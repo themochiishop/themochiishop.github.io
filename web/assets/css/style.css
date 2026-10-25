@@ -459,3 +459,10 @@ footer p:last-child { margin-bottom: 0; }
 .updates-bg .txt h2 { color: #fff; }
 .updates-bg .txt p { color: #d6cddb; }
 .updates-bg .latest-card { border-color: rgba(201,164,92,.45); box-shadow: 0 22px 50px rgba(0,0,0,.45); }
+/* ===== Latest Updates 区块:奶油色 + 大图案 ===== */
+.updates-bg { background: #f7f1ec; border-top: 1px solid #eadfd8; border-bottom: 1px solid #eadfd8; }
+.updates-bg::before { background-image: radial-gradient(rgba(201,164,92,.22) 3px, transparent 3px); background-size: 38px 38px; -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 70%); mask-image: linear-gradient(90deg, transparent 0%, #000 70%); }
+.updates-bg::after { right: -140px; top: auto; bottom: -170px; width: 440px; height: 440px; background: none; border: 46px solid rgba(249,168,192,.3); border-radius: 50%; }
+.updates-bg .txt h2 { color: var(--ink); }
+.updates-bg .txt p { color: var(--muted); }
+.updates-bg .latest-card { border-color: #eadfd8; box-shadow: 0 18px 40px rgba(28,23,34,.12); }
