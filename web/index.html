@@ -284,12 +284,12 @@ The MoChii Shop</h1>
       new ResizeObserver(fit).observe(sl);
       fit();
     }
-    $('#likeBtn').onclick = () => {
-      const key = 'liked_' + m.id;
-      try { if (localStorage.getItem(key)) return; } catch (e) {}
+        $('#likeBtn').onclick = () => {
+      const b = $('#likeBtn'), sp = b.querySelector('span');
+      const before = parseInt(sp.textContent, 10) || 0;
+      sp.textContent = before + 1;   // 先立刻显示,不用等网络
       runTransaction(ref(db, 'messages/' + m.id + '/likes'), n => (n || 0) + 1)
-        .then(() => { try { localStorage.setItem(key, '1'); } catch (e) {} })
-        .catch(err => console.error('点赞失败:', err.message));
+        .catch(err => { sp.textContent = before; console.error('点赞失败:', err.code || '', err.message); });
     };
   }
 </script>
