@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>首页编辑 - The Mochii Shop</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f4f1f5; color: #2b2430; line-height: 1.5; }
+    header { background: #1c1722; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #c9a45c; position: sticky; top: 0; z-index: 10; }
+    header h1 { font-size: 1.05rem; }
+    header .right { display: flex; gap: 10px; align-items: center; font-size: .85rem; color: #cfc6d4; }
+    .wrap { max-width: 860px; margin: 24px auto; padding: 0 16px 80px; }
+    .card { background: #fff; border-radius: 10px; border: 1px solid #e9e2e6; padding: 22px 24px; margin-bottom: 20px; }
+    .card h2 { font-size: 1.05rem; margin-bottom: 4px; color: #1c1722; }
+    .card .hint { font-size: .82rem; color: #8b8190; margin-bottom: 16px; }
+    label { display: block; font-size: .85rem; font-weight: 600; margin: 14px 0 6px; }
+    input[type=text], input[type=email], input[type=password], input[type=url], textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid #d8d0db; border-radius: 6px; font: inherit; background: #fff;
+    }
+    textarea { min-height: 96px; resize: vertical; }
+    input:focus, textarea:focus { outline: 2px solid #e0628a55; border-color: #e0628a; }
+    .btn { display: inline-block; padding: 10px 20px; border-radius: 6px; border: none; font-weight: 600; font-size: .9rem; cursor: pointer; background: #e0628a; color: #fff; }
+    .btn:hover { background: #c94f76; }
+    .btn.dark { background: #1c1722; } .btn.dark:hover { background: #2a2331; }
+    .btn.ghost { background: #fff; color: #1c1722; border: 1px solid #d8d0db; } .btn.ghost:hover { background: #f4f1f5; }
+    .btn.small { padding: 6px 10px; font-size: .78rem; }
+    .btn.danger { background: #fff; color: #c0392b; border: 1px solid #e8b4ad; } .btn.danger:hover { background: #fdecea; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; }
+    .slide-item { display: flex; gap: 14px; align-items: center; border: 1px solid #e9e2e6; border-radius: 8px; padding: 10px; margin-bottom: 10px; background: #fcfbfc; }
+    .slide-item img { width: 120px; height: 68px; object-fit: cover; border-radius: 6px; flex-shrink: 0; background: #eee; }
+    .slide-item .mid { flex: 1; min-width: 0; }
+    .slide-item .mid input { margin-top: 4px; }
+    .slide-item .ops { display: flex; flex-direction: column; gap: 6px; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .msg { font-size: .88rem; margin-top: 12px; }
+    .msg.ok { color: #1d8a38; } .msg.err { color: #c0392b; }
+    .savebar { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid #e9e2e6; padding: 12px 16px; display: flex; justify-content: center; gap: 14px; align-items: center; box-shadow: 0 -4px 14px rgba(0,0,0,.05); }
+    #loginView { max-width: 380px; margin: 90px auto; padding: 0 16px; }
+    #loginView .card { text-align: center; }
+    #loginView .btn { width: 100%; margin-top: 18px; }
+    #loginView label { text-align: left; }
+    .small-note { font-size: .78rem; color: #8b8190; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+<!-- 登录 -->
+<div id="loginView">
+  <div class="card">
+    <h2 style="font-size:1.3rem;margin-bottom:6px;">首页编辑登录</h2>
+    <p class="hint">The Mochii Shop · 仅限管理员</p>
+    <label for="email">邮箱</label>
+    <input type="email" id="email" autocomplete="username">
+    <label for="password">密码</label>
+    <input type="password" id="password" autocomplete="current-password">
+    <button class="btn" id="loginBtn">登录</button>
+    <div class="msg err" id="loginMsg"></div>
+  </div>
+</div>
+
+<!-- 编辑器 -->
+<div id="editorView" hidden>
+  <header>
+    <h1>The Mochii Shop · 首页编辑</h1>
+    <div class="right">
+      <span id="who"></span>
+      <a class="btn ghost small" href="/" target="_blank" rel="noopener">查看首页</a>
+      <button class="btn ghost small" id="logoutBtn">退出</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <div class="card">
+      <h2>顶部公告条</h2>
+      <p class="hint">显示在页面最顶部的粉色条。留空则隐藏。</p>
+      <textarea id="announcement" style="min-height:64px"></textarea>
+    </div>
+
+    <div class="card">
+      <h2>大图区文字</h2>
+      <p class="hint">轮播图上方的大标题和说明。</p>
+      <label for="heroTitle">大标题</label>
+      <input type="text" id="heroTitle">
+      <label for="heroSubtitle">副标题</label>
+      <textarea id="heroSubtitle" style="min-height:70px"></textarea>
+    </div>
+
+    <div class="card">
+      <h2>轮播图</h2>
+      <p class="hint">最多 6 张,左右切换显示。建议横向图片(例如 1920×1080)。上传时会自动压缩。</p>
+      <div id="slideList"></div>
+      <div class="row">
+        <input type="file" id="fileInput" accept="image/*" multiple hidden>
+        <button class="btn dark" id="addBtn">＋ 添加图片</button>
+        <span class="small-note" id="slideInfo"></span>
+      </div>
+      <div class="msg" id="slideMsg"></div>
+    </div>
+
+    <div class="card">
+      <h2>"Latest Updates" 介绍文字</h2>
+      <p class="hint">每一行会变成一个段落。右侧的动态卡片来自 my-admin-status,不在这里改。</p>
+      <textarea id="intro"></textarea>
+    </div>
+
+    <div class="card">
+      <h2>社交链接</h2>
+      <p class="hint">必须以 https:// 开头。</p>
+      <label for="facebook">Facebook</label><input type="url" id="facebook">
+      <label for="instagram">Instagram</label><input type="url" id="instagram">
+      <label for="shopee">Shopee</label><input type="url" id="shopee">
+      <label for="tiktok">TikTok</label><input type="url" id="tiktok">
+      <label for="whatsapp">WhatsApp 频道</label><input type="url" id="whatsapp">
+    </div>
+  </div>
+
+  <div class="savebar">
+    <button class="btn" id="saveBtn">保存到首页</button>
+    <span class="msg" id="saveMsg" style="margin:0"></span>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDJrsKAjWqz0AmjEtBzz4CeswiskdQqASw",
+    authDomain: "admin-status-c3bdb.firebaseapp.com",
+    databaseURL: "https://admin-status-c3bdb-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "admin-status-c3bdb",
+    storageBucket: "admin-status-c3bdb.firebasestorage.app",
+    messagingSenderId: "377694458194",
+    appId: "1:377694458194:web:71a78ba5dbed4df1b1aa8b"
+  });
+  const auth = getAuth(app);
+  const db = getDatabase(app);
+  const $ = s => document.querySelector(s);
+
+  const FIELDS = ['announcement','heroTitle','heroSubtitle','intro','facebook','instagram','shopee','tiktok','whatsapp'];
+  const LINK_FIELDS = ['facebook','instagram','shopee','tiktok','whatsapp'];
+  const DEFAULTS = {
+    announcement: '🤹 Every day, we host live-streamed games at varying times, giving customers the chance to win our products and enjoy exclusive random discounts!',
+    heroTitle: 'Welcome to The MoChii Shop',
+    heroSubtitle: 'Your ultimate destination for handmade bracelets, 100% authentic blind boxes, and thrilling live stream interactive games!',
+    intro: 'Join our live streams every day for a chance to win our products and enjoy exclusive random discounts.\nPlease stay tuned and follow us ~',
+    facebook: 'https://www.facebook.com/profile.php?id=61583702212449',
+    instagram: 'https://www.instagram.com/themochiishop_ig/',
+    shopee: 'https://s.shopee.com.my/5q5l5fQ8dM?share_channel_code=5',
+    tiktok: 'https://www.tiktok.com/@themochiishoptt',
+    whatsapp: 'https://whatsapp.com/channel/0029Vb7zsqb8F2pABPvoOR2I'
+  };
+  const MAX_SLIDES = 6;
+  let slides = [];
+
+  /* ---------- 登录 ---------- */
+  $('#loginBtn').onclick = login;
+  $('#password').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+  async function login() {
+    const msg = $('#loginMsg'); msg.textContent = '';
+    try {
+      await signInWithEmailAndPassword(auth, $('#email').value.trim(), $('#password').value);
+    } catch (e) {
+      msg.textContent = '登录失败:邮箱或密码不正确。';
+    }
+  }
+  $('#logoutBtn').onclick = () => signOut(auth);
+
+  onAuthStateChanged(auth, user => {
+    $('#loginView').hidden = !!user;
+    $('#editorView').hidden = !user;
+    if (user) { $('#who').textContent = user.email || ''; load(); }
+  });
+
+  /* ---------- 读取 ---------- */
+  async function load() {
+    try {
+      const snap = await get(ref(db, 'homepage'));
+      const v = snap.val() || {};
+      const cfg = v.config || {};
+      FIELDS.forEach(f => { $('#' + f).value = (cfg[f] !== undefined) ? cfg[f] : DEFAULTS[f]; });
+      const list = Array.isArray(v.slides) ? v.slides : Object.values(v.slides || {});
+      slides = list.filter(s => s && typeof s.src === 'string').map(s => ({ src: s.src, caption: s.caption || '' }));
+      renderSlides();
+    } catch (e) {
+      showSave('读取失败:' + e.message, false);
+    }
+  }
+
+  /* ---------- 轮播图 ---------- */
+  function renderSlides() {
+    const box = $('#slideList'); box.innerHTML = '';
+    slides.forEach((s, i) => {
+      const item = document.createElement('div'); item.className = 'slide-item';
+
+      const img = document.createElement('img'); img.src = s.src; item.appendChild(img);
+
+      const mid = document.createElement('div'); mid.className = 'mid';
+      const t = document.createElement('div'); t.textContent = '第 ' + (i + 1) + ' 张'; t.style.fontSize = '.85rem'; t.style.fontWeight = '600';
+      const cap = document.createElement('input'); cap.type = 'text'; cap.placeholder = '图片说明(可留空)'; cap.value = s.caption; cap.maxLength = 60;
+      cap.oninput = () => { s.caption = cap.value; };
+      mid.append(t, cap); item.appendChild(mid);
+
+      const ops = document.createElement('div'); ops.className = 'ops';
+      const up = btn('↑', 'ghost small', () => move(i, -1)); up.disabled = i === 0;
+      const dn = btn('↓', 'ghost small', () => move(i, 1)); dn.disabled = i === slides.length - 1;
+      const del = btn('删除', 'danger small', () => { slides.splice(i, 1); renderSlides(); });
+      ops.append(up, dn, del); item.appendChild(ops);
+
+      box.appendChild(item);
+    });
+    const kb = Math.round(slides.reduce((n, s) => n + s.src.length, 0) / 1024);
+    $('#slideInfo').textContent = slides.length + ' / ' + MAX_SLIDES + ' 张 · 约 ' + kb + ' KB';
+    $('#addBtn').disabled = slides.length >= MAX_SLIDES;
+  }
+  function btn(text, cls, fn) {
+    const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = text; b.onclick = fn; return b;
+  }
+  function move(i, d) {
+    const j = i + d; if (j < 0 || j >= slides.length) return;
+    [slides[i], slides[j]] = [slides[j], slides[i]]; renderSlides();
+  }
+
+  $('#addBtn').onclick = () => $('#fileInput').click();
+  $('#fileInput').onchange = async e => {
+    const files = [...e.target.files]; e.target.value = '';
+    const msg = $('#slideMsg'); msg.className = 'msg'; msg.textContent = '';
+    for (const f of files) {
+      if (slides.length >= MAX_SLIDES) { msg.className = 'msg err'; msg.textContent = '最多只能 ' + MAX_SLIDES + ' 张,多余的已忽略。'; break; }
+      if (!f.type.startsWith('image/')) continue;
+      try {
+        msg.textContent = '正在处理 ' + f.name + ' ...';
+        slides.push({ src: await compress(f), caption: '' });
+        renderSlides();
+        msg.textContent = '';
+      } catch (err) {
+        msg.className = 'msg err'; msg.textContent = f.name + ':' + err.message;
+      }
+    }
+    if (!msg.textContent) { msg.className = 'msg ok'; msg.textContent = '已添加,记得点下方"保存到首页"。'; }
+  };
+
+  function compress(file, maxSide = 1800, q = 0.82) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file); const img = new Image();
+      img.onload = () => {
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const s = Math.min(1, maxSide / Math.max(w, h));
+        w = Math.round(w * s); h = Math.round(h * s);
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        let quality = q, out = c.toDataURL('image/jpeg', quality);
+        while (out.length > 1300000 && quality > 0.4) { quality -= 0.1; out = c.toDataURL('image/jpeg', quality); }
+        resolve(out);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('无法读取这张图片(请用 JPG 或 PNG 格式)')); };
+      img.src = url;
+    });
+  }
+
+  /* ---------- 保存 ---------- */
+  function showSave(text, ok) { const m = $('#saveMsg'); m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = text; }
+
+  $('#saveBtn').onclick = async () => {
+    const cfg = {};
+    for (const f of FIELDS) {
+      const v = $('#' + f).value.trim();
+      if (LINK_FIELDS.includes(f) && v && !/^https:\/\//i.test(v)) { showSave('链接必须以 https:// 开头:' + f, false); return; }
+      if (f === 'announcement') cfg[f] = v;   // 允许留空 = 隐藏公告
+      else if (v) cfg[f] = v;                  // 留空 = 使用首页默认
+    }
+    const btnSave = $('#saveBtn'); btnSave.disabled = true; showSave('保存中...', true);
+    try {
+      await set(ref(db, 'homepage/config'), cfg);
+      await set(ref(db, 'homepage/slides'), slides.length ? slides : null);
+      showSave('✅ 已保存,首页已更新(' + new Date().toLocaleTimeString() + ')', true);
+    } catch (e) {
+      const denied = /permission/i.test(e.message);
+      showSave(denied ? '保存失败:没有权限。请确认这个账号的 UID 已写入 Firebase 规则。' : '保存失败:' + e.message, false);
+    } finally { btnSave.disabled = false; }
+  };
+</script>
+</body>
+</html>
