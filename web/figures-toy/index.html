@@ -131,7 +131,9 @@
       const b = document.createElement('button'); b.type = 'button'; b.className = 'fig-item';
       b.setAttribute('aria-label', 'View ' + (s.caption || 'image ' + (i + 1)));
       const wrap = document.createElement('div'); wrap.className = 'fig-img';
-      const im = document.createElement('img'); im.src = s.src; im.alt = s.caption || 'Figures Toy'; im.loading = 'lazy';
+           const im = document.createElement('img'); im.alt = s.caption || 'Figures Toy'; im.loading = 'lazy';
+      im.onload = () => { const r = im.naturalWidth / im.naturalHeight; if (r > 1.25 || r < 0.75) b.classList.add('contain'); };
+      im.src = s.src;
       wrap.appendChild(im); b.appendChild(wrap);
       if (s.caption) { const c = document.createElement('div'); c.className = 'fig-cap'; c.textContent = s.caption; b.appendChild(c); }
       b.onclick = () => show(i);
