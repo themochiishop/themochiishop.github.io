@@ -414,3 +414,20 @@ footer p:last-child { margin-bottom: 0; }
   .home .band .social { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 320px; justify-content: start; }
   .home .band .social a { padding: 11px 10px; text-align: center; font-size: .9rem; }
 }
+/* ===== 金线恢复原设定:从第一个字开始向右,间距恢复 ===== */
+.section-head h2, .split .txt h2, .band h2, .page-hero h1 { line-height: 1.65; }
+.section-head h2::after, .band h2::after, .page-hero h1::after { margin: 14px auto 0; }
+.split .txt h2::after, .home-split .txt h2::after { margin: 14px 0 20px; }
+
+@media (max-width: 860px) {
+  .home .section-head h2, .home .band h2, .home .split .txt h2 { display: block; }
+  .home .section-head h2::after, .home .band h2::after { margin: 14px 0 0; }
+  .home .split .txt h2::after { margin: 14px 0 16px; }
+}
+/* ===== 手机端:社交按钮 = 图标 + 小字,一行四个 ===== */
+.social a svg { display: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 600px) {
+  .home .band .social { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; max-width: 340px; justify-content: start; }
+  .home .band .social a { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 12px 4px; border-radius: 8px; font-size: .7rem; letter-spacing: .2px; text-align: center; }
+  .home .band .social a svg { display: block; width: 22px; height: 22px; }
+}
