@@ -35,7 +35,7 @@
 
   <section class="section">
     <div class="container">
-            <div class="fig-banner" id="figBanner" hidden><img id="figBannerImg" alt="Our figures and blind box brands"></div>
+      <div class="fig-banner" id="figBanner" hidden><img id="figBannerImg" alt="Our figures and blind box brands"></div>
       <div class="fig-grid" id="figGrid"></div>
       <div class="fig-empty" id="figEmpty" hidden>
         <div class="ico">🧸</div>
@@ -86,6 +86,7 @@
   const $ = s => document.querySelector(s);
   const isHttps = u => typeof u === 'string' && /^https:\/\//i.test(u);
   const isEmail = e => typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  const isImg = s => typeof s === 'string' && /^(data:image\/|https:\/\/)/.test(s);
 
   $('#menuBtn').onclick = () => $('#menu').classList.toggle('open');
 
@@ -122,27 +123,27 @@
     if (e.key === 'ArrowRight') show(idx + 1);
   });
 
-  /* 图片墙 */
-    /* 顶部横幅 */
+  /* 顶部横幅 */
   let hasBanner = false, hasItems = false;
   function syncEmpty() { $('#figEmpty').hidden = hasBanner || hasItems; }
   onValue(ref(db, 'homepage/figuresBanner'), snap => {
     const v = snap.val();
-    const ok = typeof v === 'string' && /^(data:image\/|https:\/\/)/.test(v);
+    const ok = isImg(v);
     if (ok) $('#figBannerImg').src = v;
     $('#figBanner').hidden = !ok;
     hasBanner = ok; syncEmpty();
   });
+
+  /* 图片墙 */
   onValue(ref(db, 'homepage/figures'), snap => {
     const v = snap.val();
-    items = (Array.isArray(v) ? v : Object.values(v || {}))
-      .filter(s => s && typeof s.src === 'string' && /^(data:image\/|https:\/\/)/.test(s.src));
+    items = (Array.isArray(v) ? v : Object.values(v || {})).filter(s => s && isImg(s.src));
     const grid = $('#figGrid'); grid.innerHTML = '';
     items.forEach((s, i) => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'fig-item';
       b.setAttribute('aria-label', 'View ' + (s.caption || 'image ' + (i + 1)));
       const wrap = document.createElement('div'); wrap.className = 'fig-img';
-           const im = document.createElement('img'); im.alt = s.caption || 'Figures Toy'; im.loading = 'lazy';
+      const im = document.createElement('img'); im.alt = s.caption || 'Figures Toy'; im.loading = 'lazy';
       im.onload = () => { const r = im.naturalWidth / im.naturalHeight; if (r > 1.25 || r < 0.75) b.classList.add('contain'); };
       im.src = s.src;
       wrap.appendChild(im); b.appendChild(wrap);
@@ -150,7 +151,7 @@
       b.onclick = () => show(i);
       grid.appendChild(b);
     });
-        hasItems = items.length > 0; syncEmpty();
+    hasItems = items.length > 0; syncEmpty();
   });
 </script>
 </body>
