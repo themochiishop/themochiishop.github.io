@@ -431,3 +431,17 @@ footer p:last-child { margin-bottom: 0; }
   .home .band .social a { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 12px 4px; border-radius: 8px; font-size: .7rem; letter-spacing: .2px; text-align: center; }
   .home .band .social a svg { display: block; width: 22px; height: 22px; }
 }
+/* ===== Latest Updates:带框架的面板 ===== */
+.update-panel { background: #fff; border: 1px solid var(--line); border-top: 3px solid var(--gold); padding: 36px 40px; display: grid; grid-template-columns: 1fr minmax(0, 340px); gap: 40px; align-items: center; transition: box-shadow .25s; }
+.update-panel:hover { box-shadow: 0 16px 30px rgba(28,23,34,.08); }
+.update-text p { color: var(--muted); font-size: 1.02rem; margin-bottom: 12px; }
+.update-text p:last-child { margin-bottom: 0; }
+.update-panel #latest-card-wrapper { max-width: 340px; width: 100%; margin: 0; justify-self: end; }
+.update-panel .latest-card { box-shadow: none; }
+.home .updates + .section { padding-top: 0; }
+
+@media (max-width: 860px) {
+  .update-panel { grid-template-columns: 1fr; gap: 22px; padding: 24px 20px; }
+  .update-text p { font-size: .95rem; line-height: 1.7; }
+  .update-panel #latest-card-wrapper { justify-self: start; }
+}
