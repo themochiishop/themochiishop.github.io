@@ -466,3 +466,27 @@ footer p:last-child { margin-bottom: 0; }
 .updates-bg .txt h2 { color: var(--ink); }
 .updates-bg .txt p { color: var(--muted); }
 .updates-bg .latest-card { border-color: #eadfd8; box-shadow: 0 18px 40px rgba(28,23,34,.12); }
+/* ===== 手机端:首页区块全部居中 ===== */
+@media (max-width: 860px) {
+  .home .section-head,
+  .home .band,
+  .home .band .wa,
+  .home .split .txt { text-align: center; }
+
+  .home .section-head h2::after,
+  .home .band h2::after { margin: 14px auto 0; }
+  .home .split .txt h2::after { margin: 14px auto 16px; }
+
+  .home .band p { margin: 12px auto 22px; }
+  .home .band .social { justify-content: center; }
+  .home .band .wa { margin-top: 28px; }
+
+  .home .home-split #latest-card-wrapper { margin: 0 auto; justify-self: center; }
+}
+@media (max-width: 600px) {
+  .home .band .social { margin-left: auto; margin-right: auto; justify-content: center; }
+}
+
+/* ===== WhatsApp 按钮图标(全站) ===== */
+.btn-wa { display: inline-flex; align-items: center; justify-content: center; gap: 9px; }
+.btn-wa svg { width: 20px; height: 20px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
