@@ -331,3 +331,7 @@ footer a { color: var(--gold); }
   .ql-t em { font-style: normal; color: var(--muted); font-size: .82rem; }
   .ql-go { color: var(--gold); font-size: 1.1rem; }
 }
+/* ===== 页脚地址:手机端缩小一号,并在 "TAMAN SRI SAUJANA," 后换行 ===== */
+@media (max-width: 600px) {
+  footer .faddr, footer #fAddr { font-size: .72rem; line-height: 1.7; white-space: pre-line; }
+}
