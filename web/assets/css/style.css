@@ -315,3 +315,10 @@ footer p:last-child { margin-bottom: 0; }
   .lc-frame { max-height: 440px; }
   .lc-main { max-height: 440px; }
 }
+/* ===== Latest Updates 动态卡片:框架完全跟随图片 ===== */
+#latest-card-wrapper { max-width: 520px; }
+.lc-slider { align-items: flex-start; overflow-y: hidden; transition: height .25s ease; }
+.lc-frame { height: auto; min-height: 0; max-height: none; display: block; background: #f6f2f4; }
+.lc-blur { display: none; }
+.lc-main { position: static; display: block; width: 100%; height: auto; max-width: 100%; max-height: 760px; object-fit: cover; }
+@media (max-width: 600px) { .lc-main { max-height: 620px; } }
