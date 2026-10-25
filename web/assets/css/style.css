@@ -301,3 +301,8 @@ footer p:last-child { margin-bottom: 0; }
 /* ===== Figures Toy 顶部横幅 ===== */
 .fig-banner { max-width: 680px; margin: 0 auto 40px; }
 .fig-banner img { width: 100%; height: auto; display: block; border-radius: 6px; box-shadow: 0 18px 40px rgba(28,23,34,.18); border-bottom: 3px solid var(--gold); }
+/* ===== Figures Toy:缩略图一律完整显示,不裁切 ===== */
+.fig-item .fig-img { background: #fff; }
+.fig-item img,
+.fig-item.contain img { aspect-ratio: 1 / 1; object-fit: contain; background: #fff; padding: 10px; }
+.fig-item:hover img { transform: scale(1.04); }
