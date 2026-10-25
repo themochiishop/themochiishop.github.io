@@ -268,3 +268,7 @@ footer a { color: var(--gold); }
 .band .mission { max-width: 720px; margin: 14px auto 12px; color: #cfc6d4; }
 .band .tagline { font-family: Georgia, "Songti SC", "Noto Serif SC", serif; font-size: 1.15rem; color: #fff; margin: 22px auto 28px; max-width: 640px; }
 @media (max-width: 860px) { .split.rev .media { order: 0; } }
+/* ===== About Us 图片:不放大、不裁切 ===== */
+.about-img { width: auto; height: auto; max-width: 100%; max-height: 460px; margin: 0 auto; object-fit: contain; display: block; }
+.split .media { text-align: center; }
+@media (max-width: 860px) { .about-img { max-height: 380px; } }
