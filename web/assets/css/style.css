@@ -356,3 +356,5 @@ footer p:last-child { margin-bottom: 0; }
   .lc-like.pop .lc-heart, .lc-like.pop .lc-count { animation: none; }
   .fly-heart { display: none; }
 }
+/* 大图副标题:更舒展 */
+.hero-content p { font-size: 1.12rem; letter-spacing: .4px; line-height: 1.75; }
