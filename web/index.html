@@ -3,18 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Welcome to The MoChii Shop">
+  <meta name="description" content="Welcome to The MoChii Shop - handmade bracelets, 100% authentic blind boxes and live stream games.">
   <title>The Mochii Shop</title>
+  <link rel="icon" href="/assets/images/logo.png">
   <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
+
+  <div class="topbar" id="topbar"><span id="topbarText">🤹 Every day, we host live-streamed games at varying times, giving customers the chance to win our products and enjoy exclusive random discounts!</span></div>
+
   <header>
     <div class="nav">
       <a class="brand" href="/">
         <img src="/assets/images/logo.png" alt="" onerror="this.style.display='none'">
         The Mochii Shop
       </a>
-      <ul>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+      <ul id="menu">
         <li><a class="active" href="/">Home</a></li>
         <li><a href="/live-stream/">Live Stream</a></li>
         <li><a href="/figures-toy/">Figures Toy</a></li>
@@ -24,48 +29,222 @@
     </div>
   </header>
 
-  <main>
-    <section class="hero">
-      <h1>Welcome to The MoChii Shop</h1>
-      <p>Your ultimate destination for handmade bracelets, 100% authentic blind boxes, and thrilling live stream interactive games!</p>
-    </section>
-
-    <section class="card">
-      <h2>Latest updates</h2>
-      <p>🤹 Every day, we host live-streamed games at varying times, giving customers the chance to win our products and enjoy exclusive random discounts!</p>
-    </section>
-
-    <section class="card">
-      <h2>Handmade bracelets</h2>
-      <div class="gallery">
-        <!-- 图片稍后再加,格式:<img src="/assets/images/bracelet1.jpg" alt="Handmade bracelet"> -->
+  <!-- 大图轮播 -->
+  <section class="hero">
+    <div class="slides" id="slides"></div>
+    <div class="hero-shade"></div>
+    <div class="hero-content">
+      <div class="eyebrow">The Mochii Shop</div>
+      <h1 id="heroTitle">Welcome to The MoChii Shop</h1>
+      <p id="heroSubtitle">Your ultimate destination for handmade bracelets, 100% authentic blind boxes, and thrilling live stream interactive games!</p>
+      <div class="cta">
+        <a class="btn btn-primary" data-link="shopee" href="https://s.shopee.com.my/5q5l5fQ8dM?share_channel_code=5" target="_blank" rel="noopener">Shop on Shopee</a>
+        <a class="btn btn-outline" href="/live-stream/">Watch Live</a>
       </div>
-    </section>
+    </div>
+    <button class="arrow" id="prev" aria-label="Previous" hidden>‹</button>
+    <button class="arrow" id="next" aria-label="Next" hidden>›</button>
+    <div class="dots" id="dots" hidden></div>
+  </section>
 
-    <section class="card">
-      <h2>Please stay tuned and follow us ~</h2>
-      <p>Our Social Channels</p>
-      <div class="social">
-        <a class="btn" href="https://www.facebook.com/profile.php?id=61583702212449" target="_blank" rel="noopener">Facebook</a>
-        <a class="btn" href="https://www.instagram.com/themochiishop_ig/" target="_blank" rel="noopener">Instagram</a>
-        <a class="btn" href="https://s.shopee.com.my/5q5l5fQ8dM?share_channel_code=5" target="_blank" rel="noopener">Shopee</a>
-        <a class="btn" href="https://www.tiktok.com/@themochiishoptt" target="_blank" rel="noopener">TikTok</a>
+  <!-- 三大特色 -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2>What We Offer</h2>
       </div>
-    </section>
+      <div class="features">
+        <div class="feature">
+          <div class="ico">🧶</div>
+          <h3>Handmade Bracelets</h3>
+          <p>Our handmade bracelet collection, made to be worn and loved.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">🎁</div>
+          <h3>100% Authentic Blind Boxes</h3>
+          <p>Genuine blind boxes you can buy with confidence.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">🎥</div>
+          <h3>Live Stream Games</h3>
+          <p>Interactive live-streamed games with chances to win our products and exclusive random discounts.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <section class="card">
-      <h2>Join Our WhatsApp Channel To Get Extra Rewards</h2>
-      <div class="social">
-        <a class="btn green" href="https://whatsapp.com/channel/0029Vb7zsqb8F2pABPvoOR2I" target="_blank" rel="noopener">Join WhatsApp Channel</a>
+  <!-- 介绍 + Latest updates -->
+  <section class="section" style="background:#fff;">
+    <div class="container split">
+      <div class="txt">
+        <h2>Latest Updates</h2>
+        <div id="introText">
+          <p>Join our live streams every day for a chance to win our products and enjoy exclusive random discounts.</p>
+          <p>Please stay tuned and follow us ~</p>
+        </div>
+        <a class="btn btn-dark" href="/live-stream/">Live Stream Schedule</a>
       </div>
-    </section>
-  </main>
+      <div id="latest-card-wrapper">
+        <div class="lc-empty">加载最新动态...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 社交渠道 -->
+  <section class="band">
+    <h2>Our Social Channels</h2>
+    <p>Follow us to never miss a live stream or a new arrival.</p>
+    <div class="social">
+      <a data-link="facebook" href="https://www.facebook.com/profile.php?id=61583702212449" target="_blank" rel="noopener">Facebook</a>
+      <a data-link="instagram" href="https://www.instagram.com/themochiishop_ig/" target="_blank" rel="noopener">Instagram</a>
+      <a data-link="shopee" href="https://s.shopee.com.my/5q5l5fQ8dM?share_channel_code=5" target="_blank" rel="noopener">Shopee</a>
+      <a data-link="tiktok" href="https://www.tiktok.com/@themochiishoptt" target="_blank" rel="noopener">TikTok</a>
+    </div>
+    <div class="wa">
+      <p>Join Our WhatsApp Channel To Get Extra Rewards</p>
+      <a class="btn btn-wa" data-link="whatsapp" href="https://whatsapp.com/channel/0029Vb7zsqb8F2pABPvoOR2I" target="_blank" rel="noopener">Join WhatsApp Channel</a>
+    </div>
+  </section>
 
   <footer>
-    <p>Mochii Shop (202503305565)</p>
+    <p><strong>Mochii Shop (202503305565)</strong></p>
     <p>67A, JALAN SS 2/6, TAMAN SRI SAUJANA, 81900 KOTA TINGGI, JOHOR, MALAYSIA</p>
     <p>Customer Services: +6017-7503767 (WhatsApp only) · Email: <a href="mailto:mail@themochiishop.com">mail@themochiishop.com</a></p>
-    <p>© 2026 themochiishop</p>
+    <p style="margin-top:14px;">© 2026 themochiishop</p>
   </footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDJrsKAjWqz0AmjEtBzz4CeswiskdQqASw",
+    authDomain: "admin-status-c3bdb.firebaseapp.com",
+    databaseURL: "https://admin-status-c3bdb-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "admin-status-c3bdb",
+    storageBucket: "admin-status-c3bdb.firebasestorage.app",
+    messagingSenderId: "377694458194",
+    appId: "1:377694458194:web:71a78ba5dbed4df1b1aa8b"
+  });
+  const db = getDatabase(app);
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  /* 手机菜单 */
+  $('#menuBtn').onclick = () => $('#menu').classList.toggle('open');
+
+  /* ① 首页文字、公告、链接 */
+  onValue(ref(db, 'homepage/config'), snap => {
+    const c = snap.val() || {};
+    if (c.heroTitle) $('#heroTitle').textContent = c.heroTitle;
+    if (c.heroSubtitle) $('#heroSubtitle').textContent = c.heroSubtitle;
+    if (typeof c.announcement === 'string') {
+      $('#topbarText').textContent = c.announcement;
+      $('#topbar').hidden = !c.announcement.trim();
+    }
+    if (c.intro) {
+      const box = $('#introText'); box.innerHTML = '';
+      c.intro.split(/\n+/).filter(Boolean).forEach(t => {
+        const p = document.createElement('p'); p.textContent = t; box.appendChild(p);
+      });
+    }
+    ['facebook','instagram','shopee','tiktok','whatsapp'].forEach(k => {
+      if (c[k]) document.querySelectorAll('[data-link="' + k + '"]').forEach(a => a.href = c[k]);
+    });
+  });
+
+  /* ② 大图轮播 */
+  const track = $('#slides'), dots = $('#dots');
+  let count = 0, timer = null;
+  const cur = () => Math.round(track.scrollLeft / (track.clientWidth || 1));
+  const go = i => track.scrollTo({ left: i * track.clientWidth, behavior: 'smooth' });
+  function updateDots() { [...dots.children].forEach((d, i) => d.classList.toggle('on', i === cur())); }
+  function stop() { clearInterval(timer); }
+  function start() { stop(); if (count > 1) timer = setInterval(() => go((cur() + 1) % count), 5500); }
+
+  track.addEventListener('scroll', updateDots, { passive: true });
+  $('#prev').onclick = () => go((cur() - 1 + count) % count);
+  $('#next').onclick = () => go((cur() + 1) % count);
+  ['mouseenter', 'touchstart'].forEach(e => $('.hero').addEventListener(e, stop, { passive: true }));
+  ['mouseleave', 'touchend'].forEach(e => $('.hero').addEventListener(e, start, { passive: true }));
+
+  onValue(ref(db, 'homepage/slides'), snap => {
+    const v = snap.val();
+    const list = (Array.isArray(v) ? v : Object.values(v || {}))
+      .filter(s => s && typeof s.src === 'string' && /^(data:image\/|https:\/\/)/.test(s.src));
+    count = list.length;
+    track.innerHTML = ''; dots.innerHTML = '';
+    list.forEach((s, i) => {
+      const d = document.createElement('div'); d.className = 'slide';
+      const img = document.createElement('img'); img.src = s.src; img.alt = s.caption || 'The Mochii Shop';
+      d.appendChild(img);
+      if (s.caption) { const c = document.createElement('div'); c.className = 'slide-caption'; c.textContent = s.caption; d.appendChild(c); }
+      track.appendChild(d);
+      const b = document.createElement('button'); b.setAttribute('aria-label', 'Slide ' + (i + 1)); b.onclick = () => go(i); dots.appendChild(b);
+    });
+    $('#prev').hidden = $('#next').hidden = dots.hidden = count < 2;
+    updateDots(); start();
+  });
+
+  /* ③ Latest updates(读取 my-admin-status 的同一份数据) */
+  let globalAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=admin";
+  let globalName = "The Mochii Shop";
+  let rawSnapshot = null;
+
+  onValue(ref(db, 'adminProfile'), snap => {
+    const d = snap.val() || {};
+    globalAvatar = d.defaultAvatar || globalAvatar;
+    globalName = d.displayName || globalName;
+    renderLatest();
+  });
+  onValue(ref(db, 'messages'), snap => { rawSnapshot = snap; renderLatest(); });
+
+  function fmt(ts) {
+    if (!ts) return '';
+    const d = new Date(ts), p = n => String(n).padStart(2, '0');
+    return p(d.getMonth() + 1) + '/' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  function renderLatest() {
+    const box = $('#latest-card-wrapper');
+    if (!rawSnapshot || !rawSnapshot.exists()) { box.innerHTML = '<div class="lc-empty">暂无最新动态</div>'; return; }
+    const arr = [];
+    rawSnapshot.forEach(c => { arr.push({ id: c.key, ...c.val() }); });
+    arr.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    const m = arr[0];
+
+    let imgs = [];
+    if (Array.isArray(m.images)) imgs = m.images.slice(0, 3).filter(x => typeof x === 'string' && x);
+    else if (typeof m.imageUrl === 'string' && m.imageUrl) imgs = [m.imageUrl];
+
+    const slider = imgs.length
+      ? '<div class="lc-slider">' + imgs.map(u =>
+          '<div class="lc-frame"><img class="lc-blur" src="' + esc(u) + '"><img class="lc-main" src="' + esc(u) + '"></div>').join('') + '</div>'
+      : '';
+
+    box.innerHTML =
+      '<div class="latest-card">' +
+        '<div class="lc-header">' +
+          '<img class="lc-avatar" src="' + esc(m.avatarUrl || globalAvatar) + '">' +
+          '<div><span class="lc-name">' + esc(m.authorName || globalName) + '</span>' +
+          '<span class="lc-time">最新更新 · ' + fmt(m.timestamp) + '</span></div>' +
+        '</div>' +
+        slider +
+        (m.content ? '<div class="lc-body">' + esc(m.content) + '</div>' : '') +
+        '<div class="lc-footer">' +
+          '<button class="lc-like" id="likeBtn">❤️ <span>' + (m.likes || 0) + '</span></button>' +
+          '<a class="lc-more" href="https://themochiishop.github.io/admin/my-admin-status/feed.html" target="_blank" rel="noopener">More Feed ➔</a>' +
+        '</div>' +
+      '</div>';
+
+    $('#likeBtn').onclick = () => {
+      const key = 'liked_' + m.id;
+      try { if (localStorage.getItem(key)) return; } catch (e) {}
+      runTransaction(ref(db, 'messages/' + m.id + '/likes'), n => (n || 0) + 1)
+        .then(() => { try { localStorage.setItem(key, '1'); } catch (e) {} })
+        .catch(err => console.error('点赞失败:', err.message));
+    };
+  }
+</script>
 </body>
 </html>
