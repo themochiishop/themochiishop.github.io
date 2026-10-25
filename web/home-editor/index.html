@@ -107,7 +107,26 @@
       <textarea id="intro"></textarea>
     </div>
 
-    <div class="card">
+        <div class="card">
+      <h2>Contact Us 页面 / 联系信息</h2>
+      <p class="hint">显示在 Contact Us 页面。社交链接在下面的"社交链接"栏位修改,两个页面共用。</p>
+      <label for="contactIntro">页面说明</label>
+      <textarea id="contactIntro" style="min-height:64px"></textarea>
+      <label for="phone">客服电话(显示用)</label>
+      <input type="text" id="phone">
+      <label for="waNumber">WhatsApp 号码(只填数字,包含国家码,例如 60177503767)</label>
+      <input type="text" id="waNumber" inputmode="numeric">
+      <label for="email">客服邮箱</label>
+      <input type="text" id="email">
+      <label for="shopName">店铺名称 / 注册号</label>
+      <input type="text" id="shopName">
+      <label for="address">地址(按 Enter 换行)</label>
+      <textarea id="address" style="min-height:70px"></textarea>
+      <label for="mapLink">地图链接(可留空,留空则自动用地址搜索)</label>
+      <input type="url" id="mapLink" placeholder="https://maps.app.goo.gl/...">
+      <label for="contactNote">页面底部提示</label>
+      <textarea id="contactNote" style="min-height:64px"></textarea>
+    </div><div class="card">
       <h2>社交链接</h2>
       <p class="hint">必须以 https:// 开头。</p>
       <label for="facebook">Facebook</label><input type="url" id="facebook">
@@ -142,18 +161,26 @@
   const db = getDatabase(app);
   const $ = s => document.querySelector(s);
 
-  const FIELDS = ['announcement','heroTitle','heroSubtitle','intro','facebook','instagram','shopee','tiktok','whatsapp'];
-  const LINK_FIELDS = ['facebook','instagram','shopee','tiktok','whatsapp'];
+    const FIELDS = ['announcement','heroTitle','heroSubtitle','intro','facebook','instagram','shopee','tiktok','whatsapp','contactIntro','phone','waNumber','email','shopName','address','mapLink','contactNote'];
+  const LINK_FIELDS = ['facebook','instagram','shopee','tiktok','whatsapp','mapLink'];
   const DEFAULTS = {
     announcement: '🤹 Every day, we host live-streamed games at varying times, giving customers the chance to win our products and enjoy exclusive random discounts!',
-    heroTitle: 'Welcome to The MoChii Shop',
+    heroTitle: 'Welcome to\nThe MoChii Shop',
     heroSubtitle: 'Your ultimate destination for handmade bracelets, 100% authentic blind boxes, and thrilling live stream interactive games!',
     intro: 'Join our live streams every day for a chance to win our products and enjoy exclusive random discounts.\nPlease stay tuned and follow us ~',
     facebook: 'https://www.facebook.com/profile.php?id=61583702212449',
     instagram: 'https://www.instagram.com/themochiishop_ig/',
     shopee: 'https://s.shopee.com.my/5q5l5fQ8dM?share_channel_code=5',
     tiktok: 'https://www.tiktok.com/@themochiishoptt',
-    whatsapp: 'https://whatsapp.com/channel/0029Vb7zsqb8F2pABPvoOR2I'
+    whatsapp: 'https://whatsapp.com/channel/0029Vb7zsqb8F2pABPvoOR2I',
+    contactIntro: "We'd love to hear from you. Reach us through any of the channels below.",
+    phone: '+6017-7503767',
+    waNumber: '60177503767',
+    email: 'mail@themochiishop.com',
+    shopName: 'Mochii Shop (202503305565)',
+    address: '67A, JALAN SS 2/6, TAMAN SRI SAUJANA,\n81900 KOTA TINGGI, JOHOR, MALAYSIA',
+    mapLink: '',
+    contactNote: 'For orders and after-sales enquiries, WhatsApp is the fastest way to reach us.'
   };
   const MAX_SLIDES = 6;
   let slides = [];
