@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Watch The Mochii Shop live streams on Shopee, TikTok and Facebook.">
+  <title>Live Stream - The Mochii Shop</title>
+  <link rel="icon" href="/assets/images/logo.png">
+  <link rel="stylesheet" href="/assets/css/style.css?v=__V__">
+</head>
+<body>
+
+  <header>
+    <div class="nav">
+      <a class="brand" href="/">
+        <img src="/assets/images/logo.png" alt="" onerror="this.style.display='none'">
+        The Mochii Shop
+      </a>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+      <ul id="menu">
+        <li><a href="/">Home</a></li>
+        <li><a class="active" href="/live-stream/">Live Stream</a></li>
+        <li><a href="/figures-toy/">Figures Toy</a></li>
+        <li><a href="/about-us/">About Us</a></li>
+        <li><a href="/contact-us/">Contact Us</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <section class="page-hero">
+    <h1>Live Stream</h1>
+    <p id="lIntro">Find our live streams on Shopee, TikTok and Facebook. Join in for interactive games, prizes and exclusive random discounts!</p>
+  </section>
+
+  <section class="section">
+    <div class="container">
+
+      <div class="live-status" id="liveStatus">
+        <div class="live-dot"></div>
+        <strong id="liveTitle">CURRENTLY OFFLINE</strong>
+        <span id="liveSub">We are not live right now. Check the schedule below.</span>
+      </div>
+
+      <div class="section-head">
+        <h2>Watch Us Live On</h2>
+      </div>
+
+      <div class="platforms">
+        <div class="platform shopee">
+          <div class="logo">S</div>
+          <h3>Shopee Live</h3>
+          <p>Join our Shopee live to shop and play in real time.</p>
+          <a class="btn" id="lShopee" href="https://my.shp.ee/k4VoTpQc" target="_blank" rel="noopener">Watch on Shopee</a>
+        </div>
+        <div class="platform tiktok">
+          <div class="logo">♪</div>
+          <h3>TikTok Live</h3>
+          <p>Follow us on TikTok to catch our live streams and highlights.</p>
+          <a class="btn" id="lTiktok" href="https://www.tiktok.com/@themochiishoptt" target="_blank" rel="noopener">Watch on TikTok</a>
+        </div>
+        <div class="platform facebook">
+          <div class="logo">f</div>
+          <h3>Facebook Live</h3>
+          <p>Watch and chat with us on our Facebook page.</p>
+          <a class="btn" id="lFacebook" href="https://www.facebook.com/profile.php?id=61583702212449" target="_blank" rel="noopener">Watch on Facebook</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="background:#fff;">
+    <div class="container">
+      <div class="schedule">
+        <h2>Live Schedule</h2>
+        <div class="when" id="lSchedule">We go live every day at varying times.
+Follow our channels to get notified when we start.</div>
+        <div class="perks">
+          <span>🎮 Interactive Games</span>
+          <span>🎁 Win Our Products</span>
+          <span>🏷️ Exclusive Random Discounts</span>
+        </div>
+        <p class="note" id="lNote">Tip: turn on notifications on each platform so you never miss a live stream.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong id="fShop">Mochii Shop (202503305565)</strong></p>
+    <p id="fAddr">67A, JALAN SS 2/6, TAMAN SRI SAUJANA, 81900 KOTA TINGGI, JOHOR, MALAYSIA</p>
+    <p>Customer Services: <span id="fPhone">+6017-7503767</span> (WhatsApp only) · Email: <a id="fMail" href="mailto:mail@themochiishop.com">mail@themochiishop.com</a></p>
+    <p style="margin-top:14px;">© 2026 themochiishop</p>
+  </footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDJrsKAjWqz0AmjEtBzz4CeswiskdQqASw",
+    authDomain: "admin-status-c3bdb.firebaseapp.com",
+    databaseURL: "https://admin-status-c3bdb-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "admin-status-c3bdb",
+    storageBucket: "admin-status-c3bdb.firebasestorage.app",
+    messagingSenderId: "377694458194",
+    appId: "1:377694458194:web:71a78ba5dbed4df1b1aa8b"
+  });
+  const db = getDatabase(app);
+  const $ = s => document.querySelector(s);
+  const isHttps = u => typeof u === 'string' && /^https:\/\//i.test(u);
+  const isEmail = e => typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+  $('#menuBtn').onclick = () => $('#menu').classList.toggle('open');
+
+  onValue(ref(db, 'homepage/config'), snap => {
+    const c = snap.val() || {};
+
+    const on = c.liveStatus === 'on';
+    $('#liveStatus').classList.toggle('on', on);
+    $('#liveTitle').textContent = on ? 'LIVE NOW' : 'CURRENTLY OFFLINE';
+    $('#liveSub').textContent = on
+      ? 'We are live right now! Pick a platform below to join us.'
+      : 'We are not live right now. Check the schedule below.';
+
+    if (c.liveIntro) $('#lIntro').textContent = c.liveIntro;
+    if (c.liveSchedule) $('#lSchedule').textContent = c.liveSchedule;
+    if (typeof c.liveNote === 'string' && c.liveNote.trim()) $('#lNote').textContent = c.liveNote;
+
+    if (isHttps(c.liveShopee)) $('#lShopee').href = c.liveShopee;
+    if (isHttps(c.tiktok)) $('#lTiktok').href = c.tiktok;
+    if (isHttps(c.facebook)) $('#lFacebook').href = c.facebook;
+
+    if (c.phone) $('#fPhone').textContent = c.phone;
+    if (isEmail(c.email)) { $('#fMail').textContent = c.email; $('#fMail').href = 'mailto:' + c.email; }
+    if (c.shopName) $('#fShop').textContent = c.shopName;
+    if (c.address) $('#fAddr').textContent = c.address.replace(/\s*\n\s*/g, ' ');
+  });
+</script>
+</body>
+</html>
