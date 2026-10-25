@@ -107,7 +107,23 @@
       <textarea id="intro"></textarea>
     </div>
 
-        <div class="card">
+            <div class="card">
+      <h2>Live Stream 页面 / 直播</h2>
+      <p class="hint">开播时把状态改成"正在直播",页面会显示闪烁的红色 LIVE NOW。TikTok 和 Facebook 的直播链接用下面的"社交链接"。</p>
+      <label for="liveStatus">直播状态</label>
+      <select id="liveStatus" style="width:100%;padding:10px 12px;border:1px solid #d8d0db;border-radius:6px;font:inherit;background:#fff">
+        <option value="off">未直播(显示 Currently offline)</option>
+        <option value="on">🔴 正在直播(显示 LIVE NOW)</option>
+      </select>
+      <label for="liveIntro">页面说明</label>
+      <textarea id="liveIntro" style="min-height:70px"></textarea>
+      <label for="liveSchedule">直播时间 / 下一场预告(按 Enter 换行)</label>
+      <textarea id="liveSchedule" style="min-height:80px"></textarea>
+      <label for="liveShopee">Shopee 直播链接</label>
+      <input type="url" id="liveShopee">
+      <label for="liveNote">页面底部提示</label>
+      <textarea id="liveNote" style="min-height:64px"></textarea>
+    </div><div class="card">
       <h2>Contact Us 页面 / 联系信息</h2>
       <p class="hint">显示在 Contact Us 页面。社交链接在下面的"社交链接"栏位修改,两个页面共用。</p>
       <label for="contactIntro">页面说明</label>
@@ -161,8 +177,8 @@
   const db = getDatabase(app);
   const $ = s => document.querySelector(s);
 
-    const FIELDS = ['announcement','heroTitle','heroSubtitle','intro','facebook','instagram','shopee','tiktok','whatsapp','contactIntro','phone','waNumber','email','shopName','address','mapLink','contactNote'];
-  const LINK_FIELDS = ['facebook','instagram','shopee','tiktok','whatsapp','mapLink'];
+      const FIELDS = ['announcement','heroTitle','heroSubtitle','intro','facebook','instagram','shopee','tiktok','whatsapp','contactIntro','phone','waNumber','email','shopName','address','mapLink','contactNote','liveStatus','liveIntro','liveSchedule','liveShopee','liveNote'];
+  const LINK_FIELDS = ['facebook','instagram','shopee','tiktok','whatsapp','mapLink','liveShopee'];
   const DEFAULTS = {
     announcement: '🤹 Every day, we host live-streamed games at varying times, giving customers the chance to win our products and enjoy exclusive random discounts!',
     heroTitle: 'Welcome to\nThe MoChii Shop',
@@ -180,7 +196,12 @@
     shopName: 'Mochii Shop (202503305565)',
     address: '67A, JALAN SS 2/6, TAMAN SRI SAUJANA,\n81900 KOTA TINGGI, JOHOR, MALAYSIA',
     mapLink: '',
-    contactNote: 'For orders and after-sales enquiries, WhatsApp is the fastest way to reach us.'
+    contactNote: 'For orders and after-sales enquiries, WhatsApp is the fastest way to reach us.',
+    liveStatus: 'off',
+    liveIntro: 'Find our live streams on Shopee, TikTok and Facebook. Join in for interactive games, prizes and exclusive random discounts!',
+    liveSchedule: 'We go live every day at varying times.\nFollow our channels to get notified when we start.',
+    liveShopee: 'https://my.shp.ee/k4VoTpQc',
+    liveNote: 'Tip: turn on notifications on each platform so you never miss a live stream.'
   };
   const MAX_SLIDES = 6;
   let slides = [];
