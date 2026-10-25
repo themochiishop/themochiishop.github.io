@@ -345,3 +345,9 @@ footer a { color: var(--gold); }
   footer .faddr,
   footer #fAddr { line-height: 1.35; }
 }
+/* ===== 电脑端页脚:各行之间的间距收紧 ===== */
+@media (min-width: 601px) {
+  footer p,
+  footer .faddr,
+  footer #fAddr { line-height: 1.35; margin-bottom: 2px; }
+}
