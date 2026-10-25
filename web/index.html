@@ -40,19 +40,14 @@ The MoChii Shop</h1>
       <p id="heroSubtitle">Your ultimate destination for handmade bracelets, 100% authentic blind boxes, and thrilling live stream interactive games!</p>
       <div class="cta">
         <a class="btn btn-primary" data-link="shopee" href="https://s.shopee.com.my/5q5l5fQ8dM?share_channel_code=5" target="_blank" rel="noopener">Shop on Shopee</a>
-        <a class="btn btn-outline" href="/live-stream/">Watch Live</a>
+                <span id="watchLive"><a class="btn btn-outline" href="/live-stream/">Watch Live</a></span>
       </div>
     </div>
     <button class="arrow" id="prev" aria-label="Previous" hidden>‹</button>
     <button class="arrow" id="next" aria-label="Next" hidden>›</button>
     <div class="dots" id="dots" hidden></div>
   </section>
-    <div class="live-strip" id="liveStrip" hidden>
-    <div class="live-strip-inner">
-      <span class="live-strip-label">LIVE NOW ON</span>
-      <div class="live-icons" id="liveIcons"></div>
-    </div>
-  </div>
+   
   
 
   <!-- 三大特色 -->
@@ -140,30 +135,31 @@ The MoChii Shop</h1>
 
   /* 手机菜单 */
   $('#menuBtn').onclick = () => $('#menu').classList.toggle('open');
-    /* 直播光圈:正在直播的平台 */
-    const LIVE_META = {
+   /* 直播:Watch Live 按钮 → 平台图标胶囊 */
+  const LIVE_META = {
     shopee:   { name: 'Shopee',   img: '/assets/images/logo-shopee.png',   key: 'liveShopee', def: 'https://my.shp.ee/k4VoTpQc' },
     tiktok:   { name: 'TikTok',   img: '/assets/images/tiktok.png',        key: 'tiktok',     def: 'https://www.tiktok.com/@themochiishoptt' },
     facebook: { name: 'Facebook', img: '/assets/images/Facebook_logo.png', key: 'facebook',   def: 'https://www.facebook.com/profile.php?id=61583702212449' }
   };
+  const watchBox = $('#watchLive');
+  const watchOrig = watchBox.innerHTML;
   onValue(ref(db, 'homepage/config'), snap => {
     const c = snap.val() || {};
     const list = String(c.livePlatforms || '').split(',').filter(k => LIVE_META[k]);
-    const box = $('#liveIcons'); box.innerHTML = '';
+    if (!list.length) { watchBox.innerHTML = watchOrig; return; }
+
+    const pill = document.createElement('div'); pill.className = 'watch-live';
+    const lab = document.createElement('a'); lab.className = 'wl-label'; lab.href = '/live-stream/'; lab.textContent = 'LIVE NOW ON';
+    pill.appendChild(lab);
     list.forEach(k => {
       const m = LIVE_META[k];
-      const a = document.createElement('a'); a.className = 'live-ico'; a.target = '_blank'; a.rel = 'noopener';
+      const a = document.createElement('a'); a.className = 'wl-ico'; a.target = '_blank'; a.rel = 'noopener';
       a.href = /^https:\/\//i.test(c[m.key]) ? c[m.key] : m.def;
-      a.setAttribute('aria-label', 'Watch live on ' + m.name);
-      const rw = document.createElement('div'); rw.className = 'ring-wrap';
-            const lg = document.createElement('div'); lg.className = 'logo-c';
-      const im = document.createElement('img'); im.src = m.img; im.alt = m.name; lg.appendChild(im);
-      const tg = document.createElement('div'); tg.className = 'live-tag'; tg.textContent = 'LIVE';
-      rw.append(lg, tg);
-      const nm = document.createElement('div'); nm.className = 'live-name'; nm.textContent = m.name;
-      a.append(rw, nm); box.appendChild(a);
+      a.title = 'Watch live on ' + m.name; a.setAttribute('aria-label', 'Watch live on ' + m.name);
+      const im = document.createElement('img'); im.src = m.img; im.alt = m.name;
+      a.appendChild(im); pill.appendChild(a);
     });
-    $('#liveStrip').hidden = list.length === 0;
+    watchBox.replaceChildren(pill);
   });
 
   /* ① 首页文字、公告、链接 */
