@@ -325,8 +325,7 @@
     const m = $('#saveMsg'); m.className = 'msg'; m.style.color = '#b45309'; m.textContent = '● 有未保存的修改';
   }
   $('#editorView').addEventListener('input', markDirty);
-  $('#editorView').addEventListener('change', markDirty);
-  window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+  $('#editorView').addEventListener('change', e => { if (e.target.type !== 'file') markDirty(); });  window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
   /* ---------- 卡牌切换 ---------- */
   function openTab(name) {
@@ -451,24 +450,25 @@
   }
 
   /* 通用:添加图片 */
-  function bindAdd(addSel, fileSel, msgSel, arr, max, compressFn, rerender) {
+   function bindAdd(addSel, fileSel, msgSel, arr, max, compressFn, rerender) {
     $(addSel).onclick = () => $(fileSel).click();
     $(fileSel).onchange = async e => {
       const files = [...e.target.files]; e.target.value = '';
       const msg = $(msgSel); msg.className = 'msg'; msg.textContent = '';
+      if (!files.length) return;
+      let added = 0; const errs = [];
       for (const f of files) {
-        if (arr.length >= max) { msg.className = 'msg err'; msg.textContent = '最多只能 ' + max + ' 张,多余的已忽略。'; break; }
-        if (!f.type.startsWith('image/')) continue;
+        if (arr.length >= max) { errs.push('最多只能 ' + max + ' 张,多余的已忽略。'); break; }
         try {
           msg.textContent = '正在处理 ' + f.name + ' ...';
           arr.push({ src: await compressFn(f), caption: '' });
-          rerender(); msg.textContent = '';
-        } catch (err) { msg.className = 'msg err'; msg.textContent = f.name + ':' + err.message; }
+          added++; rerender();
+        } catch (err) { errs.push(f.name + ':' + err.message); }
       }
-      if (!msg.textContent) { msg.className = 'msg ok'; msg.textContent = '已添加,记得点下方"保存到网站"。'; }
+      if (errs.length) { msg.className = 'msg err'; msg.textContent = (added ? '已添加 ' + added + ' 张。' : '') + errs.join(' '); }
+      else { msg.className = 'msg ok'; msg.textContent = '已添加 ' + added + ' 张,记得点下方"保存到网站"。'; }
     };
   }
-
   /* ---------- 轮播图 ---------- */
   function renderSlides() { renderList('#slideList', '#slideInfo', '#addBtn', slides, MAX_SLIDES, renderSlides); }
   bindAdd('#addBtn', '#fileInput', '#slideMsg', slides, MAX_SLIDES, f => compressImage(f, 1800, 0.82, 1300000), renderSlides);
