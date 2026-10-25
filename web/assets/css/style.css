@@ -298,3 +298,6 @@ footer p:last-child { margin-bottom: 0; }
   .topbar { white-space: normal; text-align: center; padding: 8px 14px; font-size: .78rem; }
   .topbar span { display: inline; padding-left: 0; animation: none; }
 }
+/* ===== Figures Toy 顶部横幅 ===== */
+.fig-banner { max-width: 680px; margin: 0 auto 40px; }
+.fig-banner img { width: 100%; height: auto; display: block; border-radius: 6px; box-shadow: 0 18px 40px rgba(28,23,34,.18); border-bottom: 3px solid var(--gold); }
