@@ -107,7 +107,22 @@
       <textarea id="intro"></textarea>
     </div>
 
-                <div class="card">
+                    <div class="card">
+      <h2>About Us 页面 / 图片</h2>
+      <p class="hint">两张配图:一张放在 "Our Story" 旁边,一张放在 "Your Dream Accessories" 旁边。不上传则不显示。</p>
+      <div class="slide-item">
+        <img id="aboutPrev1" alt="" style="visibility:hidden">
+        <div class="mid"><div style="font-size:.85rem;font-weight:600">图片 1 · Our Story</div></div>
+        <div class="ops"><button class="btn dark small" id="aboutBtn1">上传 / 更换</button><button class="btn danger small" id="aboutDel1">删除</button></div>
+      </div>
+      <div class="slide-item">
+        <img id="aboutPrev2" alt="" style="visibility:hidden">
+        <div class="mid"><div style="font-size:.85rem;font-weight:600">图片 2 · Your Dream Accessories</div></div>
+        <div class="ops"><button class="btn dark small" id="aboutBtn2">上传 / 更换</button><button class="btn danger small" id="aboutDel2">删除</button></div>
+      </div>
+      <input type="file" id="aboutFile" accept="image/*" hidden>
+      <div class="msg" id="aboutMsg"></div>
+    </div><div class="card">
       <h2>Figures Toy 页面 / 图片</h2>
       <p class="hint">最多 12 张,点击可放大浏览。建议竖向或方形图片,上传时会自动压缩。</p>
       <label for="figuresIntro">页面说明(可留空)</label>
@@ -251,6 +266,9 @@
             const lp = String(cfg.livePlatforms || '').split(',');
       ['shopee','tiktok','facebook'].forEach(k => { $('#liveP_' + k).checked = lp.includes(k); });
       const list = Array.isArray(v.slides) ? v.slides : Object.values(v.slides || {});
+            const ab = v.about || {};
+      about = { story: typeof ab.story === 'string' ? ab.story : '', dream: typeof ab.dream === 'string' ? ab.dream : '' };
+      renderAbout();
             const fl = Array.isArray(v.figures) ? v.figures : Object.values(v.figures || {});
       figs = fl.filter(s => s && typeof s.src === 'string').map(s => ({ src: s.src, caption: s.caption || '' }));
       renderFigs();
@@ -332,7 +350,33 @@
       img.src = url;
     });
   }
+  /* ---------- About Us 图片 ---------- */
+  let about = { story: '', dream: '' };
+  let aboutTarget = null;
 
+  function renderAbout() {
+    [['story', 1], ['dream', 2]].forEach(([k, n]) => {
+      const im = $('#aboutPrev' + n);
+      if (about[k]) { im.src = about[k]; im.style.visibility = 'visible'; }
+      else { im.removeAttribute('src'); im.style.visibility = 'hidden'; }
+      $('#aboutDel' + n).disabled = !about[k];
+    });
+  }
+  [['story', 1], ['dream', 2]].forEach(([k, n]) => {
+    $('#aboutBtn' + n).onclick = () => { aboutTarget = k; $('#aboutFile').click(); };
+    $('#aboutDel' + n).onclick = () => { about[k] = ''; renderAbout(); };
+  });
+  $('#aboutFile').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = '';
+    const msg = $('#aboutMsg'); msg.className = 'msg'; msg.textContent = '';
+    if (!f || !aboutTarget) return;
+    try {
+      msg.textContent = '正在处理 ...';
+      about[aboutTarget] = await compressFig(f, 1200);
+      renderAbout();
+      msg.className = 'msg ok'; msg.textContent = '已更新,记得点下方"保存到首页"。';
+    } catch (err) { msg.className = 'msg err'; msg.textContent = err.message; }
+  };
   /* ---------- 保存 ---------- */
     /* ---------- Figures Toy 图片 ---------- */
   const MAX_FIGS = 12;
@@ -418,6 +462,8 @@
       await set(ref(db, 'homepage/config'), cfg);
       await set(ref(db, 'homepage/slides'), slides.length ? slides : null);
             await set(ref(db, 'homepage/figures'), figs.length ? figs : null);
+            const abOut = {}; if (about.story) abOut.story = about.story; if (about.dream) abOut.dream = about.dream;
+      await set(ref(db, 'homepage/about'), Object.keys(abOut).length ? abOut : null);
       showSave('✅ 已保存,首页已更新(' + new Date().toLocaleTimeString() + ')', true);
     } catch (e) {
       const denied = /permission/i.test(e.message);
