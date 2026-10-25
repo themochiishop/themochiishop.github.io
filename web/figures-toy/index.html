@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="light">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Browse The Mochii Shop figures and toys collection.">
+  <title>Figures Toy - The Mochii Shop</title>
+  <link rel="icon" href="/assets/images/logo.png">
+  <link rel="stylesheet" href="/assets/css/style.css?v=__V__">
+</head>
+<body>
+
+  <header>
+    <div class="nav">
+      <a class="brand" href="/">
+        <img src="/assets/images/logo.png" alt="" onerror="this.style.display='none'">
+        The Mochii Shop
+      </a>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+      <ul id="menu">
+        <li><a href="/">Home</a></li>
+        <li><a href="/live-stream/">Live Stream</a></li>
+        <li><a class="active" href="/figures-toy/">Figures Toy</a></li>
+        <li><a href="/about-us/">About Us</a></li>
+        <li><a href="/contact-us/">Contact Us</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <section class="page-hero">
+    <h1>Figures Toy</h1>
+    <p id="fIntro">Browse our figures and toys. Join our live streams for chances to win and exclusive random discounts!</p>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="fig-grid" id="figGrid"></div>
+      <div class="fig-empty" id="figEmpty" hidden>
+        <div class="ico">🧸</div>
+        <p>New figures are coming soon.<br>Follow our live streams to be the first to see them!</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <h2>Interested in Our Figures?</h2>
+    <p>Order on Shopee, or catch us live for exclusive random discounts.</p>
+    <div class="cta" style="justify-content:center;">
+      <a class="btn btn-primary" id="fShopee" href="https://s.shopee.com.my/5q5l5fQ8dM?share_channel_code=5" target="_blank" rel="noopener">Shop on Shopee</a>
+      <a class="btn btn-outline" href="/live-stream/">Watch Live</a>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong id="fShop">Mochii Shop (202503305565)</strong></p>
+    <p id="fAddr">67A, JALAN SS 2/6, TAMAN SRI SAUJANA, 81900 KOTA TINGGI, JOHOR, MALAYSIA</p>
+    <p>Customer Services: <span id="fPhone">+6017-7503767</span> (WhatsApp only) · Email: <a id="fMail" href="mailto:mail@themochiishop.com">mail@themochiishop.com</a></p>
+    <p style="margin-top:14px;">© 2026 themochiishop</p>
+  </footer>
+
+  <!-- 放大浏览 -->
+  <div class="lb" id="lb" aria-modal="true" role="dialog">
+    <button class="lb-btn lb-close" id="lbClose" aria-label="Close">✕</button>
+    <button class="lb-btn lb-prev" id="lbPrev" aria-label="Previous">‹</button>
+    <img id="lbImg" alt="">
+    <div class="lb-cap" id="lbCap"></div>
+    <button class="lb-btn lb-next" id="lbNext" aria-label="Next">›</button>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDJrsKAjWqz0AmjEtBzz4CeswiskdQqASw",
+    authDomain: "admin-status-c3bdb.firebaseapp.com",
+    databaseURL: "https://admin-status-c3bdb-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "admin-status-c3bdb",
+    storageBucket: "admin-status-c3bdb.firebasestorage.app",
+    messagingSenderId: "377694458194",
+    appId: "1:377694458194:web:71a78ba5dbed4df1b1aa8b"
+  });
+  const db = getDatabase(app);
+  const $ = s => document.querySelector(s);
+  const isHttps = u => typeof u === 'string' && /^https:\/\//i.test(u);
+  const isEmail = e => typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+  $('#menuBtn').onclick = () => $('#menu').classList.toggle('open');
+
+  /* 页面文字 + 页脚 */
+  onValue(ref(db, 'homepage/config'), snap => {
+    const c = snap.val() || {};
+    if (c.figuresIntro) $('#fIntro').textContent = c.figuresIntro;
+    if (isHttps(c.shopee)) $('#fShopee').href = c.shopee;
+    if (c.phone) $('#fPhone').textContent = c.phone;
+    if (isEmail(c.email)) { $('#fMail').textContent = c.email; $('#fMail').href = 'mailto:' + c.email; }
+    if (c.shopName) $('#fShop').textContent = c.shopName;
+    if (c.address) $('#fAddr').textContent = c.address.replace(/\s*\n\s*/g, ' ');
+  });
+
+  /* 放大浏览 */
+  let items = [], idx = 0;
+  const lb = $('#lb'), lbImg = $('#lbImg'), lbCap = $('#lbCap');
+  function show(i) {
+    idx = (i + items.length) % items.length;
+    lbImg.src = items[idx].src; lbImg.alt = items[idx].caption || 'Figures Toy';
+    lbCap.textContent = items[idx].caption || '';
+    $('#lbPrev').hidden = $('#lbNext').hidden = items.length < 2;
+    lb.classList.add('open'); document.body.style.overflow = 'hidden';
+  }
+  function hide() { lb.classList.remove('open'); document.body.style.overflow = ''; }
+  $('#lbClose').onclick = hide;
+  $('#lbPrev').onclick = e => { e.stopPropagation(); show(idx - 1); };
+  $('#lbNext').onclick = e => { e.stopPropagation(); show(idx + 1); };
+  lb.onclick = e => { if (e.target === lb) hide(); };
+  document.addEventListener('keydown', e => {
+    if (!lb.classList.contains('open')) return;
+    if (e.key === 'Escape') hide();
+    if (e.key === 'ArrowLeft') show(idx - 1);
+    if (e.key === 'ArrowRight') show(idx + 1);
+  });
+
+  /* 图片墙 */
+  onValue(ref(db, 'homepage/figures'), snap => {
+    const v = snap.val();
+    items = (Array.isArray(v) ? v : Object.values(v || {}))
+      .filter(s => s && typeof s.src === 'string' && /^(data:image\/|https:\/\/)/.test(s.src));
+    const grid = $('#figGrid'); grid.innerHTML = '';
+    items.forEach((s, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'fig-item';
+      b.setAttribute('aria-label', 'View ' + (s.caption || 'image ' + (i + 1)));
+      const wrap = document.createElement('div'); wrap.className = 'fig-img';
+      const im = document.createElement('img'); im.src = s.src; im.alt = s.caption || 'Figures Toy'; im.loading = 'lazy';
+      wrap.appendChild(im); b.appendChild(wrap);
+      if (s.caption) { const c = document.createElement('div'); c.className = 'fig-cap'; c.textContent = s.caption; b.appendChild(c); }
+      b.onclick = () => show(i);
+      grid.appendChild(b);
+    });
+    $('#figEmpty').hidden = items.length > 0;
+  });
+</script>
+</body>
+</html>
