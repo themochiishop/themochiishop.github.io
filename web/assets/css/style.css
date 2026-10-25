@@ -339,3 +339,9 @@ footer a { color: var(--gold); }
 @media (max-width: 600px) {
   footer { text-align: left; padding-left: 20px; padding-right: 20px; }
 }
+/* ===== 手机端页脚:地址两行、Customer Services / Email 两行的间距 ===== */
+@media (max-width: 600px) {
+  footer p,
+  footer .faddr,
+  footer #fAddr { line-height: 1.35; }
+}
