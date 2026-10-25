@@ -6,7 +6,7 @@
   <meta name="description" content="Contact The Mochii Shop - WhatsApp, email, address and social channels.">
   <title>Contact Us - The Mochii Shop</title>
   <link rel="icon" href="/assets/images/logo.png">
-  <link rel="stylesheet" href="/assets/css/style.css?v=2">
+  <link rel="stylesheet" href="/assets/css/style.css?v=3">
 </head>
 <body>
 
@@ -29,7 +29,7 @@
 
   <section class="page-hero">
     <h1>Contact Us</h1>
-    <p>We'd love to hear from you. Reach us through any of the channels below.</p>
+    <p id="cIntro">We'd love to hear from you. Reach us through any of the channels below.</p>
   </section>
 
   <section class="section">
@@ -38,23 +38,25 @@
         <div class="contact-card">
           <div class="ico">💬</div>
           <h3>WhatsApp</h3>
-          <p>Customer Services<br><strong>+6017-7503767</strong><br>(WhatsApp only)</p>
-          <a class="btn btn-wa" href="https://wa.me/60177503767" target="_blank" rel="noopener">Chat on WhatsApp</a>
+          <p>Customer Services<br><strong id="cPhone">+6017-7503767</strong><br>(WhatsApp only)</p>
+          <a class="btn btn-wa" id="cWa" href="https://wa.me/60177503767" target="_blank" rel="noopener">Chat on WhatsApp</a>
         </div>
         <div class="contact-card">
           <div class="ico">✉️</div>
           <h3>Email</h3>
-          <p><strong>mail@themochiishop.com</strong></p>
-          <a class="btn btn-dark" href="mailto:mail@themochiishop.com">Send Email</a>
+          <p><strong id="cEmail">mail@themochiishop.com</strong></p>
+          <a class="btn btn-dark" id="cMail" href="mailto:mail@themochiishop.com">Send Email</a>
         </div>
         <div class="contact-card">
           <div class="ico">📍</div>
           <h3>Address</h3>
-          <p>Mochii Shop (202503305565)<br>67A, JALAN SS 2/6, TAMAN SRI SAUJANA,<br>81900 KOTA TINGGI, JOHOR, MALAYSIA</p>
-          <a class="btn btn-dark" href="https://www.google.com/maps/search/?api=1&query=67A+Jalan+SS+2/6+Taman+Sri+Saujana+81900+Kota+Tinggi+Johor" target="_blank" rel="noopener">View on Map</a>
+          <p id="cAddress" style="white-space:pre-line">Mochii Shop (202503305565)
+67A, JALAN SS 2/6, TAMAN SRI SAUJANA,
+81900 KOTA TINGGI, JOHOR, MALAYSIA</p>
+          <a class="btn btn-dark" id="cMap" href="https://www.google.com/maps/search/?api=1&query=67A+Jalan+SS+2%2F6+Taman+Sri+Saujana+81900+Kota+Tinggi+Johor" target="_blank" rel="noopener">View on Map</a>
         </div>
       </div>
-      <p class="note">For orders and after-sales enquiries, WhatsApp is the fastest way to reach us.</p>
+      <p class="note" id="cNote">For orders and after-sales enquiries, WhatsApp is the fastest way to reach us.</p>
     </div>
   </section>
 
@@ -62,24 +64,75 @@
     <h2>Follow Us</h2>
     <p>Stay tuned for live streams and new arrivals.</p>
     <div class="social">
-      <a href="https://www.facebook.com/profile.php?id=61583702212449" target="_blank" rel="noopener">Facebook</a>
-      <a href="https://www.instagram.com/themochiishop_ig/" target="_blank" rel="noopener">Instagram</a>
-      <a href="https://s.shopee.com.my/5q5l5fQ8dM?share_channel_code=5" target="_blank" rel="noopener">Shopee</a>
-      <a href="https://www.tiktok.com/@themochiishoptt" target="_blank" rel="noopener">TikTok</a>
+      <a data-link="facebook" href="https://www.facebook.com/profile.php?id=61583702212449" target="_blank" rel="noopener">Facebook</a>
+      <a data-link="instagram" href="https://www.instagram.com/themochiishop_ig/" target="_blank" rel="noopener">Instagram</a>
+      <a data-link="shopee" href="https://s.shopee.com.my/5q5l5fQ8dM?share_channel_code=5" target="_blank" rel="noopener">Shopee</a>
+      <a data-link="tiktok" href="https://www.tiktok.com/@themochiishoptt" target="_blank" rel="noopener">TikTok</a>
     </div>
   </section>
 
   <footer>
-    <p><strong>Mochii Shop (202503305565)</strong></p>
-    <p>67A, JALAN SS 2/6, TAMAN SRI SAUJANA, 81900 KOTA TINGGI, JOHOR, MALAYSIA</p>
-    <p>Customer Services: +6017-7503767 (WhatsApp only) · Email: <a href="mailto:mail@themochiishop.com">mail@themochiishop.com</a></p>
+    <p><strong id="fShop">Mochii Shop (202503305565)</strong></p>
+    <p id="fAddr">67A, JALAN SS 2/6, TAMAN SRI SAUJANA, 81900 KOTA TINGGI, JOHOR, MALAYSIA</p>
+    <p>Customer Services: <span id="fPhone">+6017-7503767</span> (WhatsApp only) · Email: <a id="fMail" href="mailto:mail@themochiishop.com">mail@themochiishop.com</a></p>
     <p style="margin-top:14px;">© 2026 themochiishop</p>
   </footer>
 
-<script>
-  document.getElementById('menuBtn').onclick = function () {
-    document.getElementById('menu').classList.toggle('open');
-  };
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDJrsKAjWqz0AmjEtBzz4CeswiskdQqASw",
+    authDomain: "admin-status-c3bdb.firebaseapp.com",
+    databaseURL: "https://admin-status-c3bdb-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "admin-status-c3bdb",
+    storageBucket: "admin-status-c3bdb.firebasestorage.app",
+    messagingSenderId: "377694458194",
+    appId: "1:377694458194:web:71a78ba5dbed4df1b1aa8b"
+  });
+  const db = getDatabase(app);
+  const $ = s => document.querySelector(s);
+
+  $('#menuBtn').onclick = () => $('#menu').classList.toggle('open');
+
+  const isHttps = u => typeof u === 'string' && /^https:\/\//i.test(u);
+  const isEmail = e => typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+  onValue(ref(db, 'homepage/config'), snap => {
+    const c = snap.val() || {};
+
+    if (c.contactIntro) $('#cIntro').textContent = c.contactIntro;
+    if (c.contactNote) $('#cNote').textContent = c.contactNote;
+
+    if (c.phone) { $('#cPhone').textContent = c.phone; $('#fPhone').textContent = c.phone; }
+
+    if (c.waNumber) {
+      const digits = String(c.waNumber).replace(/\D/g, '');
+      if (digits) $('#cWa').href = 'https://wa.me/' + digits;
+    }
+
+    if (isEmail(c.email)) {
+      $('#cEmail').textContent = c.email; $('#fMail').textContent = c.email;
+      $('#cMail').href = 'mailto:' + c.email; $('#fMail').href = 'mailto:' + c.email;
+    }
+
+    if (c.shopName) $('#fShop').textContent = c.shopName;
+
+    if (c.address || c.shopName) {
+      const shop = c.shopName || $('#fShop').textContent;
+      const addr = c.address || '';
+      $('#cAddress').textContent = addr ? shop + '\n' + addr : shop;
+      if (addr) $('#fAddr').textContent = addr.replace(/\s*\n\s*/g, ' ');
+    }
+
+    if (isHttps(c.mapLink)) $('#cMap').href = c.mapLink;
+    else if (c.address) $('#cMap').href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(c.address.replace(/\s*\n\s*/g, ' '));
+
+    ['facebook','instagram','shopee','tiktok'].forEach(k => {
+      if (isHttps(c[k])) document.querySelectorAll('[data-link="' + k + '"]').forEach(a => a.href = c[k]);
+    });
+  });
 </script>
 </body>
 </html>
