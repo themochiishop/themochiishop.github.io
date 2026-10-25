@@ -450,7 +450,7 @@
   }
 
   /* 通用:添加图片 */
-   function bindAdd(addSel, fileSel, msgSel, arr, max, compressFn, rerender) {
+    function bindAdd(addSel, fileSel, msgSel, getArr, max, compressFn, rerender) {
     $(addSel).onclick = () => $(fileSel).click();
     $(fileSel).onchange = async e => {
       const files = [...e.target.files]; e.target.value = '';
@@ -458,10 +458,11 @@
       if (!files.length) return;
       let added = 0; const errs = [];
       for (const f of files) {
-        if (arr.length >= max) { errs.push('最多只能 ' + max + ' 张,多余的已忽略。'); break; }
+        if (getArr().length >= max) { errs.push('最多只能 ' + max + ' 张,多余的已忽略。'); break; }
         try {
           msg.textContent = '正在处理 ' + f.name + ' ...';
-          arr.push({ src: await compressFn(f), caption: '' });
+          const src = await compressFn(f);
+          getArr().push({ src, caption: '' });
           added++; rerender();
         } catch (err) { errs.push(f.name + ':' + err.message); }
       }
@@ -471,11 +472,11 @@
   }
   /* ---------- 轮播图 ---------- */
   function renderSlides() { renderList('#slideList', '#slideInfo', '#addBtn', slides, MAX_SLIDES, renderSlides); }
-  bindAdd('#addBtn', '#fileInput', '#slideMsg', slides, MAX_SLIDES, f => compressImage(f, 1800, 0.82, 1300000), renderSlides);
+    bindAdd('#addBtn', '#fileInput', '#slideMsg', () => slides, MAX_SLIDES, f => compressImage(f, 1800, 0.82, 1300000), renderSlides);
 
   /* ---------- Figures Toy ---------- */
   function renderFigs() { renderList('#figList', '#figInfo', '#figAddBtn', figs, MAX_FIGS, renderFigs); }
-  bindAdd('#figAddBtn', '#figInput', '#figMsg', figs, MAX_FIGS, f => compressImage(f, 1000, 0.82, 270000), renderFigs);
+    bindAdd('#figAddBtn', '#figInput', '#figMsg', () => figs, MAX_FIGS, f => compressImage(f, 1000, 0.82, 270000), renderFigs);
 
   /* ---------- About Us ---------- */
   let aboutTarget = null;
