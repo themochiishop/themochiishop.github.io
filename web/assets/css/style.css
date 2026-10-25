@@ -192,3 +192,20 @@ footer a { color: var(--gold); }
 .schedule .when { font-size: 1.05rem; color: var(--text); white-space: pre-line; }
 .schedule .perks { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
 .schedule .perks span { background: var(--cream); border: 1px solid var(--line); padding: 8px 16px; border-radius: 999px; font-size: .88rem; color: var(--ink); }
+/* ===== 直播光圈 ===== */
+.live-strip { background: #fff; border-bottom: 1px solid var(--line); padding: 16px 20px 20px; }
+.live-strip-inner { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 28px; flex-wrap: wrap; }
+.live-strip-label { font-weight: 800; letter-spacing: 1.5px; color: #e11d48; font-size: .85rem; display: flex; align-items: center; gap: 8px; }
+.live-strip-label::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #e11d48; animation: livepulse 1.4s infinite; }
+.live-icons { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
+.live-ico { display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--ink); }
+.live-ico .ring-wrap { position: relative; }
+.live-ico .logo-c { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.4rem; font-weight: 800; outline: 3px solid #e11d48; outline-offset: 4px; animation: livepulse 1.4s infinite; }
+.live-ico .live-tag { position: absolute; left: 50%; bottom: -12px; transform: translateX(-50%); background: #e11d48; color: #fff; font-size: .6rem; font-weight: 800; letter-spacing: 1px; padding: 2px 8px; border-radius: 999px; border: 2px solid #fff; white-space: nowrap; }
+.live-ico .live-name { font-size: .78rem; font-weight: 600; }
+.live-ico:hover .logo-c { filter: brightness(1.12); }
+.c-shopee { background: #ee4d2d; } .c-tiktok { background: #111; } .c-facebook { background: #1877f2; }
+
+/* Live Stream 页:正在直播的平台卡片 */
+.platform.is-live .logo { outline: 3px solid #e11d48; outline-offset: 4px; animation: livepulse 1.4s infinite; }
+.platform .live-badge { background: #e11d48; color: #fff; font-size: .7rem; font-weight: 800; letter-spacing: 1px; padding: 3px 12px; border-radius: 999px; margin-bottom: 10px; }
