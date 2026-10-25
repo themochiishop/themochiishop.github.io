@@ -272,7 +272,18 @@ The MoChii Shop</h1>
           '<a class="lc-more" href="https://themochiishop.github.io/admin/my-admin-status/feed.html" target="_blank" rel="noopener">More Feed ➔</a>' +
         '</div>' +
       '</div>';
-
+    const sl = box.querySelector('.lc-slider');
+    if (sl && imgs.length > 1) {
+      const fit = () => {
+        const i = Math.round(sl.scrollLeft / (sl.clientWidth || 1));
+        const fr = sl.children[i];
+        if (fr) sl.style.height = fr.offsetHeight + 'px';
+      };
+      sl.addEventListener('scroll', fit, { passive: true });
+      sl.querySelectorAll('img').forEach(im => im.addEventListener('load', fit));
+      new ResizeObserver(fit).observe(sl);
+      fit();
+    }
     $('#likeBtn').onclick = () => {
       const key = 'liked_' + m.id;
       try { if (localStorage.getItem(key)) return; } catch (e) {}
