@@ -280,3 +280,7 @@ footer a { color: var(--gold); }
 .wl-ico:hover { transform: scale(1.1); }
 .wl-ico img { width: 100%; height: 100%; object-fit: cover; display: block; }
 @media (max-width: 480px) { .watch-live { gap: 8px; padding-left: 14px; } .wl-label { font-size: .75rem; letter-spacing: .8px; } .wl-ico { width: 34px; height: 34px; margin: 0 3px; } }
+/* ===== 页脚贴底 ===== */
+html { height: 100%; }
+body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+footer { margin-top: auto; }
