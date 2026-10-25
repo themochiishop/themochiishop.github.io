@@ -253,3 +253,11 @@ footer a { color: var(--gold); }
 .lb-prev { left: 18px; top: 50%; transform: translateY(-50%); }
 .lb-next { right: 18px; top: 50%; transform: translateY(-50%); }
 @media (max-width: 600px) { .fig-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } .lb-prev { left: 8px; } .lb-next { right: 8px; } }
+/* ===== Figures Toy 优化:居中 + logo 完整显示 ===== */
+.fig-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+.fig-item { width: 260px; }
+.fig-item.contain img { object-fit: contain; background: #fff; padding: 16px; aspect-ratio: 1 / 1; }
+@media (max-width: 600px) {
+  .fig-grid { gap: 12px; }
+  .fig-item { width: calc(50% - 6px); }
+}
