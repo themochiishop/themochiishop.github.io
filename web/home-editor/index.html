@@ -179,6 +179,17 @@
     <!-- Figures Toy -->
     <div class="panel" id="panel-figures">
       <div class="panel-head"><h2>🧸 Figures Toy</h2><a class="btn ghost small" href="/figures-toy/" target="_blank" rel="noopener">查看页面 ↗</a></div>
+            <div class="card">
+        <h3>顶部横幅图 Banner</h3>
+        <p class="hint">显示在图片墙上方的大图,适合放品牌介绍图。不上传则不显示。</p>
+        <div class="slide-item">
+          <img id="bannerPrev" alt="" style="visibility:hidden;width:130px;height:130px;object-fit:contain">
+          <div class="mid"><div style="font-size:.85rem;font-weight:600">横幅图</div></div>
+          <div class="ops"><button class="btn dark small" id="bannerBtn">上传 / 更换</button><button class="btn danger small" id="bannerDel">删除</button></div>
+        </div>
+        <input type="file" id="bannerFile" accept="image/*" hidden>
+        <div class="msg" id="bannerMsg"></div>
+      </div>
       <div class="card">
         <p class="hint">最多 12 张,点击可放大浏览。上传时会自动压缩。</p>
         <label for="figuresIntro" style="margin-top:0">页面说明(可留空)</label>
@@ -372,6 +383,8 @@
       about = { story: typeof ab.story === 'string' ? ab.story : '', dream: typeof ab.dream === 'string' ? ab.dream : '' };
       renderAbout();
 
+            banner = typeof v.figuresBanner === 'string' ? v.figuresBanner : '';
+      renderBanner();
       const fl = Array.isArray(v.figures) ? v.figures : Object.values(v.figures || {});
       figs = fl.filter(s => s && typeof s.src === 'string').map(s => ({ src: s.src, caption: s.caption || '' }));
       renderFigs();
@@ -490,7 +503,28 @@
       msg.className = 'msg ok'; msg.textContent = '已更新,记得点下方"保存到网站"。';
     } catch (err) { msg.className = 'msg err'; msg.textContent = err.message; }
   };
-
+  /* ---------- Figures Toy 横幅 ---------- */
+  let banner = '';
+  function renderBanner() {
+    const im = $('#bannerPrev');
+    if (banner) { im.src = banner; im.style.visibility = 'visible'; }
+    else { im.removeAttribute('src'); im.style.visibility = 'hidden'; }
+    $('#bannerDel').disabled = !banner;
+    markDirty();
+  }
+  $('#bannerBtn').onclick = () => $('#bannerFile').click();
+  $('#bannerDel').onclick = () => { banner = ''; renderBanner(); };
+  $('#bannerFile').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = '';
+    const msg = $('#bannerMsg'); msg.className = 'msg'; msg.textContent = '';
+    if (!f) return;
+    try {
+      msg.textContent = '正在处理 ...';
+      banner = await compressImage(f, 1600, 0.9, 700000);
+      renderBanner();
+      msg.className = 'msg ok'; msg.textContent = '已更新,记得点下方"保存到网站"。';
+    } catch (err) { msg.className = 'msg err'; msg.textContent = err.message; }
+  };
   /* ---------- 保存 ---------- */
   $('#saveBtn').onclick = async () => {
     const cfg = {};
@@ -515,6 +549,7 @@
       await set(ref(db, 'homepage/config'), cfg);
       await set(ref(db, 'homepage/slides'), slides.length ? slides : null);
       await set(ref(db, 'homepage/figures'), figs.length ? figs : null);
+            await set(ref(db, 'homepage/figuresBanner'), banner || null);
       const abOut = {}; if (about.story) abOut.story = about.story; if (about.dream) abOut.dream = about.dream;
       await set(ref(db, 'homepage/about'), Object.keys(abOut).length ? abOut : null);
       dirty = false;
