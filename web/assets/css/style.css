@@ -329,3 +329,30 @@ footer p:last-child { margin-bottom: 0; }
 .lc-avatar { width: 30px; height: 30px; }
 .lc-body { padding: 8px 12px; font-size: .85rem; }
 .lc-footer { padding: 8px 12px; }
+/* ===== 点赞跳动效果 ===== */
+.lc-like { position: relative; overflow: visible; transition: transform .15s; }
+.lc-like:active { transform: scale(.9); }
+.lc-like .lc-heart { display: inline-block; }
+.lc-like.pop .lc-heart { animation: heartpop .55s cubic-bezier(.2, 1.6, .4, 1); }
+.lc-like.pop .lc-count { display: inline-block; animation: countbump .4s ease; }
+@keyframes heartpop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.8) rotate(-12deg); }
+  60% { transform: scale(.9) rotate(6deg); }
+  100% { transform: scale(1); }
+}
+@keyframes countbump {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-5px) scale(1.25); }
+  100% { transform: translateY(0) scale(1); }
+}
+.fly-heart { position: absolute; left: 18px; top: 4px; pointer-events: none; opacity: 0; animation: heartfly 1s ease-out forwards; }
+@keyframes heartfly {
+  0% { opacity: 0; transform: translate(0, 0) scale(.5) rotate(0); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), -70px) scale(1.1) rotate(var(--dr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lc-like.pop .lc-heart, .lc-like.pop .lc-count { animation: none; }
+  .fly-heart { display: none; }
+}
