@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="light">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Where every handmade bracelet and dainty accessory adds a touch of magic, charm, and sweetness to your everyday life.">
+  <title>About Us - The Mochii Shop</title>
+  <link rel="icon" href="/assets/images/logo.png">
+  <link rel="stylesheet" href="/assets/css/style.css?v=__V__">
+</head>
+<body>
+
+  <header>
+    <div class="nav">
+      <a class="brand" href="/">
+        <img src="/assets/images/logo.png" alt="" onerror="this.style.display='none'">
+        The Mochii Shop
+      </a>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+      <ul id="menu">
+        <li><a href="/">Home</a></li>
+        <li><a href="/live-stream/">Live Stream</a></li>
+        <li><a href="/figures-toy/">Figures Toy</a></li>
+        <li><a class="active" href="/about-us/">About Us</a></li>
+        <li><a href="/contact-us/">Contact Us</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <section class="page-hero">
+    <h1>About Us</h1>
+    <p>Where every handmade bracelet and dainty accessory adds a touch of magic, charm, and sweetness to your everyday life. ✨</p>
+  </section>
+
+  <!-- Our Story -->
+  <section class="section">
+    <div class="container split solo" id="split1">
+      <div class="txt">
+        <h2>Our Story</h2>
+        <p>The Mochii Shop was born out of a deep passion for delicate aesthetics and wearable art. We believe that a piece of jewelry is never just an accessory—it is a gentle extension of your personality, mood, and style. Just like soft, sweet Mochi, every piece we create is designed to bring warmth, comfort, and a little spark of joy to your day.</p>
+      </div>
+      <div class="media" id="media1" hidden><img class="about-img" id="img1" alt="The Mochii Shop handmade bracelets"></div>
+    </div>
+  </section>
+
+  <!-- Crafted with Love & Detail -->
+  <section class="section" style="background:#fff;">
+    <div class="container">
+      <div class="section-head">
+        <h2>💝 Crafted with Love &amp; Detail 💝</h2>
+        <p>From selecting the beads to the final weave, we are dedicated to exceptional quality and heartfelt craftsmanship:</p>
+      </div>
+      <div class="features">
+        <div class="feature">
+          <div class="ico">💎</div>
+          <h3>Curated Materials</h3>
+          <p>We carefully select high-quality glass beads, charming pendants, and durable cords to ensure a comfortable fit and lasting beauty.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">🎀</div>
+          <h3>Unique Designs</h3>
+          <p>Blending retro aesthetics, sweet everyday styles, and versatile elegance, our bracelets effortlessly transition from casual daily wear to special dates.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">🤲</div>
+          <h3>Handmade Touch</h3>
+          <p>Each bracelet carries a personal touch and a meticulous dedication to artistry, giving you a unique piece as individual as you are.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Your Dream Accessories -->
+  <section class="section">
+    <div class="container split rev solo" id="split2">
+      <div class="media" id="media2" hidden><img class="about-img" id="img2" alt="Your dream accessories"></div>
+      <div class="txt">
+        <h2>✨ Your Dream Accessories ✨</h2>
+        <p>We invite you to explore our collections and discover how handmade bracelets and dainty details can bring a touch of sweetness and sophistication to your look. Whether you're looking for everyday essentials or a charming gift for special moments, THE MOCHIISHOP is here to provide you with the perfect blend of elegance and heart.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Our Mission -->
+  <section class="band">
+    <h2>Our Mission</h2>
+    <p class="mission">At The Mochiishop, our goal is to share our love for refined, beautiful details through every piece we make. We want every customer to find a little piece of confidence, romance, and self-expression when they shop with us.</p>
+    <p class="tagline">✨ The Mochii Shop — Wear your own handmade sweetness, and carry a little magic wherever you go.</p>
+    <div class="cta" style="justify-content:center;">
+      <a class="btn btn-primary" id="aShopee" href="https://s.shopee.com.my/5q5l5fQ8dM?share_channel_code=5" target="_blank" rel="noopener">Shop on Shopee</a>
+      <a class="btn btn-outline" href="/live-stream/">Watch Live</a>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong id="fShop">Mochii Shop (202503305565)</strong></p>
+    <p id="fAddr">67A, JALAN SS 2/6, TAMAN SRI SAUJANA, 81900 KOTA TINGGI, JOHOR, MALAYSIA</p>
+    <p>Customer Services: <span id="fPhone">+6017-7503767</span> (WhatsApp only) · Email: <a id="fMail" href="mailto:mail@themochiishop.com">mail@themochiishop.com</a></p>
+    <p style="margin-top:14px;">© 2026 themochiishop</p>
+  </footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDJrsKAjWqz0AmjEtBzz4CeswiskdQqASw",
+    authDomain: "admin-status-c3bdb.firebaseapp.com",
+    databaseURL: "https://admin-status-c3bdb-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "admin-status-c3bdb",
+    storageBucket: "admin-status-c3bdb.firebasestorage.app",
+    messagingSenderId: "377694458194",
+    appId: "1:377694458194:web:71a78ba5dbed4df1b1aa8b"
+  });
+  const db = getDatabase(app);
+  const $ = s => document.querySelector(s);
+  const isHttps = u => typeof u === 'string' && /^https:\/\//i.test(u);
+  const isEmail = e => typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  const isImg = s => typeof s === 'string' && /^(data:image\/|https:\/\/)/.test(s);
+
+  $('#menuBtn').onclick = () => $('#menu').classList.toggle('open');
+
+  onValue(ref(db, 'homepage/config'), snap => {
+    const c = snap.val() || {};
+    if (isHttps(c.shopee)) $('#aShopee').href = c.shopee;
+    if (c.phone) $('#fPhone').textContent = c.phone;
+    if (isEmail(c.email)) { $('#fMail').textContent = c.email; $('#fMail').href = 'mailto:' + c.email; }
+    if (c.shopName) $('#fShop').textContent = c.shopName;
+    if (c.address) $('#fAddr').textContent = c.address.replace(/\s*\n\s*/g, ' ');
+  });
+
+  onValue(ref(db, 'homepage/about'), snap => {
+    const a = snap.val() || {};
+    [['story', 1], ['dream', 2]].forEach(([k, n]) => {
+      const has = isImg(a[k]);
+      if (has) $('#img' + n).src = a[k];
+      $('#media' + n).hidden = !has;
+      $('#split' + n).classList.toggle('solo', !has);
+    });
+  });
+</script>
+</body>
+</html>
