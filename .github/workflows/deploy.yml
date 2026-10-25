@@ -15,6 +15,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Stamp CSS version
+        run: |
+          V="${GITHUB_SHA::7}"
+          grep -rl "__V__" web --include=*.html | xargs -r sed -i "s/__V__/$V/g"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
