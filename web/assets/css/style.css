@@ -214,3 +214,20 @@ footer a { color: var(--gold); }
 /* Live Stream 页:正在直播的平台卡片 */
 .platform.is-live .logo { outline: 3px solid #e11d48; outline-offset: 4px; animation: livepulse 1.4s infinite; }
 .platform .live-badge { background: #e11d48; color: #fff; font-size: .7rem; font-weight: 800; letter-spacing: 1px; padding: 3px 12px; border-radius: 999px; margin-bottom: 10px; }
+/* ===== 直播条:手机优化 ===== */
+:root { color-scheme: light; }
+
+@keyframes livepulse-sm { 0% { box-shadow: 0 0 0 0 rgba(225,29,72,.55); } 70% { box-shadow: 0 0 0 6px rgba(225,29,72,0); } 100% { box-shadow: 0 0 0 0 rgba(225,29,72,0); } }
+.live-strip-label::before { animation: livepulse-sm 1.4s infinite; }
+
+@media (max-width: 600px) {
+  .live-strip { padding: 14px 16px 24px; }
+  .live-strip-inner { flex-direction: column; gap: 16px; }
+  .live-strip-label { font-size: .78rem; letter-spacing: 1.2px; }
+  .live-strip-label::before { width: 8px; height: 8px; }
+  .live-icons { gap: 24px; }
+  .live-ico { gap: 15px; }
+  .live-ico .logo-c { width: 46px; height: 46px; outline-width: 2px; outline-offset: 3px; }
+  .live-ico .live-tag { font-size: .55rem; padding: 1px 7px; bottom: -11px; }
+  .live-ico .live-name { font-size: .72rem; }
+}
