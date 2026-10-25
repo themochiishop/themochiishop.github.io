@@ -177,8 +177,9 @@
     track.innerHTML = ''; dots.innerHTML = '';
     list.forEach((s, i) => {
       const d = document.createElement('div'); d.className = 'slide';
-      const img = document.createElement('img'); img.src = s.src; img.alt = s.caption || 'The Mochii Shop';
-      d.appendChild(img);
+            const bg = document.createElement('img'); bg.src = s.src; bg.className = 'bg'; bg.alt = ''; bg.setAttribute('aria-hidden', 'true');
+      const fg = document.createElement('img'); fg.src = s.src; fg.className = 'fg'; fg.alt = s.caption || 'The Mochii Shop';
+      d.append(bg, fg);
       if (s.caption) { const c = document.createElement('div'); c.className = 'slide-caption'; c.textContent = s.caption; d.appendChild(c); }
       track.appendChild(d);
       const b = document.createElement('button'); b.setAttribute('aria-label', 'Slide ' + (i + 1)); b.onclick = () => go(i); dots.appendChild(b);
