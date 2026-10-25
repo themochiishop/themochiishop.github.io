@@ -452,3 +452,10 @@ footer p:last-child { margin-bottom: 0; }
 .updates-bg > .container { position: relative; z-index: 1; }
 .updates-bg .txt p { color: #6b5d70; }
 .updates-bg .latest-card { box-shadow: 0 20px 44px rgba(224,98,138,.2); border-color: #f1d6df; }
+/* ===== Latest Updates 区块:深色版 ===== */
+.updates-bg { background: linear-gradient(135deg, #1c1722 0%, #2a2331 55%, #3a2335 100%); border-top: 2px solid var(--gold); border-bottom: 2px solid var(--gold); }
+.updates-bg::before { background-image: radial-gradient(rgba(201,164,92,.22) 1.5px, transparent 1.5px); }
+.updates-bg::after { background: radial-gradient(circle, rgba(224,98,138,.32), rgba(224,98,138,0) 70%); }
+.updates-bg .txt h2 { color: #fff; }
+.updates-bg .txt p { color: #d6cddb; }
+.updates-bg .latest-card { border-color: rgba(201,164,92,.45); box-shadow: 0 22px 50px rgba(0,0,0,.45); }
