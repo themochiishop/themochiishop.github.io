@@ -110,11 +110,12 @@
             <div class="card">
       <h2>Live Stream 页面 / 直播</h2>
       <p class="hint">开播时把状态改成"正在直播",页面会显示闪烁的红色 LIVE NOW。TikTok 和 Facebook 的直播链接用下面的"社交链接"。</p>
-      <label for="liveStatus">直播状态</label>
-      <select id="liveStatus" style="width:100%;padding:10px 12px;border:1px solid #d8d0db;border-radius:6px;font:inherit;background:#fff">
-        <option value="off">未直播(显示 Currently offline)</option>
-        <option value="on">🔴 正在直播(显示 LIVE NOW)</option>
-      </select>
+            <label>正在直播的平台(可多选;全部不勾 = 未直播)</label>
+      <div class="row" style="gap:22px;margin-top:6px">
+        <label style="margin:0;font-weight:500;cursor:pointer"><input type="checkbox" id="liveP_shopee"> Shopee</label>
+        <label style="margin:0;font-weight:500;cursor:pointer"><input type="checkbox" id="liveP_tiktok"> TikTok</label>
+        <label style="margin:0;font-weight:500;cursor:pointer"><input type="checkbox" id="liveP_facebook"> Facebook</label>
+      </div>
       <label for="liveIntro">页面说明</label>
       <textarea id="liveIntro" style="min-height:70px"></textarea>
       <label for="liveSchedule">直播时间 / 下一场预告(按 Enter 换行)</label>
@@ -177,7 +178,7 @@
   const db = getDatabase(app);
   const $ = s => document.querySelector(s);
 
-      const FIELDS = ['announcement','heroTitle','heroSubtitle','intro','facebook','instagram','shopee','tiktok','whatsapp','contactIntro','phone','waNumber','email','shopName','address','mapLink','contactNote','liveStatus','liveIntro','liveSchedule','liveShopee','liveNote'];
+      const FIELDS = ['announcement','heroTitle','heroSubtitle','intro','facebook','instagram','shopee','tiktok','whatsapp','contactIntro','phone','waNumber','email','shopName','address','mapLink','contactNote','liveIntro','liveSchedule','liveShopee','liveNote'];
   const LINK_FIELDS = ['facebook','instagram','shopee','tiktok','whatsapp','mapLink','liveShopee'];
   const DEFAULTS = {
     announcement: '🤹 Every day, we host live-streamed games at varying times, giving customers the chance to win our products and enjoy exclusive random discounts!',
@@ -233,6 +234,8 @@
       const v = snap.val() || {};
       const cfg = v.config || {};
       FIELDS.forEach(f => { $('#' + f).value = (cfg[f] !== undefined) ? cfg[f] : DEFAULTS[f]; });
+            const lp = String(cfg.livePlatforms || '').split(',');
+      ['shopee','tiktok','facebook'].forEach(k => { $('#liveP_' + k).checked = lp.includes(k); });
       const list = Array.isArray(v.slides) ? v.slides : Object.values(v.slides || {});
       slides = list.filter(s => s && typeof s.src === 'string').map(s => ({ src: s.src, caption: s.caption || '' }));
       renderSlides();
@@ -324,6 +327,9 @@
       if (f === 'announcement') cfg[f] = v;   // 允许留空 = 隐藏公告
       else if (v) cfg[f] = v;                  // 留空 = 使用首页默认
     }
+        const livePs = ['shopee','tiktok','facebook'].filter(k => $('#liveP_' + k).checked);
+    cfg.livePlatforms = livePs.join(',');
+    cfg.liveStatus = livePs.length ? 'on' : 'off';
     const btnSave = $('#saveBtn'); btnSave.disabled = true; showSave('保存中...', true);
     try {
       await set(ref(db, 'homepage/config'), cfg);
