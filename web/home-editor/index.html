@@ -372,7 +372,7 @@
     if (!f || !aboutTarget) return;
     try {
       msg.textContent = '正在处理 ...';
-      about[aboutTarget] = await compressFig(f, 1200);
+            about[aboutTarget] = await compressFig(f, 1000, 0.9, 520000);
       renderAbout();
       msg.className = 'msg ok'; msg.textContent = '已更新,记得点下方"保存到首页"。';
     } catch (err) { msg.className = 'msg err'; msg.textContent = err.message; }
@@ -426,7 +426,7 @@
     if (!msg.textContent) { msg.className = 'msg ok'; msg.textContent = '已添加,记得点下方"保存到首页"。'; }
   };
 
-  function compressFig(file, maxSide = 1000, q = 0.82) {
+    function compressFig(file, maxSide = 1000, q = 0.82, limit = 270000) {
     return new Promise((resolve, reject) => {
       const url = URL.createObjectURL(file); const img = new Image();
       img.onload = () => {
@@ -437,7 +437,7 @@
         const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h);
         URL.revokeObjectURL(url);
         let quality = q, out = c.toDataURL('image/jpeg', quality);
-        while (out.length > 270000 && quality > 0.4) { quality -= 0.08; out = c.toDataURL('image/jpeg', quality); }
+                while (out.length > limit && quality > 0.4) { quality -= 0.08; out = c.toDataURL('image/jpeg', quality); }
         resolve(out);
       };
       img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('无法读取这张图片(请用 JPG 或 PNG 格式)')); };
