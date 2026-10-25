@@ -158,3 +158,10 @@ footer a { color: var(--gold); }
 .contact-card p { color: var(--muted); font-size: .94rem; margin-bottom: 14px; word-break: break-word; }
 .contact-card .btn { padding: 10px 22px; }
 .note { text-align: center; color: var(--muted); font-size: .9rem; margin-top: 28px; }
+/* 电脑端:竖图往左靠,与内容区右边对齐,不遮挡文字 */
+@media (min-width: 861px) {
+  .slide.tall .fg {
+    max-width: 44%;
+    margin-right: max(24px, calc(50% - 536px));
+  }
+}
