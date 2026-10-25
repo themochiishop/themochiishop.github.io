@@ -240,7 +240,20 @@ The MoChii Shop</h1>
     const d = new Date(ts), p = n => String(n).padStart(2, '0');
     return p(d.getMonth() + 1) + '/' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
-
+  let lastSig = '';
+  function popLike(btn) {
+    btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    for (let i = 0; i < 5; i++) {
+      const h = document.createElement('span'); h.className = 'fly-heart'; h.textContent = '❤️';
+      h.style.setProperty('--dx', (Math.random() * 60 - 30) + 'px');
+      h.style.setProperty('--dr', (Math.random() * 50 - 25) + 'deg');
+      h.style.animationDelay = (i * 60) + 'ms';
+      h.style.fontSize = (10 + Math.random() * 8) + 'px';
+      btn.appendChild(h);
+      setTimeout(() => h.remove(), 1200);
+    }
+  }
   function renderLatest() {
     const box = $('#latest-card-wrapper');
     if (!rawSnapshot || !rawSnapshot.exists()) { box.innerHTML = '<div class="lc-empty">暂无最新动态</div>'; return; }
@@ -252,7 +265,10 @@ The MoChii Shop</h1>
     let imgs = [];
     if (Array.isArray(m.images)) imgs = m.images.slice(0, 3).filter(x => typeof x === 'string' && x);
     else if (typeof m.imageUrl === 'string' && m.imageUrl) imgs = [m.imageUrl];
-
+    const sig = [m.id, m.content, m.authorName, m.avatarUrl, m.timestamp, imgs.length, imgs.map(u => u.length).join(',')].join('|');
+    const countEl = box.querySelector('.lc-count');
+    if (sig === lastSig && countEl) { countEl.textContent = m.likes || 0; return; }
+    lastSig = sig;
     const slider = imgs.length
       ? '<div class="lc-slider">' + imgs.map(u =>
           '<div class="lc-frame"><img class="lc-blur" src="' + esc(u) + '"><img class="lc-main" src="' + esc(u) + '"></div>').join('') + '</div>'
@@ -268,7 +284,7 @@ The MoChii Shop</h1>
         slider +
         (m.content ? '<div class="lc-body">' + esc(m.content) + '</div>' : '') +
         '<div class="lc-footer">' +
-          '<button class="lc-like" id="likeBtn">❤️ <span>' + (m.likes || 0) + '</span></button>' +
+                  '<button class="lc-like" id="likeBtn"><span class="lc-heart">❤️</span> <span class="lc-count">' + (m.likes || 0) + '</span></button>' +
           '<a class="lc-more" href="https://themochiishop.github.io/admin/my-admin-status/feed.html" target="_blank" rel="noopener">More Feed ➔</a>' +
         '</div>' +
       '</div>';
@@ -284,10 +300,11 @@ The MoChii Shop</h1>
       new ResizeObserver(fit).observe(sl);
       fit();
     }
-        $('#likeBtn').onclick = () => {
-      const b = $('#likeBtn'), sp = b.querySelector('span');
+          $('#likeBtn').onclick = () => {
+      const b = $('#likeBtn'), sp = b.querySelector('.lc-count');
       const before = parseInt(sp.textContent, 10) || 0;
       sp.textContent = before + 1;   // 先立刻显示,不用等网络
+      popLike(b);
       runTransaction(ref(db, 'messages/' + m.id + '/likes'), n => (n || 0) + 1)
         .catch(err => { sp.textContent = before; console.error('点赞失败:', err.code || '', err.message); });
     };
