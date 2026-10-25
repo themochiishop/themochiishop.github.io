@@ -385,3 +385,18 @@ footer p:last-child { margin-bottom: 0; }
 .feature .ico { width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 50%; background: #fdf0f4; border: 1px solid #f6d3df; color: var(--pink); display: flex; align-items: center; justify-content: center; font-size: 0; transition: background .25s, color .25s, transform .25s; }
 .feature .ico svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .feature:hover .ico { background: var(--pink); color: #fff; transform: scale(1.06); }
+/* ===== 金线离标题更近(全站) ===== */
+.section-head h2, .split .txt h2, .band h2, .page-hero h1 { line-height: 1.25; }
+.section-head h2::after, .band h2::after, .page-hero h1::after { margin-top: 8px; }
+.split .txt h2::after, .home-split .txt h2::after { margin-top: 8px; margin-bottom: 16px; }
+
+/* ===== 首页:What We Offer、Stay Connected 靠左 ===== */
+.home .section-head { text-align: left; }
+.home .section-head h2::after { margin-left: 0; margin-right: 0; }
+
+.home .band { text-align: left; }
+.home .band > * { max-width: 1120px; margin-left: auto; margin-right: auto; }
+.home .band h2::after { margin-left: 0; margin-right: 0; }
+.home .band p { margin-top: 12px; margin-bottom: 22px; }
+.home .band .social { justify-content: flex-start; }
+.home .band .wa { margin-top: 32px; }
