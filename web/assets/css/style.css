@@ -205,6 +205,11 @@ footer a { color: var(--gold); }
 .live-ico .live-name { font-size: .78rem; font-weight: 600; }
 .live-ico:hover .logo-c { filter: brightness(1.12); }
 .c-shopee { background: #ee4d2d; } .c-tiktok { background: #111; } .c-facebook { background: #1877f2; }
+/* ===== 平台 logo 图片 ===== */
+.live-ico .logo-c { background: #fff; overflow: hidden; padding: 0; }
+.live-ico .logo-c img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.platform.shopee .logo, .platform.tiktok .logo, .platform.facebook .logo { background: #fff; overflow: hidden; padding: 0; border: 1px solid var(--line); }
+.platform .logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* Live Stream 页:正在直播的平台卡片 */
 .platform.is-live .logo { outline: 3px solid #e11d48; outline-offset: 4px; animation: livepulse 1.4s infinite; }
