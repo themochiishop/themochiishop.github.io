@@ -490,3 +490,9 @@ footer p:last-child { margin-bottom: 0; }
 /* ===== WhatsApp 按钮图标(全站) ===== */
 .btn-wa { display: inline-flex; align-items: center; justify-content: center; gap: 9px; }
 .btn-wa svg { width: 20px; height: 20px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+/* ===== 手机端:副标题靠左,其余保持居中 ===== */
+@media (max-width: 860px) {
+  .home .section-head p,
+  .home .band > p,
+  .home .split .txt p { text-align: left; }
+}
