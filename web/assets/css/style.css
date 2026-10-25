@@ -358,3 +358,19 @@ footer p:last-child { margin-bottom: 0; }
 }
 /* 大图副标题:更舒展 */
 .hero-content p { font-size: 1.12rem; letter-spacing: .4px; line-height: 1.75; }
+/* ===== 首页 Latest Updates:手机端紧凑居中 ===== */
+@media (max-width: 860px) {
+  .home-split { gap: 26px; }
+  .home-split .txt { text-align: center; }
+  .home-split .txt h2 { font-size: 1.55rem; margin-bottom: 0; }
+  .home-split .txt h2::after { margin: 12px auto 16px; }
+  .home-split .txt p { font-size: .95rem; line-height: 1.7; margin-bottom: 10px; }
+  .home-split .txt .btn { padding: 11px 24px; font-size: .88rem; margin-top: 6px; }
+  .home-split #latest-card-wrapper { max-width: 340px; width: 100%; }
+}
+@media (max-width: 600px) {
+  .section { padding: 40px 20px; }
+  .section-head { margin-bottom: 26px; }
+  .section-head h2 { font-size: 1.5rem; }
+  .section-head p { font-size: .92rem; }
+}
