@@ -114,12 +114,22 @@ Follow our channels to get notified when we start.</div>
   onValue(ref(db, 'homepage/config'), snap => {
     const c = snap.val() || {};
 
-    const on = c.liveStatus === 'on';
+       const names = { shopee: 'Shopee', tiktok: 'TikTok', facebook: 'Facebook' };
+    const livePs = String(c.livePlatforms || '').split(',').filter(k => names[k]);
+    const on = livePs.length > 0;
     $('#liveStatus').classList.toggle('on', on);
     $('#liveTitle').textContent = on ? 'LIVE NOW' : 'CURRENTLY OFFLINE';
     $('#liveSub').textContent = on
-      ? 'We are live right now! Pick a platform below to join us.'
+      ? 'We are live on ' + livePs.map(k => names[k]).join(' + ') + ' right now! Tap a platform below to join us.'
       : 'We are not live right now. Check the schedule below.';
+    document.querySelectorAll('.platform').forEach(card => {
+      const k = ['shopee','tiktok','facebook'].find(x => card.classList.contains(x));
+      const isLive = livePs.includes(k);
+      card.classList.toggle('is-live', isLive);
+      let b = card.querySelector('.live-badge');
+      if (isLive && !b) { b = document.createElement('span'); b.className = 'live-badge'; b.textContent = '● LIVE'; card.insertBefore(b, card.querySelector('h3')); }
+      if (!isLive && b) b.remove();
+    });
 
     if (c.liveIntro) $('#lIntro').textContent = c.liveIntro;
     if (c.liveSchedule) $('#lSchedule').textContent = c.liveSchedule;
