@@ -96,7 +96,7 @@ header { background: var(--ink); position: sticky; top: 0; z-index: 50; border-b
 .btn-wa:hover { background: #1d8a38; }
 
 /* 页脚 */
-footer { background: #120e16; color: #a79eab; text-align: center; padding: 40px 20px; font-size: .86rem; }
+footer { background: #120e16; color: #a79eab; text-align: center; padding: 40px 20px; font-size: .80rem; }
 footer p { margin-bottom: 6px; }
 footer a { color: var(--gold); }
 
