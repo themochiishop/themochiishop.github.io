@@ -171,7 +171,8 @@ The MoChii Shop</h1>
     }
     if (c.heroSubtitle) $('#heroSubtitle').textContent = c.heroSubtitle;
     if (typeof c.announcement === 'string') {
-      $('#topbarText').textContent = c.announcement;
+          $('#topbarText').textContent = c.announcement;
+      $('#topbarText').style.animationDuration = Math.min(60, Math.max(14, c.announcement.length * 0.22)) + 's';
       $('#topbar').hidden = !c.announcement.trim();
     }
     if (c.intro) {
