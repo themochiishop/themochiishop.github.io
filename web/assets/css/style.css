@@ -335,3 +335,7 @@ footer a { color: var(--gold); }
 @media (max-width: 600px) {
   footer .faddr, footer #fAddr { font-size: .72rem; line-height: 1.7; white-space: pre-line; }
 }
+/* ===== 手机端:页脚靠左 ===== */
+@media (max-width: 600px) {
+  footer { text-align: left; padding-left: 20px; padding-right: 20px; }
+}
