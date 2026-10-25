@@ -306,3 +306,12 @@ footer p:last-child { margin-bottom: 0; }
 .fig-item img,
 .fig-item.contain img { aspect-ratio: 1 / 1; object-fit: contain; background: #fff; padding: 10px; }
 .fig-item:hover img { transform: scale(1.04); }
+/* ===== Latest Updates 动态卡片:图片框自适应比例 ===== */
+#latest-card-wrapper { max-width: 520px; }
+.lc-slider { align-items: stretch; }
+.lc-frame { height: auto; min-height: 220px; max-height: 520px; }
+.lc-main { width: 100%; height: auto; max-width: 100%; max-height: 520px; object-fit: contain; }
+@media (max-width: 600px) {
+  .lc-frame { max-height: 440px; }
+  .lc-main { max-height: 440px; }
+}
