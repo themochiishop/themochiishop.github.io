@@ -2,33 +2,52 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+  <meta name="color-scheme" content="light">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex,nofollow">
-  <title>首页编辑 - The Mochii Shop</title>
+  <title>网站后台 - The Mochii Shop</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     [hidden] { display: none !important; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f4f1f5; color: #2b2430; line-height: 1.5; }
-    header { background: #1c1722; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #c9a45c; position: sticky; top: 0; z-index: 10; }
-    header h1 { font-size: 1.05rem; }
-    header .right { display: flex; gap: 10px; align-items: center; font-size: .85rem; color: #cfc6d4; }
-    .wrap { max-width: 860px; margin: 24px auto; padding: 0 16px 80px; }
-    .card { background: #fff; border-radius: 10px; border: 1px solid #e9e2e6; padding: 22px 24px; margin-bottom: 20px; }
-    .card h2 { font-size: 1.05rem; margin-bottom: 4px; color: #1c1722; }
-    .card .hint { font-size: .82rem; color: #8b8190; margin-bottom: 16px; }
+
+    .top { position: sticky; top: 0; z-index: 20; background: #f4f1f5; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+    header { background: #1c1722; color: #fff; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #c9a45c; gap: 10px; }
+    header h1 { font-size: 1rem; }
+    header .right { display: flex; gap: 8px; align-items: center; font-size: .82rem; color: #cfc6d4; }
+    #who { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .tabbar { display: flex; gap: 10px; max-width: 900px; margin: 0 auto; padding: 12px 16px; overflow-x: auto; scrollbar-width: none; }
+    .tabbar::-webkit-scrollbar { display: none; }
+    .tab { flex: 0 0 auto; position: relative; display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 10px; border: 1px solid #ddd5e0; background: #fff; color: #2b2430; font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .15s; }
+    .tab:hover { border-color: #e0628a; }
+    .tab.on { background: #1c1722; color: #fff; border-color: #1c1722; box-shadow: 0 6px 14px rgba(28,23,34,.25); }
+    .tab .dot { position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; border-radius: 50%; background: #e11d48; border: 2px solid #f4f1f5; }
+
+    .wrap { max-width: 900px; margin: 18px auto; padding: 0 16px 110px; }
+    .panel { display: none; }
+    .panel.on { display: block; }
+    .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 10px; }
+    .panel-head h2 { font-size: 1.15rem; color: #1c1722; }
+
+    .card { background: #fff; border-radius: 10px; border: 1px solid #e9e2e6; padding: 22px 24px; margin-bottom: 18px; }
+    .card h3 { font-size: 1.02rem; margin-bottom: 4px; color: #1c1722; }
+    .card .hint { font-size: .82rem; color: #8b8190; margin-bottom: 14px; }
     label { display: block; font-size: .85rem; font-weight: 600; margin: 14px 0 6px; }
     input[type=text], input[type=email], input[type=password], input[type=url], textarea {
       width: 100%; padding: 10px 12px; border: 1px solid #d8d0db; border-radius: 6px; font: inherit; background: #fff;
     }
     textarea { min-height: 96px; resize: vertical; }
     input:focus, textarea:focus { outline: 2px solid #e0628a55; border-color: #e0628a; }
-    .btn { display: inline-block; padding: 10px 20px; border-radius: 6px; border: none; font-weight: 600; font-size: .9rem; cursor: pointer; background: #e0628a; color: #fff; }
+
+    .btn { display: inline-block; padding: 10px 20px; border-radius: 6px; border: none; font-weight: 600; font-size: .9rem; cursor: pointer; background: #e0628a; color: #fff; text-decoration: none; }
     .btn:hover { background: #c94f76; }
     .btn.dark { background: #1c1722; } .btn.dark:hover { background: #2a2331; }
     .btn.ghost { background: #fff; color: #1c1722; border: 1px solid #d8d0db; } .btn.ghost:hover { background: #f4f1f5; }
     .btn.small { padding: 6px 10px; font-size: .78rem; }
     .btn.danger { background: #fff; color: #c0392b; border: 1px solid #e8b4ad; } .btn.danger:hover { background: #fdecea; }
     .btn:disabled { opacity: .5; cursor: not-allowed; }
+
     .slide-item { display: flex; gap: 14px; align-items: center; border: 1px solid #e9e2e6; border-radius: 8px; padding: 10px; margin-bottom: 10px; background: #fcfbfc; }
     .slide-item img { width: 120px; height: 68px; object-fit: cover; border-radius: 6px; flex-shrink: 0; background: #eee; }
     .slide-item .mid { flex: 1; min-width: 0; }
@@ -37,12 +56,20 @@
     .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .msg { font-size: .88rem; margin-top: 12px; }
     .msg.ok { color: #1d8a38; } .msg.err { color: #c0392b; }
-    .savebar { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid #e9e2e6; padding: 12px 16px; display: flex; justify-content: center; gap: 14px; align-items: center; box-shadow: 0 -4px 14px rgba(0,0,0,.05); }
+    .small-note { font-size: .78rem; color: #8b8190; }
+
+    .savebar { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid #e9e2e6; padding: 12px 16px; display: flex; justify-content: center; gap: 14px; align-items: center; box-shadow: 0 -4px 14px rgba(0,0,0,.06); z-index: 30; }
+
     #loginView { max-width: 380px; margin: 90px auto; padding: 0 16px; }
     #loginView .card { text-align: center; }
     #loginView .btn { width: 100%; margin-top: 18px; }
     #loginView label { text-align: left; }
-    .small-note { font-size: .78rem; color: #8b8190; margin-top: 8px; }
+
+    @media (max-width: 600px) {
+      .card { padding: 18px 16px; }
+      .slide-item img { width: 84px; height: 60px; }
+      #who { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -50,10 +77,10 @@
 <!-- 登录 -->
 <div id="loginView">
   <div class="card">
-    <h2 style="font-size:1.3rem;margin-bottom:6px;">首页编辑登录</h2>
+    <h3 style="font-size:1.3rem;margin-bottom:6px;">网站后台登录</h3>
     <p class="hint">The Mochii Shop · 仅限管理员</p>
-    <label for="email">邮箱</label>
-    <input type="email" id="email" autocomplete="username">
+    <label for="email_login">邮箱</label>
+    <input type="email" id="email_login" autocomplete="username">
     <label for="password">密码</label>
     <input type="password" id="password" autocomplete="current-password">
     <button class="btn" id="loginBtn">登录</button>
@@ -63,127 +90,170 @@
 
 <!-- 编辑器 -->
 <div id="editorView" hidden>
-  <header>
-    <h1>The Mochii Shop · 首页编辑</h1>
-    <div class="right">
-      <span id="who"></span>
-      <a class="btn ghost small" href="/" target="_blank" rel="noopener">查看首页</a>
-      <button class="btn ghost small" id="logoutBtn">退出</button>
+  <div class="top">
+    <header>
+      <h1>The Mochii Shop · 网站后台</h1>
+      <div class="right">
+        <span id="who"></span>
+        <a class="btn ghost small" href="/" target="_blank" rel="noopener">查看网站</a>
+        <button class="btn ghost small" id="logoutBtn">退出</button>
+      </div>
+    </header>
+    <div class="tabbar" id="tabbar">
+      <button class="tab" data-tab="home">🏠 首页</button>
+      <button class="tab" data-tab="slides">🖼️ 轮播图</button>
+      <button class="tab" data-tab="live">🔴 Live 直播<span class="dot" id="liveDot" hidden></span></button>
+      <button class="tab" data-tab="figures">🧸 Figures Toy</button>
+      <button class="tab" data-tab="about">💝 About Us</button>
+      <button class="tab" data-tab="contact">✉️ Contact Us</button>
+      <button class="tab" data-tab="social">🔗 社交链接</button>
     </div>
-  </header>
+  </div>
 
   <div class="wrap">
 
-    <div class="card">
-      <h2>顶部公告条</h2>
-      <p class="hint">显示在页面最顶部的粉色条。留空则隐藏。</p>
-      <textarea id="announcement" style="min-height:64px"></textarea>
+    <!-- 首页 -->
+    <div class="panel" id="panel-home">
+      <div class="panel-head"><h2>🏠 首页文字</h2><a class="btn ghost small" href="/" target="_blank" rel="noopener">查看页面 ↗</a></div>
+      <div class="card">
+        <h3>顶部公告条</h3>
+        <p class="hint">显示在页面最顶部的粉色条。留空则隐藏。</p>
+        <textarea id="announcement" style="min-height:64px"></textarea>
+      </div>
+      <div class="card">
+        <h3>大图区文字</h3>
+        <p class="hint">轮播图上方的大标题和说明。大标题按 Enter 可以换行。</p>
+        <label for="heroTitle">大标题</label>
+        <textarea id="heroTitle" style="min-height:70px"></textarea>
+        <label for="heroSubtitle">副标题</label>
+        <textarea id="heroSubtitle" style="min-height:70px"></textarea>
+      </div>
+      <div class="card">
+        <h3>"Latest Updates" 介绍文字</h3>
+        <p class="hint">每一行会变成一个段落。右侧的动态卡片来自 my-admin-status,不在这里改。</p>
+        <textarea id="intro"></textarea>
+      </div>
     </div>
 
-    <div class="card">
-      <h2>大图区文字</h2>
-      <p class="hint">轮播图上方的大标题和说明。</p>
-      <label for="heroTitle">大标题</label>
-         <textarea id="heroTitle" style="min-height:70px"></textarea>
-      <label for="heroSubtitle">副标题</label>
-      <textarea id="heroSubtitle" style="min-height:70px"></textarea>
+    <!-- 轮播图 -->
+    <div class="panel" id="panel-slides">
+      <div class="panel-head"><h2>🖼️ 首页轮播图</h2><a class="btn ghost small" href="/" target="_blank" rel="noopener">查看页面 ↗</a></div>
+      <div class="card">
+        <p class="hint">最多 6 张,左右切换显示。横图、竖图都可以,上传时会自动压缩。</p>
+        <div id="slideList"></div>
+        <div class="row">
+          <input type="file" id="fileInput" accept="image/*" multiple hidden>
+          <button class="btn dark" id="addBtn">＋ 添加图片</button>
+          <span class="small-note" id="slideInfo"></span>
+        </div>
+        <div class="msg" id="slideMsg"></div>
+      </div>
     </div>
 
-    <div class="card">
-      <h2>轮播图</h2>
-      <p class="hint">最多 6 张,左右切换显示。建议横向图片(例如 1920×1080)。上传时会自动压缩。</p>
-      <div id="slideList"></div>
-      <div class="row">
-        <input type="file" id="fileInput" accept="image/*" multiple hidden>
-        <button class="btn dark" id="addBtn">＋ 添加图片</button>
-        <span class="small-note" id="slideInfo"></span>
+    <!-- Live -->
+    <div class="panel" id="panel-live">
+      <div class="panel-head"><h2>🔴 Live 直播</h2><a class="btn ghost small" href="/live-stream/" target="_blank" rel="noopener">查看页面 ↗</a></div>
+      <div class="card">
+        <h3>正在直播的平台</h3>
+        <p class="hint">勾选后,首页会出现带光圈的平台图标,Live Stream 页也会显示 LIVE NOW。全部不勾 = 未直播。下播后记得取消勾选并保存。</p>
+        <div class="row" style="gap:26px;margin-top:6px">
+          <label style="margin:0;font-weight:500;cursor:pointer"><input type="checkbox" id="liveP_shopee"> Shopee</label>
+          <label style="margin:0;font-weight:500;cursor:pointer"><input type="checkbox" id="liveP_tiktok"> TikTok</label>
+          <label style="margin:0;font-weight:500;cursor:pointer"><input type="checkbox" id="liveP_facebook"> Facebook</label>
+        </div>
       </div>
-      <div class="msg" id="slideMsg"></div>
+      <div class="card">
+        <h3>Live Stream 页面文字</h3>
+        <p class="hint">TikTok 和 Facebook 的链接在"社交链接"卡片里修改。</p>
+        <label for="liveIntro">页面说明</label>
+        <textarea id="liveIntro" style="min-height:70px"></textarea>
+        <label for="liveSchedule">直播时间 / 下一场预告(按 Enter 换行)</label>
+        <textarea id="liveSchedule" style="min-height:80px"></textarea>
+        <label for="liveShopee">Shopee 直播链接</label>
+        <input type="url" id="liveShopee">
+        <label for="liveNote">页面底部提示</label>
+        <textarea id="liveNote" style="min-height:64px"></textarea>
+      </div>
     </div>
 
-    <div class="card">
-      <h2>"Latest Updates" 介绍文字</h2>
-      <p class="hint">每一行会变成一个段落。右侧的动态卡片来自 my-admin-status,不在这里改。</p>
-      <textarea id="intro"></textarea>
+    <!-- Figures Toy -->
+    <div class="panel" id="panel-figures">
+      <div class="panel-head"><h2>🧸 Figures Toy</h2><a class="btn ghost small" href="/figures-toy/" target="_blank" rel="noopener">查看页面 ↗</a></div>
+      <div class="card">
+        <p class="hint">最多 12 张,点击可放大浏览。上传时会自动压缩。</p>
+        <label for="figuresIntro" style="margin-top:0">页面说明(可留空)</label>
+        <textarea id="figuresIntro" style="min-height:64px"></textarea>
+        <label>图片</label>
+        <div id="figList"></div>
+        <div class="row">
+          <input type="file" id="figInput" accept="image/*" multiple hidden>
+          <button class="btn dark" id="figAddBtn">＋ 添加图片</button>
+          <span class="small-note" id="figInfo"></span>
+        </div>
+        <div class="msg" id="figMsg"></div>
+      </div>
     </div>
 
-                    <div class="card">
-      <h2>About Us 页面 / 图片</h2>
-      <p class="hint">两张配图:一张放在 "Our Story" 旁边,一张放在 "Your Dream Accessories" 旁边。不上传则不显示。</p>
-      <div class="slide-item">
-        <img id="aboutPrev1" alt="" style="visibility:hidden">
-        <div class="mid"><div style="font-size:.85rem;font-weight:600">图片 1 · Our Story</div></div>
-        <div class="ops"><button class="btn dark small" id="aboutBtn1">上传 / 更换</button><button class="btn danger small" id="aboutDel1">删除</button></div>
+    <!-- About Us -->
+    <div class="panel" id="panel-about">
+      <div class="panel-head"><h2>💝 About Us</h2><a class="btn ghost small" href="/about-us/" target="_blank" rel="noopener">查看页面 ↗</a></div>
+      <div class="card">
+        <p class="hint">两张配图:一张放在 "Our Story" 旁边,一张放在 "Your Dream Accessories" 旁边。不上传则不显示。</p>
+        <div class="slide-item">
+          <img id="aboutPrev1" alt="" style="visibility:hidden">
+          <div class="mid"><div style="font-size:.85rem;font-weight:600">图片 1 · Our Story</div></div>
+          <div class="ops"><button class="btn dark small" id="aboutBtn1">上传 / 更换</button><button class="btn danger small" id="aboutDel1">删除</button></div>
+        </div>
+        <div class="slide-item">
+          <img id="aboutPrev2" alt="" style="visibility:hidden">
+          <div class="mid"><div style="font-size:.85rem;font-weight:600">图片 2 · Your Dream Accessories</div></div>
+          <div class="ops"><button class="btn dark small" id="aboutBtn2">上传 / 更换</button><button class="btn danger small" id="aboutDel2">删除</button></div>
+        </div>
+        <input type="file" id="aboutFile" accept="image/*" hidden>
+        <div class="msg" id="aboutMsg"></div>
       </div>
-      <div class="slide-item">
-        <img id="aboutPrev2" alt="" style="visibility:hidden">
-        <div class="mid"><div style="font-size:.85rem;font-weight:600">图片 2 · Your Dream Accessories</div></div>
-        <div class="ops"><button class="btn dark small" id="aboutBtn2">上传 / 更换</button><button class="btn danger small" id="aboutDel2">删除</button></div>
+    </div>
+
+    <!-- Contact -->
+    <div class="panel" id="panel-contact">
+      <div class="panel-head"><h2>✉️ Contact Us</h2><a class="btn ghost small" href="/contact-us/" target="_blank" rel="noopener">查看页面 ↗</a></div>
+      <div class="card">
+        <p class="hint">社交链接在"社交链接"卡片修改,两个页面共用。这里的电话、邮箱、地址也会显示在各页面的页脚。</p>
+        <label for="contactIntro" style="margin-top:0">页面说明</label>
+        <textarea id="contactIntro" style="min-height:64px"></textarea>
+        <label for="phone">客服电话(显示用)</label>
+        <input type="text" id="phone">
+        <label for="waNumber">WhatsApp 号码(只填数字,包含国家码,例如 60177503767)</label>
+        <input type="text" id="waNumber" inputmode="numeric">
+        <label for="email">客服邮箱</label>
+        <input type="text" id="email">
+        <label for="shopName">店铺名称 / 注册号</label>
+        <input type="text" id="shopName">
+        <label for="address">地址(按 Enter 换行)</label>
+        <textarea id="address" style="min-height:70px"></textarea>
+        <label for="mapLink">地图链接(可留空,留空则自动用地址搜索)</label>
+        <input type="url" id="mapLink" placeholder="https://maps.app.goo.gl/...">
+        <label for="contactNote">页面底部提示</label>
+        <textarea id="contactNote" style="min-height:64px"></textarea>
       </div>
-      <input type="file" id="aboutFile" accept="image/*" hidden>
-      <div class="msg" id="aboutMsg"></div>
-    </div><div class="card">
-      <h2>Figures Toy 页面 / 图片</h2>
-      <p class="hint">最多 12 张,点击可放大浏览。建议竖向或方形图片,上传时会自动压缩。</p>
-      <label for="figuresIntro">页面说明(可留空)</label>
-      <textarea id="figuresIntro" style="min-height:64px"></textarea>
-      <label>图片</label>
-      <div id="figList"></div>
-      <div class="row">
-        <input type="file" id="figInput" accept="image/*" multiple hidden>
-        <button class="btn dark" id="figAddBtn">＋ 添加图片</button>
-        <span class="small-note" id="figInfo"></span>
+    </div>
+
+    <!-- 社交链接 -->
+    <div class="panel" id="panel-social">
+      <div class="panel-head"><h2>🔗 社交链接</h2></div>
+      <div class="card">
+        <p class="hint">必须以 https:// 开头。首页、Contact Us、Live Stream 页的按钮都会用到这些链接。</p>
+        <label for="facebook" style="margin-top:0">Facebook</label><input type="url" id="facebook">
+        <label for="instagram">Instagram</label><input type="url" id="instagram">
+        <label for="shopee">Shopee 店铺</label><input type="url" id="shopee">
+        <label for="tiktok">TikTok</label><input type="url" id="tiktok">
+        <label for="whatsapp">WhatsApp 频道</label><input type="url" id="whatsapp">
       </div>
-      <div class="msg" id="figMsg"></div>
-    </div><div class="card">
-      <h2>Live Stream 页面 / 直播</h2>
-      <p class="hint">开播时把状态改成"正在直播",页面会显示闪烁的红色 LIVE NOW。TikTok 和 Facebook 的直播链接用下面的"社交链接"。</p>
-            <label>正在直播的平台(可多选;全部不勾 = 未直播)</label>
-      <div class="row" style="gap:22px;margin-top:6px">
-        <label style="margin:0;font-weight:500;cursor:pointer"><input type="checkbox" id="liveP_shopee"> Shopee</label>
-        <label style="margin:0;font-weight:500;cursor:pointer"><input type="checkbox" id="liveP_tiktok"> TikTok</label>
-        <label style="margin:0;font-weight:500;cursor:pointer"><input type="checkbox" id="liveP_facebook"> Facebook</label>
-      </div>
-      <label for="liveIntro">页面说明</label>
-      <textarea id="liveIntro" style="min-height:70px"></textarea>
-      <label for="liveSchedule">直播时间 / 下一场预告(按 Enter 换行)</label>
-      <textarea id="liveSchedule" style="min-height:80px"></textarea>
-      <label for="liveShopee">Shopee 直播链接</label>
-      <input type="url" id="liveShopee">
-      <label for="liveNote">页面底部提示</label>
-      <textarea id="liveNote" style="min-height:64px"></textarea>
-    </div><div class="card">
-      <h2>Contact Us 页面 / 联系信息</h2>
-      <p class="hint">显示在 Contact Us 页面。社交链接在下面的"社交链接"栏位修改,两个页面共用。</p>
-      <label for="contactIntro">页面说明</label>
-      <textarea id="contactIntro" style="min-height:64px"></textarea>
-      <label for="phone">客服电话(显示用)</label>
-      <input type="text" id="phone">
-      <label for="waNumber">WhatsApp 号码(只填数字,包含国家码,例如 60177503767)</label>
-      <input type="text" id="waNumber" inputmode="numeric">
-      <label for="email">客服邮箱</label>
-      <input type="text" id="email">
-      <label for="shopName">店铺名称 / 注册号</label>
-      <input type="text" id="shopName">
-      <label for="address">地址(按 Enter 换行)</label>
-      <textarea id="address" style="min-height:70px"></textarea>
-      <label for="mapLink">地图链接(可留空,留空则自动用地址搜索)</label>
-      <input type="url" id="mapLink" placeholder="https://maps.app.goo.gl/...">
-      <label for="contactNote">页面底部提示</label>
-      <textarea id="contactNote" style="min-height:64px"></textarea>
-    </div><div class="card">
-      <h2>社交链接</h2>
-      <p class="hint">必须以 https:// 开头。</p>
-      <label for="facebook">Facebook</label><input type="url" id="facebook">
-      <label for="instagram">Instagram</label><input type="url" id="instagram">
-      <label for="shopee">Shopee</label><input type="url" id="shopee">
-      <label for="tiktok">TikTok</label><input type="url" id="tiktok">
-      <label for="whatsapp">WhatsApp 频道</label><input type="url" id="whatsapp">
     </div>
   </div>
 
   <div class="savebar">
-    <button class="btn" id="saveBtn">保存到首页</button>
+    <button class="btn" id="saveBtn">保存到网站</button>
     <span class="msg" id="saveMsg" style="margin:0"></span>
   </div>
 </div>
@@ -206,7 +276,7 @@
   const db = getDatabase(app);
   const $ = s => document.querySelector(s);
 
-      const FIELDS = ['announcement','heroTitle','heroSubtitle','intro','facebook','instagram','shopee','tiktok','whatsapp','contactIntro','phone','waNumber','email','shopName','address','mapLink','contactNote','liveIntro','liveSchedule','liveShopee','liveNote','figuresIntro'];
+  const FIELDS = ['announcement','heroTitle','heroSubtitle','intro','facebook','instagram','shopee','tiktok','whatsapp','contactIntro','phone','waNumber','email','shopName','address','mapLink','contactNote','liveIntro','liveSchedule','liveShopee','liveNote','figuresIntro'];
   const LINK_FIELDS = ['facebook','instagram','shopee','tiktok','whatsapp','mapLink','liveShopee'];
   const DEFAULTS = {
     announcement: '🤹 Every day, we host live-streamed games at varying times, giving customers the chance to win our products and enjoy exclusive random discounts!',
@@ -226,113 +296,103 @@
     address: '67A, JALAN SS 2/6, TAMAN SRI SAUJANA,\n81900 KOTA TINGGI, JOHOR, MALAYSIA',
     mapLink: '',
     contactNote: 'For orders and after-sales enquiries, WhatsApp is the fastest way to reach us.',
-    liveStatus: 'off',
     liveIntro: 'Find our live streams on Shopee, TikTok and Facebook. Join in for interactive games, prizes and exclusive random discounts!',
     liveSchedule: 'We go live every day at varying times.\nFollow our channels to get notified when we start.',
     liveShopee: 'https://my.shp.ee/k4VoTpQc',
-       liveNote: 'Tip: turn on notifications on each platform so you never miss a live stream.',
+    liveNote: 'Tip: turn on notifications on each platform so you never miss a live stream.',
     figuresIntro: 'Browse our figures and toys. Join our live streams for chances to win and exclusive random discounts!'
   };
-  const MAX_SLIDES = 6;
-  let slides = [];
+  const MAX_SLIDES = 6, MAX_FIGS = 12;
+  let slides = [], figs = [], about = { story: '', dream: '' };
+  let loading = false, dirty = false;
+
+  /* ---------- 状态提示 ---------- */
+  function showSave(text, ok) { const m = $('#saveMsg'); m.style.color = ''; m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = text; }
+  function markDirty() {
+    if (loading) return;
+    dirty = true;
+    const m = $('#saveMsg'); m.className = 'msg'; m.style.color = '#b45309'; m.textContent = '● 有未保存的修改';
+  }
+  $('#editorView').addEventListener('input', markDirty);
+  $('#editorView').addEventListener('change', markDirty);
+  window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+  /* ---------- 卡牌切换 ---------- */
+  function openTab(name) {
+    if (!$('#panel-' + name)) name = 'home';
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === name));
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'panel-' + name));
+    try { localStorage.setItem('editorTab', name); } catch (e) {}
+    window.scrollTo({ top: 0 });
+  }
+  document.querySelectorAll('.tab').forEach(t => t.onclick = () => openTab(t.dataset.tab));
+
+  function updateLiveDot() {
+    $('#liveDot').hidden = !['shopee','tiktok','facebook'].some(k => $('#liveP_' + k).checked);
+  }
+  ['shopee','tiktok','facebook'].forEach(k => $('#liveP_' + k).addEventListener('change', updateLiveDot));
 
   /* ---------- 登录 ---------- */
   $('#loginBtn').onclick = login;
   $('#password').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
-
   async function login() {
     const msg = $('#loginMsg'); msg.textContent = '';
-    try {
-      await signInWithEmailAndPassword(auth, $('#email').value.trim(), $('#password').value);
-    } catch (e) {
-      msg.textContent = '登录失败:邮箱或密码不正确。';
-    }
+    try { await signInWithEmailAndPassword(auth, $('#email_login').value.trim(), $('#password').value); }
+    catch (e) { msg.textContent = '登录失败:邮箱或密码不正确。'; }
   }
-  $('#logoutBtn').onclick = () => signOut(auth);
-
+  $('#logoutBtn').onclick = () => {
+    if (dirty && !confirm('有未保存的修改,确定退出吗?')) return;
+    dirty = false; signOut(auth);
+  };
   onAuthStateChanged(auth, user => {
     $('#loginView').hidden = !!user;
     $('#editorView').hidden = !user;
-    if (user) { $('#who').textContent = user.email || ''; load(); }
+    if (user) {
+      $('#who').textContent = user.email || '';
+      let t = 'home'; try { t = localStorage.getItem('editorTab') || 'home'; } catch (e) {}
+      openTab(t);
+      load();
+    }
   });
 
   /* ---------- 读取 ---------- */
   async function load() {
+    loading = true;
     try {
       const snap = await get(ref(db, 'homepage'));
       const v = snap.val() || {};
       const cfg = v.config || {};
       FIELDS.forEach(f => { $('#' + f).value = (cfg[f] !== undefined) ? cfg[f] : DEFAULTS[f]; });
-            const lp = String(cfg.livePlatforms || '').split(',');
+
+      const lp = String(cfg.livePlatforms || '').split(',');
       ['shopee','tiktok','facebook'].forEach(k => { $('#liveP_' + k).checked = lp.includes(k); });
-      const list = Array.isArray(v.slides) ? v.slides : Object.values(v.slides || {});
-            const ab = v.about || {};
+      updateLiveDot();
+
+      const ab = v.about || {};
       about = { story: typeof ab.story === 'string' ? ab.story : '', dream: typeof ab.dream === 'string' ? ab.dream : '' };
       renderAbout();
-            const fl = Array.isArray(v.figures) ? v.figures : Object.values(v.figures || {});
+
+      const fl = Array.isArray(v.figures) ? v.figures : Object.values(v.figures || {});
       figs = fl.filter(s => s && typeof s.src === 'string').map(s => ({ src: s.src, caption: s.caption || '' }));
       renderFigs();
+
+      const list = Array.isArray(v.slides) ? v.slides : Object.values(v.slides || {});
       slides = list.filter(s => s && typeof s.src === 'string').map(s => ({ src: s.src, caption: s.caption || '' }));
       renderSlides();
+
+      $('#saveMsg').textContent = '';
     } catch (e) {
       showSave('读取失败:' + e.message, false);
+    } finally {
+      loading = false; dirty = false;
     }
   }
 
-  /* ---------- 轮播图 ---------- */
-  function renderSlides() {
-    const box = $('#slideList'); box.innerHTML = '';
-    slides.forEach((s, i) => {
-      const item = document.createElement('div'); item.className = 'slide-item';
-
-      const img = document.createElement('img'); img.src = s.src; item.appendChild(img);
-
-      const mid = document.createElement('div'); mid.className = 'mid';
-      const t = document.createElement('div'); t.textContent = '第 ' + (i + 1) + ' 张'; t.style.fontSize = '.85rem'; t.style.fontWeight = '600';
-      const cap = document.createElement('input'); cap.type = 'text'; cap.placeholder = '图片说明(可留空)'; cap.value = s.caption; cap.maxLength = 60;
-      cap.oninput = () => { s.caption = cap.value; };
-      mid.append(t, cap); item.appendChild(mid);
-
-      const ops = document.createElement('div'); ops.className = 'ops';
-      const up = btn('↑', 'ghost small', () => move(i, -1)); up.disabled = i === 0;
-      const dn = btn('↓', 'ghost small', () => move(i, 1)); dn.disabled = i === slides.length - 1;
-      const del = btn('删除', 'danger small', () => { slides.splice(i, 1); renderSlides(); });
-      ops.append(up, dn, del); item.appendChild(ops);
-
-      box.appendChild(item);
-    });
-    const kb = Math.round(slides.reduce((n, s) => n + s.src.length, 0) / 1024);
-    $('#slideInfo').textContent = slides.length + ' / ' + MAX_SLIDES + ' 张 · 约 ' + kb + ' KB';
-    $('#addBtn').disabled = slides.length >= MAX_SLIDES;
-  }
+  /* ---------- 通用:按钮、压缩 ---------- */
   function btn(text, cls, fn) {
     const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = text; b.onclick = fn; return b;
   }
-  function move(i, d) {
-    const j = i + d; if (j < 0 || j >= slides.length) return;
-    [slides[i], slides[j]] = [slides[j], slides[i]]; renderSlides();
-  }
-
-  $('#addBtn').onclick = () => $('#fileInput').click();
-  $('#fileInput').onchange = async e => {
-    const files = [...e.target.files]; e.target.value = '';
-    const msg = $('#slideMsg'); msg.className = 'msg'; msg.textContent = '';
-    for (const f of files) {
-      if (slides.length >= MAX_SLIDES) { msg.className = 'msg err'; msg.textContent = '最多只能 ' + MAX_SLIDES + ' 张,多余的已忽略。'; break; }
-      if (!f.type.startsWith('image/')) continue;
-      try {
-        msg.textContent = '正在处理 ' + f.name + ' ...';
-        slides.push({ src: await compress(f), caption: '' });
-        renderSlides();
-        msg.textContent = '';
-      } catch (err) {
-        msg.className = 'msg err'; msg.textContent = f.name + ':' + err.message;
-      }
-    }
-    if (!msg.textContent) { msg.className = 'msg ok'; msg.textContent = '已添加,记得点下方"保存到首页"。'; }
-  };
-
-  function compress(file, maxSide = 1800, q = 0.82) {
+  function compressImage(file, maxSide, q, limit) {
     return new Promise((resolve, reject) => {
       const url = URL.createObjectURL(file); const img = new Image();
       img.onload = () => {
@@ -343,17 +403,69 @@
         const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h);
         URL.revokeObjectURL(url);
         let quality = q, out = c.toDataURL('image/jpeg', quality);
-        while (out.length > 1300000 && quality > 0.4) { quality -= 0.1; out = c.toDataURL('image/jpeg', quality); }
+        while (out.length > limit && quality > 0.4) { quality -= 0.08; out = c.toDataURL('image/jpeg', quality); }
         resolve(out);
       };
       img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('无法读取这张图片(请用 JPG 或 PNG 格式)')); };
       img.src = url;
     });
   }
-  /* ---------- About Us 图片 ---------- */
-  let about = { story: '', dream: '' };
-  let aboutTarget = null;
 
+  /* 通用:带排序/说明/删除的图片列表 */
+  function renderList(boxSel, infoSel, addSel, arr, max, rerender) {
+    const box = $(boxSel); box.innerHTML = '';
+    arr.forEach((s, i) => {
+      const item = document.createElement('div'); item.className = 'slide-item';
+      const img = document.createElement('img'); img.src = s.src; item.appendChild(img);
+
+      const mid = document.createElement('div'); mid.className = 'mid';
+      const t = document.createElement('div'); t.textContent = '第 ' + (i + 1) + ' 张'; t.style.fontSize = '.85rem'; t.style.fontWeight = '600';
+      const cap = document.createElement('input'); cap.type = 'text'; cap.placeholder = '图片说明(可留空)'; cap.value = s.caption; cap.maxLength = 60;
+      cap.oninput = () => { s.caption = cap.value; };
+      mid.append(t, cap); item.appendChild(mid);
+
+      const ops = document.createElement('div'); ops.className = 'ops';
+      const up = btn('↑', 'ghost small', () => { [arr[i], arr[i - 1]] = [arr[i - 1], arr[i]]; rerender(); }); up.disabled = i === 0;
+      const dn = btn('↓', 'ghost small', () => { [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]]; rerender(); }); dn.disabled = i === arr.length - 1;
+      const del = btn('删除', 'danger small', () => { arr.splice(i, 1); rerender(); });
+      ops.append(up, dn, del); item.appendChild(ops);
+      box.appendChild(item);
+    });
+    const kb = Math.round(arr.reduce((n, s) => n + s.src.length, 0) / 1024);
+    $(infoSel).textContent = arr.length + ' / ' + max + ' 张 · 约 ' + kb + ' KB';
+    $(addSel).disabled = arr.length >= max;
+    markDirty();
+  }
+
+  /* 通用:添加图片 */
+  function bindAdd(addSel, fileSel, msgSel, arr, max, compressFn, rerender) {
+    $(addSel).onclick = () => $(fileSel).click();
+    $(fileSel).onchange = async e => {
+      const files = [...e.target.files]; e.target.value = '';
+      const msg = $(msgSel); msg.className = 'msg'; msg.textContent = '';
+      for (const f of files) {
+        if (arr.length >= max) { msg.className = 'msg err'; msg.textContent = '最多只能 ' + max + ' 张,多余的已忽略。'; break; }
+        if (!f.type.startsWith('image/')) continue;
+        try {
+          msg.textContent = '正在处理 ' + f.name + ' ...';
+          arr.push({ src: await compressFn(f), caption: '' });
+          rerender(); msg.textContent = '';
+        } catch (err) { msg.className = 'msg err'; msg.textContent = f.name + ':' + err.message; }
+      }
+      if (!msg.textContent) { msg.className = 'msg ok'; msg.textContent = '已添加,记得点下方"保存到网站"。'; }
+    };
+  }
+
+  /* ---------- 轮播图 ---------- */
+  function renderSlides() { renderList('#slideList', '#slideInfo', '#addBtn', slides, MAX_SLIDES, renderSlides); }
+  bindAdd('#addBtn', '#fileInput', '#slideMsg', slides, MAX_SLIDES, f => compressImage(f, 1800, 0.82, 1300000), renderSlides);
+
+  /* ---------- Figures Toy ---------- */
+  function renderFigs() { renderList('#figList', '#figInfo', '#figAddBtn', figs, MAX_FIGS, renderFigs); }
+  bindAdd('#figAddBtn', '#figInput', '#figMsg', figs, MAX_FIGS, f => compressImage(f, 1000, 0.82, 270000), renderFigs);
+
+  /* ---------- About Us ---------- */
+  let aboutTarget = null;
   function renderAbout() {
     [['story', 1], ['dream', 2]].forEach(([k, n]) => {
       const im = $('#aboutPrev' + n);
@@ -361,6 +473,7 @@
       else { im.removeAttribute('src'); im.style.visibility = 'hidden'; }
       $('#aboutDel' + n).disabled = !about[k];
     });
+    markDirty();
   }
   [['story', 1], ['dream', 2]].forEach(([k, n]) => {
     $('#aboutBtn' + n).onclick = () => { aboutTarget = k; $('#aboutFile').click(); };
@@ -372,103 +485,44 @@
     if (!f || !aboutTarget) return;
     try {
       msg.textContent = '正在处理 ...';
-            about[aboutTarget] = await compressFig(f, 1000, 0.9, 520000);
+      about[aboutTarget] = await compressImage(f, 1000, 0.9, 520000);
       renderAbout();
-      msg.className = 'msg ok'; msg.textContent = '已更新,记得点下方"保存到首页"。';
+      msg.className = 'msg ok'; msg.textContent = '已更新,记得点下方"保存到网站"。';
     } catch (err) { msg.className = 'msg err'; msg.textContent = err.message; }
   };
+
   /* ---------- 保存 ---------- */
-    /* ---------- Figures Toy 图片 ---------- */
-  const MAX_FIGS = 12;
-  let figs = [];
-
-  function renderFigs() {
-    const box = $('#figList'); box.innerHTML = '';
-    figs.forEach((s, i) => {
-      const item = document.createElement('div'); item.className = 'slide-item';
-      const img = document.createElement('img'); img.src = s.src; item.appendChild(img);
-
-      const mid = document.createElement('div'); mid.className = 'mid';
-      const t = document.createElement('div'); t.textContent = '第 ' + (i + 1) + ' 张'; t.style.fontSize = '.85rem'; t.style.fontWeight = '600';
-      const cap = document.createElement('input'); cap.type = 'text'; cap.placeholder = '图片说明(可留空)'; cap.value = s.caption; cap.maxLength = 60;
-      cap.oninput = () => { s.caption = cap.value; };
-      mid.append(t, cap); item.appendChild(mid);
-
-      const ops = document.createElement('div'); ops.className = 'ops';
-      const up = btn('↑', 'ghost small', () => moveFig(i, -1)); up.disabled = i === 0;
-      const dn = btn('↓', 'ghost small', () => moveFig(i, 1)); dn.disabled = i === figs.length - 1;
-      const del = btn('删除', 'danger small', () => { figs.splice(i, 1); renderFigs(); });
-      ops.append(up, dn, del); item.appendChild(ops);
-      box.appendChild(item);
-    });
-    const kb = Math.round(figs.reduce((n, s) => n + s.src.length, 0) / 1024);
-    $('#figInfo').textContent = figs.length + ' / ' + MAX_FIGS + ' 张 · 约 ' + kb + ' KB';
-    $('#figAddBtn').disabled = figs.length >= MAX_FIGS;
-  }
-  function moveFig(i, d) {
-    const j = i + d; if (j < 0 || j >= figs.length) return;
-    [figs[i], figs[j]] = [figs[j], figs[i]]; renderFigs();
-  }
-
-  $('#figAddBtn').onclick = () => $('#figInput').click();
-  $('#figInput').onchange = async e => {
-    const files = [...e.target.files]; e.target.value = '';
-    const msg = $('#figMsg'); msg.className = 'msg'; msg.textContent = '';
-    for (const f of files) {
-      if (figs.length >= MAX_FIGS) { msg.className = 'msg err'; msg.textContent = '最多只能 ' + MAX_FIGS + ' 张,多余的已忽略。'; break; }
-      if (!f.type.startsWith('image/')) continue;
-      try {
-        msg.textContent = '正在处理 ' + f.name + ' ...';
-        figs.push({ src: await compressFig(f), caption: '' });
-        renderFigs(); msg.textContent = '';
-      } catch (err) { msg.className = 'msg err'; msg.textContent = f.name + ':' + err.message; }
-    }
-    if (!msg.textContent) { msg.className = 'msg ok'; msg.textContent = '已添加,记得点下方"保存到首页"。'; }
-  };
-
-    function compressFig(file, maxSide = 1000, q = 0.82, limit = 270000) {
-    return new Promise((resolve, reject) => {
-      const url = URL.createObjectURL(file); const img = new Image();
-      img.onload = () => {
-        let w = img.naturalWidth, h = img.naturalHeight;
-        const s = Math.min(1, maxSide / Math.max(w, h));
-        w = Math.round(w * s); h = Math.round(h * s);
-        const c = document.createElement('canvas'); c.width = w; c.height = h;
-        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h);
-        URL.revokeObjectURL(url);
-        let quality = q, out = c.toDataURL('image/jpeg', quality);
-                while (out.length > limit && quality > 0.4) { quality -= 0.08; out = c.toDataURL('image/jpeg', quality); }
-        resolve(out);
-      };
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('无法读取这张图片(请用 JPG 或 PNG 格式)')); };
-      img.src = url;
-    });
-  }
-  function showSave(text, ok) { const m = $('#saveMsg'); m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = text; }
-
   $('#saveBtn').onclick = async () => {
     const cfg = {};
     for (const f of FIELDS) {
       const v = $('#' + f).value.trim();
-      if (LINK_FIELDS.includes(f) && v && !/^https:\/\//i.test(v)) { showSave('链接必须以 https:// 开头:' + f, false); return; }
+      if (LINK_FIELDS.includes(f) && v && !/^https:\/\//i.test(v)) {
+        showSave('链接必须以 https:// 开头:' + f, false);
+        if (['facebook','instagram','shopee','tiktok','whatsapp'].includes(f)) openTab('social');
+        else if (f === 'mapLink') openTab('contact');
+        else if (f === 'liveShopee') openTab('live');
+        return;
+      }
       if (f === 'announcement') cfg[f] = v;   // 允许留空 = 隐藏公告
-      else if (v) cfg[f] = v;                  // 留空 = 使用首页默认
+      else if (v) cfg[f] = v;                  // 留空 = 使用页面默认
     }
-        const livePs = ['shopee','tiktok','facebook'].filter(k => $('#liveP_' + k).checked);
+    const livePs = ['shopee','tiktok','facebook'].filter(k => $('#liveP_' + k).checked);
     cfg.livePlatforms = livePs.join(',');
     cfg.liveStatus = livePs.length ? 'on' : 'off';
-    const btnSave = $('#saveBtn'); btnSave.disabled = true; showSave('保存中...', true);
+
+    const b = $('#saveBtn'); b.disabled = true; showSave('保存中...', true);
     try {
       await set(ref(db, 'homepage/config'), cfg);
       await set(ref(db, 'homepage/slides'), slides.length ? slides : null);
-            await set(ref(db, 'homepage/figures'), figs.length ? figs : null);
-            const abOut = {}; if (about.story) abOut.story = about.story; if (about.dream) abOut.dream = about.dream;
+      await set(ref(db, 'homepage/figures'), figs.length ? figs : null);
+      const abOut = {}; if (about.story) abOut.story = about.story; if (about.dream) abOut.dream = about.dream;
       await set(ref(db, 'homepage/about'), Object.keys(abOut).length ? abOut : null);
-      showSave('✅ 已保存,首页已更新(' + new Date().toLocaleTimeString() + ')', true);
+      dirty = false;
+      showSave('✅ 已保存,网站已更新(' + new Date().toLocaleTimeString() + ')', true);
     } catch (e) {
       const denied = /permission/i.test(e.message);
       showSave(denied ? '保存失败:没有权限。请确认这个账号的 UID 已写入 Firebase 规则。' : '保存失败:' + e.message, false);
-    } finally { btnSave.disabled = false; }
+    } finally { b.disabled = false; }
   };
 </script>
 </body>
