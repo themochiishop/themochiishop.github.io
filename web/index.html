@@ -33,18 +33,18 @@
   <section class="hero">
     <div class="slides" id="slides"></div>
     <div class="hero-shade"></div>
+        <div class="hero-content">
+      <div class="eyebrow">The Mochii Shop</div>
+      <h1 id="heroTitle">Welcome to The MoChii Shop</h1>
+      <p id="heroSubtitle">Your ultimate destination for handmade bracelets, 100% authentic blind boxes, and thrilling live stream interactive games!</p>
+      <div class="cta">
+        <a class="btn btn-primary" data-link="shopee" href="https://s.shopee.com.my/5q5l5fQ8dM?share_channel_code=5" target="_blank" rel="noopener">Shop on Shopee</a>
+        <a class="btn btn-outline" href="/live-stream/">Watch Live</a>
+      </div>
+    </div>
     <button class="arrow" id="prev" aria-label="Previous" hidden>‹</button>
     <button class="arrow" id="next" aria-label="Next" hidden>›</button>
     <div class="dots" id="dots" hidden></div>
-  </section>
-    <section class="intro-band">
-    <div class="eyebrow">The Mochii Shop</div>
-    <h1 id="heroTitle">Welcome to The MoChii Shop</h1>
-    <p id="heroSubtitle">Your ultimate destination for handmade bracelets, 100% authentic blind boxes, and thrilling live stream interactive games!</p>
-    <div class="cta">
-      <a class="btn btn-primary" data-link="shopee" href="https://s.shopee.com.my/5q5l5fQ8dM?share_channel_code=5" target="_blank" rel="noopener">Shop on Shopee</a>
-      <a class="btn btn-outline" href="/live-stream/">Watch Live</a>
-    </div>
   </section>
   
 
@@ -177,8 +177,10 @@
     track.innerHTML = ''; dots.innerHTML = '';
     list.forEach((s, i) => {
       const d = document.createElement('div'); d.className = 'slide';
-            const bg = document.createElement('img'); bg.src = s.src; bg.className = 'bg'; bg.alt = ''; bg.setAttribute('aria-hidden', 'true');
-      const fg = document.createElement('img'); fg.src = s.src; fg.className = 'fg'; fg.alt = s.caption || 'The Mochii Shop';
+                 const bg = document.createElement('img'); bg.src = s.src; bg.className = 'bg'; bg.alt = ''; bg.setAttribute('aria-hidden', 'true');
+      const fg = document.createElement('img'); fg.className = 'fg'; fg.alt = s.caption || 'The Mochii Shop';
+      fg.onload = () => { if (fg.naturalWidth / fg.naturalHeight < 1.5) d.classList.add('tall'); };
+      fg.src = s.src;
       d.append(bg, fg);
       if (s.caption) { const c = document.createElement('div'); c.className = 'slide-caption'; c.textContent = s.caption; d.appendChild(c); }
       track.appendChild(d);
