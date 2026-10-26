@@ -432,25 +432,30 @@ footer a { color: var(--gold); }
 footer strong { font-weight: 400; }
 /* ===== 页脚:爱心捐款 ===== */
 .donate { max-width: 1120px; margin: 0 auto 18px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,.12); }
-.dn-card { display: flex; align-items: center; gap: 22px; padding: 14px 20px; border: 1px solid rgba(201,164,92,.45); border-radius: 8px; background: rgba(255,255,255,.03); text-align: left; transition: background .2s, border-color .2s; }
-.dn-card:hover { background: rgba(255,255,255,.06); border-color: var(--gold); }
-.dn-imgs { display: flex; align-items: center; gap: 14px; flex-shrink: 0; padding: 10px 18px; border-radius: 8px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); }
-.dn-imgs img { display: block; height: 54px; width: auto; max-width: 100%; object-fit: contain; }
-.dn-imgs img + img { height: 44px; padding-left: 14px; border-left: 1px solid rgba(255,255,255,.2); }
-.dn-txt { flex: 1 1 auto; min-width: 0; }
-.dn-title { color: var(--gold); font-size: .72rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
-.dn-line { color: #e6dfe9; font-size: .88rem; line-height: 1.55; }
-.dn-note { color: #8f8595; font-size: .72rem; margin-top: 4px; line-height: 1.4; }
-.dn-go { flex-shrink: 0; padding: 9px 22px; border: 1px solid var(--gold); border-radius: 999px; color: var(--gold); font-size: .85rem; font-weight: 600; white-space: nowrap; transition: background .2s, color .2s; }
-.dn-card:hover .dn-go { background: var(--gold); color: var(--ink); }
+.dn-card { display: flex; flex-direction: column; align-items: center; gap: 14px; max-width: 760px; margin: 0 auto; padding: 24px 28px 20px; border: 1px solid rgba(201,164,92,.4); border-radius: 10px; background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015)); text-align: center; transition: border-color .2s, background .2s; }
+.dn-card:hover { border-color: var(--gold); background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025)); }
 
-@media (max-width: 760px) {
-  .dn-card { flex-direction: column; align-items: stretch; gap: 12px; padding: 12px; }
-  .dn-imgs { justify-content: flex-start; gap: 10px; padding: 10px 12px; }
-  .dn-imgs img { height: 42px; }
-  .dn-imgs img + img { height: 34px; padding-left: 10px; }
-  .dn-txt { padding: 0 4px; }
-  .dn-line { font-size: .82rem; }
+.dn-title { display: flex; align-items: center; gap: 14px; width: 100%; color: var(--gold); font-size: .72rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; white-space: nowrap; }
+.dn-title::before, .dn-title::after { content: ""; flex: 1; height: 1px; }
+.dn-title::before { background: linear-gradient(90deg, transparent, rgba(201,164,92,.6)); }
+.dn-title::after { background: linear-gradient(90deg, rgba(201,164,92,.6), transparent); }
+
+.dn-imgs { display: flex; align-items: center; justify-content: center; gap: 18px; max-width: 100%; }
+.dn-imgs img { display: block; height: 58px; width: auto; max-width: 100%; object-fit: contain; }
+.dn-imgs img + img { height: 48px; padding-left: 18px; border-left: 1px solid rgba(255,255,255,.22); }
+
+.dn-line { max-width: 520px; color: #e6dfe9; font-size: .92rem; line-height: 1.6; }
+.dn-go { padding: 10px 30px; border: 1px solid var(--gold); border-radius: 999px; color: var(--gold); font-size: .88rem; font-weight: 600; white-space: nowrap; transition: background .2s, color .2s; }
+.dn-card:hover .dn-go { background: var(--gold); color: var(--ink); }
+.dn-note { color: #8f8595; font-size: .72rem; line-height: 1.5; }
+
+@media (max-width: 600px) {
+  .dn-card { align-items: flex-start; gap: 12px; padding: 18px 16px 16px; text-align: left; }
+  .dn-title::before { display: none; }
+  .dn-imgs { justify-content: flex-start; gap: 12px; }
+  .dn-imgs img { height: 38px; }
+  .dn-imgs img + img { height: 30px; padding-left: 12px; }
+  .dn-line { font-size: .84rem; }
+  .dn-go { align-self: stretch; text-align: center; padding: 10px 16px; }
   .dn-note { font-size: .7rem; }
-  .dn-go { text-align: center; padding: 10px 16px; }
 }
