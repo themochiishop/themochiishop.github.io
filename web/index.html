@@ -162,7 +162,13 @@ The MoChii Shop</h1>
   const watchOrig = watchBox.innerHTML;
   onValue(ref(db, 'homepage/config'), snap => {
     const c = snap.val() || {};
-    const list = String(c.livePlatforms || '').split(',').filter(k => LIVE_META[k]);
+        let list = String(c.livePlatforms || '').split(',').filter(k => LIVE_META[k]);
+    const until = Number(c.liveUntil) || 0;
+    clearTimeout(window.__liveT);
+    if (until) {
+      if (Date.now() >= until) list = [];
+      else window.__liveT = setTimeout(() => location.reload(), Math.min(until - Date.now() + 1000, 2147483000));
+    }
     if (!list.length) { watchBox.innerHTML = watchOrig; return; }
 
     const pill = document.createElement('div'); pill.className = 'watch-live';
