@@ -177,7 +177,8 @@ The MoChii Shop</h1>
     list.forEach(k => {
       const m = LIVE_META[k];
       const a = document.createElement('a'); a.className = 'wl-ico'; a.target = '_blank'; a.rel = 'noopener';
-      a.href = /^https:\/\//i.test(c[m.key]) ? c[m.key] : m.def;
+            const lu = c.liveUrls && c.liveUrls[k];
+      a.href = /^https:\/\//i.test(lu) ? lu : (/^https:\/\//i.test(c[m.key]) ? c[m.key] : m.def);
       a.title = 'Watch live on ' + m.name; a.setAttribute('aria-label', 'Watch live on ' + m.name);
       const im = document.createElement('img'); im.src = m.img; im.alt = m.name;
       a.appendChild(im); pill.appendChild(a);
