@@ -10,6 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="Mochii Hub">
   <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
   <link rel="icon" href="/assets/images/logo.png">
+    <link rel="manifest" href="/hub/manifest.json">
   <title>Mochii Hub</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -541,6 +542,11 @@
     $('#who').textContent = u ? (u.email || '') : '';
     if (u) loadRemote();
   });
+</script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/hub/sw.js', { scope: '/hub/' }).catch(function () {});
+  }
 </script>
 </body>
 </html>
