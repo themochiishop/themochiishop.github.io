@@ -537,3 +537,16 @@ footer strong { font-weight: 400; }
 
 .draw-terms { max-width: 760px; margin: 18px auto 0; padding: 14px 18px; background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--gold); color: var(--muted); font-size: .88rem; line-height: 1.7; white-space: pre-line; }
 .draw-terms:empty { display: none; }
+/* ===== Monthly Draw:奖品清单(缩略图 + 小字) ===== */
+.prize-list { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.prize-list li { display: flex; align-items: center; gap: 12px; padding: 8px 12px 8px 8px; font-size: .86rem; line-height: 1.4; }
+.prize-list .pth { flex: 0 0 52px; width: 52px; height: 52px; border-radius: 6px; background: #fff; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--gold); }
+.prize-list .pth img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.prize-list .pth svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.prize-list .pn { flex: 1; min-width: 0; word-break: break-word; }
+.prize-list .pq { flex: 0 0 auto; font-size: .76rem; font-weight: 700; color: var(--pink); background: #fdf0f4; border-radius: 999px; padding: 2px 9px; }
+@media (max-width: 600px) {
+  .prize-list { grid-template-columns: 1fr; gap: 8px; }
+  .prize-list li { font-size: .82rem; }
+  .prize-list .pth { flex-basis: 46px; width: 46px; height: 46px; }
+}
