@@ -83,6 +83,11 @@
     #loginView .card { text-align: center; }
     #loginView label { display: block; text-align: left; font-size: .85rem; font-weight: 600; margin: 14px 0 6px; }
     #loginView .big { margin-top: 18px; background: #1c1722; }
+        .tchips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tchip { display: inline-flex; align-items: center; border: 1px solid #d8d0db; background: #faf7fb; border-radius: 999px; font-size: .78rem; overflow: hidden; }
+    .tchip:hover { border-color: #c9a45c; }
+    .tchip button { border: 0; background: none; font: inherit; cursor: pointer; padding: 5px 10px; color: #2b2430; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tchip .x { padding: 5px 9px 5px 2px; color: #8b8190; }
   </style>
 </head>
 <body>
@@ -137,6 +142,7 @@
       <div class="fld" id="fTitle" hidden>
                 <label for="title">本场标题(填入模板里的 {title})</label>
         <input type="text" id="title" placeholder="例如 Gelang Premium Live">
+                <div class="tchips" id="tchips"></div>
       </div>
       <div class="fld" id="fCode" hidden>
         <label for="code">优惠码</label>
@@ -236,6 +242,7 @@
   const urls = { shopee: '', tiktok: '', facebook: '' };
   let urlsAt = 0;
   let editing = null, lastDel = null, undoT;
+    let titles = [];
   const curTpl = () => tpls.find(x => x.id === st.tpl) || tpls[0];
   const newId = () => 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4);
 
@@ -252,8 +259,7 @@
 
   /* ---------- 保存 / 读取 ---------- */
   const tplVal = t => ({ name: t.name, body: t.body, ts: t.ts || 0 });
-  const stateObj = () => ({ tpl: st.tpl, title: st.title, code: st.code, urls: { shopee: urls.shopee, tiktok: urls.tiktok, facebook: urls.facebook }, urlsAt });
-  const saveLocal = () => store.set('hubData', JSON.stringify({ templates: tpls, state: stateObj() }));
+  const stateObj = () => ({ tpl: st.tpl, title: st.title, code: st.code, titles, urls: { shopee: urls.shopee, tiktok: urls.tiktok, facebook: urls.facebook }, urlsAt });  const saveLocal = () => store.set('hubData', JSON.stringify({ templates: tpls, state: stateObj() }));
   async function remote(fn) {
     if (!auth.currentUser) return;
     try { await fn(); remoteOk = true; } catch (e) { remoteOk = false; }
@@ -269,6 +275,7 @@
     st.tpl = tpls.some(x => x.id === s.tpl) ? s.tpl : tpls[0].id;
     st.title = typeof s.title === 'string' ? s.title : '';
     st.code = typeof s.code === 'string' ? s.code : '';
+        titles = Array.isArray(s.titles) ? s.titles.filter(x => typeof x === 'string' && x.trim()).slice(0, 8) : titles;
     urlsAt = Number(s.urlsAt) || 0;
     const fresh = Date.now() - urlsAt < 12 * 3600 * 1000;
     Object.keys(urls).forEach(k => { urls[k] = fresh && s.urls && typeof s.urls[k] === 'string' ? s.urls[k] : ''; });
@@ -337,6 +344,24 @@
     $('#title').value = st.title; $('#code').value = st.code;
   }
   $('#title').addEventListener('input', () => { st.title = $('#title').value; persistState(); refreshNotice(); });
+    $('#title').addEventListener('change', () => rememberTitle($('#title').value));
+  function rememberTitle(t) {
+    t = (t || '').trim(); if (!t) return;
+    titles = [t, ...titles.filter(x => x !== t)].slice(0, 8);
+    persistState(); renderTitleChips();
+  }
+  function renderTitleChips() {
+    const box = $('#tchips');
+    box.replaceChildren(...titles.map(t => {
+      const w = document.createElement('span'); w.className = 'tchip';
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.title = t;
+      b.onclick = () => { st.title = t; $('#title').value = t; persistState(); refreshNotice(); };
+      const x = document.createElement('button'); x.type = 'button'; x.className = 'x'; x.textContent = '×'; x.setAttribute('aria-label', '从列表移除');
+      x.onclick = () => { titles = titles.filter(y => y !== t); persistState(); renderTitleChips(); };
+      w.append(b, x); return w;
+    }));
+    box.hidden = !titles.length;
+  }
   $('#code').addEventListener('input', () => { st.code = $('#code').value; persistState(); refreshNotice(); });
 
   /* ---------- 平台、链接 ---------- */
@@ -506,6 +531,7 @@
   };
 
   $('#copyBtn').onclick = async () => {
+        rememberTitle(st.title);
     const t = $('#notice').value;
     try { await navigator.clipboard.writeText(t); say('通知已复制 ✓'); }
     catch (e) {
@@ -521,8 +547,7 @@
   });
   setInterval(renderStatus, 30000);
 
-  function renderAll() { renderPlats(); renderUrls(); renderTplSelect(); renderTplList(); syncFields(); refreshNotice(); renderStatus(); }
-  renderAll();
+  function renderAll() { renderPlats(); renderUrls(); renderTplSelect(); renderTplList(); syncFields(); renderTitleChips(); refreshNotice(); renderStatus(); }  renderAll();
 
   /* ---------- 登录 ---------- */
   $('#loginBtn').onclick = login;
