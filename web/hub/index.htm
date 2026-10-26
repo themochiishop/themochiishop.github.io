@@ -135,7 +135,7 @@
       <select id="tpl" aria-label="使用的通知模板"></select>
 
       <div class="fld" id="fTitle" hidden>
-        <label for="title">标题</label>
+                <label for="title">本场标题(填入模板里的 {title})</label>
         <input type="text" id="title" placeholder="例如 Gelang Premium Live">
       </div>
       <div class="fld" id="fCode" hidden>
@@ -162,6 +162,7 @@
           <div class="fld" style="margin-top:0">
             <label for="tplName">模板名称</label>
             <input type="text" id="tplName" maxlength="100" placeholder="例如 会员优惠券">
+                        <p class="hint">只用来在下拉菜单里选择,不会出现在通知内容里。</p>
           </div>
           <div class="fld">
             <label for="tplBody">模板内容</label>
