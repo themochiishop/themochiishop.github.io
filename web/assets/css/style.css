@@ -529,3 +529,11 @@ footer strong { font-weight: 400; }
 .btn-dark { border-color: #fff; }
 .lc-more { box-shadow: 0 0 0 1.5px #fff; }
 .share-opts .sopt.copy { border-color: #fff; }
+/* ===== 中奖名单:Winner 居中 + 领奖说明 ===== */
+@media (min-width: 601px) {
+  .winner-table .wt-row { grid-template-columns: 1fr 1fr 1fr; }
+}
+.winner-table .wt-row > div:nth-child(2) { text-align: center; }
+
+.draw-terms { max-width: 760px; margin: 18px auto 0; padding: 14px 18px; background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--gold); color: var(--muted); font-size: .88rem; line-height: 1.7; white-space: pre-line; }
+.draw-terms:empty { display: none; }
