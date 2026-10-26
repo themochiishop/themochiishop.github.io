@@ -277,13 +277,17 @@
           <textarea id="drawPrizes"></textarea>
         </div>
 
-        <div class="card">
+               <div class="card">
           <h3>中奖名单</h3>
-          <p class="hint">每行一位,格式:<b>Prize | Winner | Order ID</b>,例如 <b>Air Fryer | abcdefg | 2510XXXXXXXX</b>。也可以直接从 Excel / Google 表格复制粘贴。同一个奖品有多人时,名字之间用逗号隔开。第一行如果是标题行(Prize / Winner / Order ID)会自动忽略。</p>
-          <textarea id="drawWinners" style="min-height:220px"></textarea>
+          <p class="hint">按奖项分三栏填写,每行一位,格式:<b>Prize | Winner | Order ID</b>,例如 <b>Air Fryer | abcdefg | 2510XXXXXXXX</b>。也可以直接从 Excel / Google 表格复制粘贴。同一个奖品有多人时,名字之间用逗号隔开。<br>网页上<b>不会显示"大奖 / 中奖 / 小奖"这些字</b>,只是把不同奖项之间隔开一点。哪一栏留空就不显示。</p>
+          <label for="drawW1" style="margin-top:0">🏆 大奖</label>
+          <textarea id="drawW1" style="min-height:90px"></textarea>
+          <label for="drawW2">🎖️ 中奖</label>
+          <textarea id="drawW2" style="min-height:130px"></textarea>
+          <label for="drawW3">🎁 小奖</label>
+          <textarea id="drawW3" style="min-height:130px"></textarea>
           <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer"><input type="checkbox" id="drawMaskName"> 自动隐藏部分名字(例如 ab***fg)</label>
           <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer;margin-top:8px"><input type="checkbox" id="drawMaskOrder"> 自动隐藏部分订单号(例如 2510****A9X2)</label>
-  
         </div>
       </div>
     </div>
@@ -634,7 +638,7 @@
   let draws = [];
   let curDraw = -1;
   let drawLoadedIds = [];
-  const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', prizes: 'drawPrizes', winners: 'drawWinners' };  const newDrawId = () => 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', prizes: 'drawPrizes', w1: 'drawW1', w2: 'drawW2', w3: 'drawW3' };
 
   function renderPeriods() {
     const bar = $('#periodBar'); bar.innerHTML = '';
@@ -674,7 +678,7 @@
 
   $('#periodAdd').onclick = () => {
     const label = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
-    draws.unshift({ id: newDrawId(), month: label, intro: '', prizes: '', winners: '', pdf: '', image: '', maskName: true, maskOrder: true });
+       draws.unshift({ id: newDrawId(), month: label, intro: '', prizes: '', w1: '', w2: '', w3: '', image: '', maskName: true, maskOrder: true });
     curDraw = 0; renderPeriods(); markDirty();
   };
   $('#periodDel').onclick = () => {
@@ -713,11 +717,11 @@
     idx.forEach(it => {
       if (!it || !it.id) return;
       const d = data[it.id] || {};
-      draws.push({ id: it.id, month: d.month || it.month || '', intro: d.intro || '', prizes: d.prizes || '', winners: d.winners || '', pdf: d.pdf || '', image: typeof d.image === 'string' ? d.image : '', maskName: d.maskName !== false, maskOrder: d.maskOrder !== false });
+            draws.push({ id: it.id, month: d.month || it.month || '', intro: d.intro || '', prizes: d.prizes || '', w1: d.w1 || '', w2: d.w2 || d.winners || '', w3: d.w3 || '', image: typeof d.image === 'string' ? d.image : '', maskName: d.maskName !== false, maskOrder: d.maskOrder !== false });
     });
     if (!draws.length && v.draw && typeof v.draw === 'object') {
       const o = v.draw;
-      draws.push({ id: 'd1', month: o.month || 'Current', intro: o.intro || '', prizes: o.prizes || '', winners: o.winners || '', pdf: o.pdf || '', image: typeof o.image === 'string' ? o.image : '', maskName: o.mask !== false, maskOrder: true });
+           draws.push({ id: 'd1', month: o.month || 'Current', intro: o.intro || '', prizes: o.prizes || '', w1: '', w2: o.winners || '', w3: '', image: typeof o.image === 'string' ? o.image : '', maskName: o.mask !== false, maskOrder: true });
     }
     drawLoadedIds = Object.keys(data);
     curDraw = draws.length ? 0 : -1;
@@ -827,7 +831,7 @@
       await set(ref(db, 'homepage/drawIndex'), draws.length ? draws.map(d => ({ id: d.id, month: d.month.trim() })) : null);
       for (const d of draws) {
         const o = { month: d.month.trim(), maskName: d.maskName !== false, maskOrder: d.maskOrder !== false };
-        ['intro', 'prizes', 'winners', 'pdf'].forEach(k => { const t = (d[k] || '').trim(); if (t) o[k] = t; });
+                ['intro', 'prizes', 'w1', 'w2', 'w3'].forEach(k => { const t = (d[k] || '').trim(); if (t) o[k] = t; });
         if (d.image) o.image = d.image;
         await set(ref(db, 'homepage/drawData/' + d.id), o);
       }
