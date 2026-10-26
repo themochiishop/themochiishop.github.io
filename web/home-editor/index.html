@@ -283,9 +283,7 @@
           <textarea id="drawWinners" style="min-height:220px"></textarea>
           <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer"><input type="checkbox" id="drawMaskName"> 自动隐藏部分名字(例如 ab***fg)</label>
           <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer;margin-top:8px"><input type="checkbox" id="drawMaskOrder"> 自动隐藏部分订单号(例如 2510****A9X2)</label>
-          <label for="drawPdf">完整结果 PDF 链接(可留空)</label>
-          <input type="text" id="drawPdf" placeholder="/assets/draws/2026-10.pdf">
-          <p class="small-note" style="margin-top:6px">PDF 里通常是完整名字和订单号。要隐藏的话,不要放 PDF。</p>
+  
         </div>
       </div>
     </div>
@@ -636,8 +634,7 @@
   let draws = [];
   let curDraw = -1;
   let drawLoadedIds = [];
-  const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', prizes: 'drawPrizes', winners: 'drawWinners', pdf: 'drawPdf' };
-  const newDrawId = () => 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', prizes: 'drawPrizes', winners: 'drawWinners' };  const newDrawId = () => 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 
   function renderPeriods() {
     const bar = $('#periodBar'); bar.innerHTML = '';
@@ -729,8 +726,6 @@
   function validateDraws() {
     for (const d of draws) {
       if (!(d.month || '').trim()) return '每月抽奖:有一期没有填写期数 / 月份';
-      const p = (d.pdf || '').trim();
-      if (p && !/^(https:\/\/|\/assets\/)/i.test(p)) return '每月抽奖:PDF 链接必须以 https:// 或 /assets/ 开头(' + d.month + ')';
     }
     const names = draws.map(d => d.month.trim().toLowerCase());
     if (new Set(names).size !== names.length) return '每月抽奖:有两期的名称重复了';
