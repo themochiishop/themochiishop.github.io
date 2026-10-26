@@ -351,3 +351,19 @@ footer a { color: var(--gold); }
   footer .faddr,
   footer #fAddr { line-height: 1.35; margin-bottom: 2px; }
 }
+/* ===== Monthly Draw ===== */
+.draw-month { display: table; margin: 0 auto 26px; padding: 8px 22px; border: 1px solid var(--gold); background: #fff; color: var(--ink); font-family: Georgia, "Songti SC", "Noto Serif SC", serif; font-weight: 700; letter-spacing: 1px; }
+.draw-sec { margin-top: 48px; }
+.prize-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; max-width: 900px; margin: 0 auto; }
+.prize-list li { background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--gold); padding: 12px 16px; font-size: .95rem; color: var(--ink); }
+.winner-table { max-width: 760px; margin: 0 auto; background: #fff; border: 1px solid var(--line); border-top: 3px solid var(--gold); }
+.wt-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; padding: 14px 20px; border-top: 1px solid var(--line); }
+.wt-row:first-child { border-top: none; }
+.wt-head { background: var(--cream); color: var(--ink); font-weight: 700; font-size: .8rem; letter-spacing: 1px; text-transform: uppercase; }
+.wt-name { font-weight: 600; color: var(--ink); word-break: break-word; }
+.winner-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; max-width: 900px; margin: 0 auto; }
+.winner-list li { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--line); border-top: 3px solid var(--gold); padding: 12px 16px; }
+.winner-list .rk { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; background: #fdf0f4; color: var(--pink); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .85rem; }
+.winner-list .nm { font-weight: 600; color: var(--ink); word-break: break-word; }
+.draw-pdf { text-align: center; margin-top: 36px; }
+@media (max-width: 600px) { .draw-sec { margin-top: 36px; } .wt-row { padding: 12px 14px; gap: 10px; } }
