@@ -118,7 +118,13 @@ Follow our channels to get notified when we start.</div>
     const c = snap.val() || {};
 
        const names = { shopee: 'Shopee', tiktok: 'TikTok', facebook: 'Facebook' };
-    const livePs = String(c.livePlatforms || '').split(',').filter(k => names[k]);
+        let livePs = String(c.livePlatforms || '').split(',').filter(k => names[k]);
+    const until = Number(c.liveUntil) || 0;
+    clearTimeout(window.__liveT);
+    if (until) {
+      if (Date.now() >= until) livePs = [];
+      else window.__liveT = setTimeout(() => location.reload(), Math.min(until - Date.now() + 1000, 2147483000));
+    }
     const on = livePs.length > 0;
     $('#liveStatus').classList.toggle('on', on);
     $('#liveTitle').textContent = on ? 'LIVE NOW' : 'CURRENTLY OFFLINE';
