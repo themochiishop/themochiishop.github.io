@@ -369,7 +369,7 @@ footer a { color: var(--gold); }
 @media (max-width: 600px) { .draw-sec { margin-top: 36px; } .wt-row { padding: 12px 14px; gap: 10px; } }
 /* ===== Monthly Draw:期数切换 + 三栏名单 ===== */
 .draw-periods { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 900px; margin: 0 auto 28px; }
-.draw-periods button { padding: 8px 18px; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+.draw-periods button { padding: 8px 18px; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 15px; font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; transition: all .2s; }
 .draw-periods button:hover { border-color: var(--gold); }
 .draw-periods button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
 .winner-table .wt-row { grid-template-columns: 1.1fr 1.1fr 1fr; }
