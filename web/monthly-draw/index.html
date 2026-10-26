@@ -187,7 +187,18 @@
       renderDraw(snap.val() || {});
     } catch (e) { console.error('draw:', e); }
   }
-
+  const GIFT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="9" width="16" height="11" rx="1.5"/><rect x="3" y="6" width="18" height="3.5" rx="1"/><path d="M12 6v14"/></svg>';
+  function prizeLi(p) {
+    const li = mk('li');
+    const th = mk('span', 'pth');
+    if (p.i) { const im = document.createElement('img'); im.src = p.i; im.alt = ''; im.loading = 'lazy'; th.appendChild(im); }
+    else th.innerHTML = GIFT_SVG;
+    const m = p.n.match(/^(.*?)\s*[x×]\s*(\d+)\s*$/i);
+    li.append(th, mk('span', 'pn', m && m[1] ? m[1] : p.n));
+    if (m && m[1]) li.appendChild(mk('span', 'pq', '×' + m[2]));
+    return li;
+  }
+  
     function renderDraw(d) {
     $('#dIntro').textContent = d.intro || DEFAULT_INTRO;
           $('#dTerms').textContent = (d.terms || '').trim() || DEFAULT_TERMS;
@@ -196,10 +207,12 @@
     if (okImg) $('#dImg').src = d.image;
     $('#dImgBox').hidden = !okImg;
 
-    const prizes = String(d.prizes || '').split(/\n+/).map(x => x.trim()).filter(Boolean);
+        let items = Array.isArray(d.prizeItems) ? d.prizeItems : Object.values(d.prizeItems || {});
+    items = items.filter(x => x && typeof x.n === 'string' && x.n.trim()).map(x => ({ n: x.n.trim(), i: isImg(x.i) ? x.i : '' }));
+    if (!items.length) items = String(d.prizes || '').split(/\n+/).map(x => x.trim()).filter(Boolean).map(n => ({ n, i: '' }));
     const pu = $('#dPrizes'); pu.innerHTML = '';
-    prizes.forEach(p => pu.appendChild(mk('li', '', p)));
-    $('#prizeBlock').hidden = prizes.length === 0;
+    items.forEach(p => pu.appendChild(prizeLi(p)));
+    $('#prizeBlock').hidden = items.length === 0;
 
     const mName = d.maskName !== false, mOrder = d.maskOrder !== false;
     let groups = [d.w1, d.w2, d.w3].map(parseRows).filter(g => g.length);
