@@ -64,12 +64,39 @@ function renderCompanyTitle() {
   t.textContent = 'Company';
   foot.insertBefore(t, first);
 }
+function renderDonate() {
+  if (!foot || foot.querySelector('.donate')) return;
+  const box = document.createElement('div'); box.className = 'donate';
+  const a = document.createElement('a'); a.className = 'dn-card';
+  a.href = 'https://www.onehopecharity.org/case'; a.target = '_blank'; a.rel = 'noopener';
+  a.setAttribute('aria-label', 'One Hope Charity & Welfare (opens in a new tab)');
+
+  const imgs = document.createElement('div'); imgs.className = 'dn-imgs';
+  [['/assets/images/ohc-logo.png', 'One Hope Charity & Welfare'], ['/assets/images/ohc-slogan.png', '']].forEach(([src, alt]) => {
+    const im = document.createElement('img'); im.src = src; im.alt = alt; im.loading = 'lazy';
+    im.onerror = () => im.remove();
+    imgs.appendChild(im);
+  });
+
+  const txt = document.createElement('div'); txt.className = 'dn-txt';
+  const t = document.createElement('div'); t.className = 'dn-title'; t.textContent = 'Share the Love';
+  const l = document.createElement('div'); l.className = 'dn-line'; l.textContent = 'Support One Hope Charity & Welfare. Your kindness brings health and hope.';
+  const n = document.createElement('div'); n.className = 'dn-note'; n.textContent = "Opens the charity's own website. Donations are made directly to them.";
+  txt.append(t, l, n);
+
+  const go = document.createElement('span'); go.className = 'dn-go'; go.textContent = 'View Cases →';
+
+  a.append(imgs, txt, go);
+  box.appendChild(a);
+  foot.insertBefore(box, foot.firstChild);
+}
 function render(list) {
   const here = norm(location.pathname);
   const items = list.filter(x => x.show !== false);
   renderMenu(items, here);
   renderSitemap(items, here);
     renderCompanyTitle();
+    renderDonate();
 }
 
 /* 先用上次记住的菜单(没有就用默认),避免闪烁 */
