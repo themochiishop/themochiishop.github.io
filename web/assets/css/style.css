@@ -430,3 +430,20 @@ footer a { color: var(--gold); }
 @media (max-width: 600px) { .foot-title { margin-bottom: 6px; } }
 /* ===== 页脚:店铺名与其他资料同样式(不加粗) ===== */
 footer strong { font-weight: 400; }
+/* ===== 页脚:爱心捐款 ===== */
+.donate { max-width: 1120px; margin: 0 auto 18px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,.12); }
+.dn-card { display: flex; align-items: center; justify-content: space-between; gap: 18px 22px; flex-wrap: wrap; padding: 16px 20px; border: 1px solid rgba(201,164,92,.45); border-radius: 8px; background: rgba(255,255,255,.03); text-align: left; transition: background .2s, border-color .2s; }
+.dn-card:hover { background: rgba(255,255,255,.07); border-color: var(--gold); }
+.dn-imgs { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+.dn-imgs img { height: 46px; width: auto; max-width: 160px; object-fit: contain; display: block; }
+.dn-txt { flex: 1 1 260px; min-width: 0; }
+.dn-title { color: var(--gold); font-size: .72rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
+.dn-line { color: #e6dfe9; font-size: .88rem; line-height: 1.5; }
+.dn-note { color: #8f8595; font-size: .72rem; margin-top: 4px; line-height: 1.4; }
+.dn-go { flex-shrink: 0; padding: 9px 20px; border: 1px solid var(--gold); border-radius: 999px; color: var(--gold); font-size: .85rem; font-weight: 600; white-space: nowrap; transition: background .2s, color .2s; }
+.dn-card:hover .dn-go { background: var(--gold); color: var(--ink); }
+@media (max-width: 600px) {
+  .dn-card { flex-direction: column; align-items: flex-start; gap: 12px; padding: 14px 16px; }
+  .dn-imgs img { height: 40px; }
+  .dn-txt { flex: none; width: 100%; }
+}
