@@ -563,3 +563,10 @@ footer strong { font-weight: 400; }
   .prize-list .pn { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .prize-list .pq { font-size: .66rem; padding: 1px 6px; }
 }
+/* ===== 领奖说明:每行一个图标 ===== */
+.draw-terms::before { content: none; }
+.draw-terms { display: flex; flex-direction: column; gap: 8px; white-space: normal; }
+.dt-line { display: flex; align-items: flex-start; gap: 10px; }
+.dt-ico { flex: 0 0 18px; width: 18px; height: 18px; margin-top: 3px; color: var(--gold); }
+.dt-ico svg { display: block; width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.dt-txt { flex: 1; min-width: 0; }
