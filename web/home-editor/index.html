@@ -104,6 +104,7 @@
       <button class="tab" data-tab="slides">🖼️ 轮播图</button>
       <button class="tab" data-tab="live">🔴 Live 直播<span class="dot" id="liveDot" hidden></span></button>
       <button class="tab" data-tab="figures">🧸 Figures Toy</button>
+            <button class="tab" data-tab="draw">🎁 每月抽奖</button>
       <button class="tab" data-tab="about">💝 About Us</button>
       <button class="tab" data-tab="contact">✉️ Contact Us</button>
       <button class="tab" data-tab="social">🔗 社交链接</button>
@@ -204,7 +205,43 @@
         <div class="msg" id="figMsg"></div>
       </div>
     </div>
+    <!-- 每月抽奖 -->
+    <div class="panel" id="panel-draw">
+      <div class="panel-head"><h2>🎁 每月抽奖</h2><a class="btn ghost small" href="/monthly-draw/" target="_blank" rel="noopener">查看页面 ↗</a></div>
 
+      <div class="card">
+        <h3>本期信息</h3>
+        <p class="hint">每月开奖后,更新这里,点"保存到网站"即可。</p>
+        <label for="drawMonth" style="margin-top:0">期数 / 月份(例如 October 2026)</label>
+        <input type="text" id="drawMonth">
+        <label for="drawIntro">页面说明(可留空)</label>
+        <textarea id="drawIntro" style="min-height:64px"></textarea>
+      </div>
+
+      <div class="card">
+        <h3>奖品</h3>
+        <p class="hint">奖品图建议用实拍照。上传时会自动压缩。</p>
+        <div class="slide-item">
+          <img id="drawPrev" alt="" style="visibility:hidden;width:130px;height:130px;object-fit:contain">
+          <div class="mid"><div style="font-size:.85rem;font-weight:600">奖品图</div></div>
+          <div class="ops"><button class="btn dark small" id="drawBtn">上传 / 更换</button><button class="btn danger small" id="drawDel">删除</button></div>
+        </div>
+        <input type="file" id="drawFile" accept="image/*" hidden>
+        <div class="msg" id="drawMsg"></div>
+        <label for="drawPrizes">奖品清单(每行一个,可留空)</label>
+        <textarea id="drawPrizes"></textarea>
+      </div>
+
+      <div class="card">
+        <h3>中奖名单</h3>
+        <p class="hint">每行一位。想对应奖品,写成"奖品 | 中奖者",例如 <b>Air Fryer | abcdefg</b>。同一个奖品有多人时,名字之间用逗号隔开。</p>
+        <textarea id="drawWinners" style="min-height:200px"></textarea>
+        <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer"><input type="checkbox" id="drawMask"> 自动隐藏部分名字(例如 ab***fg,保护中奖者隐私)</label>
+        <label for="drawPdf">完整结果 PDF 链接(可留空)</label>
+        <input type="text" id="drawPdf" placeholder="/assets/draws/2026-10.pdf">
+        <p class="small-note" style="margin-top:6px">PDF 里通常是完整名字。要隐藏名字的话,不要放 PDF。</p>
+      </div>
+    </div>
     <!-- About Us -->
     <div class="panel" id="panel-about">
       <div class="panel-head"><h2>💝 About Us</h2><a class="btn ghost small" href="/about-us/" target="_blank" rel="noopener">查看页面 ↗</a></div>
@@ -378,6 +415,7 @@
       ['shopee','tiktok','facebook'].forEach(k => { $('#liveP_' + k).checked = lp.includes(k); });
       updateLiveDot();
 
+            loadDraw(v.draw);
       const ab = v.about || {};
       about = { story: typeof ab.story === 'string' ? ab.story : '', dream: typeof ab.dream === 'string' ? ab.dream : '' };
       renderAbout();
@@ -526,6 +564,48 @@
       msg.className = 'msg ok'; msg.textContent = '已更新,记得点下方"保存到网站"。';
     } catch (err) { msg.className = 'msg err'; msg.textContent = err.message; }
   };
+    /* ---------- 每月抽奖 ---------- */
+  let drawImg = '';
+  function renderDrawImg() {
+    const im = $('#drawPrev');
+    if (drawImg) { im.src = drawImg; im.style.visibility = 'visible'; }
+    else { im.removeAttribute('src'); im.style.visibility = 'hidden'; }
+    $('#drawDel').disabled = !drawImg;
+    markDirty();
+  }
+  $('#drawBtn').onclick = () => $('#drawFile').click();
+  $('#drawDel').onclick = () => { drawImg = ''; renderDrawImg(); };
+  $('#drawFile').onchange = async e => {
+    const f = e.target.files[0]; e.target.value = '';
+    const msg = $('#drawMsg'); msg.className = 'msg'; msg.textContent = '';
+    if (!f) return;
+    try {
+      msg.textContent = '正在处理 ...';
+      drawImg = await compressImage(f, 1400, 0.88, 600000);
+      renderDrawImg();
+      msg.className = 'msg ok'; msg.textContent = '已更新,记得点下方"保存到网站"。';
+    } catch (err) { msg.className = 'msg err'; msg.textContent = err.message; }
+  };
+  function loadDraw(d) {
+    d = d || {};
+    $('#drawMonth').value = d.month || '';
+    $('#drawIntro').value = d.intro || '';
+    $('#drawPrizes').value = d.prizes || '';
+    $('#drawWinners').value = d.winners || '';
+    $('#drawPdf').value = d.pdf || '';
+    $('#drawMask').checked = d.mask !== false;
+    drawImg = typeof d.image === 'string' ? d.image : '';
+    renderDrawImg();
+  }
+  function collectDraw() {
+    const o = {};
+    const put = (k, id) => { const v = $('#' + id).value.trim(); if (v) o[k] = v; };
+    put('month', 'drawMonth'); put('intro', 'drawIntro'); put('prizes', 'drawPrizes');
+    put('winners', 'drawWinners'); put('pdf', 'drawPdf');
+    o.mask = $('#drawMask').checked;
+    if (drawImg) o.image = drawImg;
+    return o;
+  }
   /* ---------- 保存 ---------- */
   $('#saveBtn').onclick = async () => {
     const cfg = {};
@@ -541,6 +621,8 @@
       if (f === 'announcement') cfg[f] = v;   // 允许留空 = 隐藏公告
       else if (v) cfg[f] = v;                  // 留空 = 使用页面默认
     }
+        const pdfV = $('#drawPdf').value.trim();
+    if (pdfV && !/^(https:\/\/|\/assets\/)/i.test(pdfV)) { showSave('PDF 链接必须以 https:// 或 /assets/ 开头', false); openTab('draw'); return; }
     const livePs = ['shopee','tiktok','facebook'].filter(k => $('#liveP_' + k).checked);
     cfg.livePlatforms = livePs.join(',');
     cfg.liveStatus = livePs.length ? 'on' : 'off';
@@ -553,6 +635,8 @@
             await set(ref(db, 'homepage/figuresBanner'), banner || null);
       const abOut = {}; if (about.story) abOut.story = about.story; if (about.dream) abOut.dream = about.dream;
       await set(ref(db, 'homepage/about'), Object.keys(abOut).length ? abOut : null);
+            const dr = collectDraw();
+      await set(ref(db, 'homepage/draw'), Object.keys(dr).some(k => k !== 'mask') ? dr : null);
       dirty = false;
       showSave('✅ 已保存,网站已更新(' + new Date().toLocaleTimeString() + ')', true);
     } catch (e) {
