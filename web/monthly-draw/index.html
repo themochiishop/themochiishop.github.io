@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="light">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="The Mochii Shop monthly draw - prizes and winners.">
+  <title>Monthly Draw - The Mochii Shop</title>
+  <link rel="icon" href="/assets/images/logo.png">
+  <link rel="stylesheet" href="/assets/css/style.css?v=__V__">
+</head>
+<body>
+
+  <header>
+    <div class="nav">
+      <a class="brand" href="/">
+        <img src="/assets/images/logo.png" alt="" onerror="this.style.display='none'">
+        The Mochii Shop
+      </a>
+      <button class="menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+      <ul id="menu">
+        <li><a href="/">Home</a></li>
+        <li><a href="/live-stream/">Live Stream</a></li>
+        <li><a href="/figures-toy/">Figures Toy</a></li>
+        <li><a class="active" href="/monthly-draw/">Monthly Draw</a></li>
+        <li><a href="/about-us/">About Us</a></li>
+        <li><a href="/contact-us/">Contact Us</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <section class="page-hero">
+    <h1>Monthly Draw</h1>
+    <p id="dIntro">Our monthly prize draw. See this month's prizes and the lucky winners.</p>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="draw-month" id="dMonth" hidden></div>
+      <div class="fig-banner" id="dImgBox" hidden><img id="dImg" alt="This month's prizes"></div>
+
+      <div class="draw-sec" id="prizeBlock" hidden>
+        <div class="section-head"><h2>Prizes</h2></div>
+        <ul class="prize-list" id="dPrizes"></ul>
+      </div>
+
+      <div class="draw-sec">
+        <div class="section-head"><h2>Winners</h2></div>
+        <div id="dWinners"></div>
+      </div>
+
+      <div class="draw-pdf" id="dPdf" hidden>
+        <a class="btn btn-dark" href="#" target="_blank" rel="noopener">Download Full Results (PDF)</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <h2>Join Our Next Draw</h2>
+    <p>Catch our daily live streams for more chances to win.</p>
+    <div class="cta" style="justify-content:center;">
+      <a class="btn btn-primary" id="dShopee" href="https://s.shopee.com.my/5q5l5fQ8dM?share_channel_code=5" target="_blank" rel="noopener">Shop on Shopee</a>
+      <a class="btn btn-outline" href="/live-stream/">Watch Live</a>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong id="fShop">Mochii Shop (202503305565)</strong></p>
+    <p id="fAddr">67A, JALAN SS 2/6, TAMAN SRI SAUJANA,
+81900 KOTA TINGGI, JOHOR, MALAYSIA</p>
+    <p>Customer Services: <span id="fPhone">+6017-7503767</span> (WhatsApp only) · Email: <a id="fMail" href="mailto:mail@themochiishop.com">mail@themochiishop.com</a></p>
+    <p style="margin-top:14px;">© 2026 themochiishop</p>
+  </footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDJrsKAjWqz0AmjEtBzz4CeswiskdQqASw",
+    authDomain: "admin-status-c3bdb.firebaseapp.com",
+    databaseURL: "https://admin-status-c3bdb-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "admin-status-c3bdb",
+    storageBucket: "admin-status-c3bdb.firebasestorage.app",
+    messagingSenderId: "377694458194",
+    appId: "1:377694458194:web:71a78ba5dbed4df1b1aa8b"
+  });
+  const db = getDatabase(app);
+  const $ = s => document.querySelector(s);
+  const isHttps = u => typeof u === 'string' && /^https:\/\//i.test(u);
+  const isEmail = e => typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  const isImg = s => typeof s === 'string' && /^(data:image\/|https:\/\/)/.test(s);
+
+  $('#menuBtn').onclick = () => $('#menu').classList.toggle('open');
+
+  /* 页脚、Shopee 链接 */
+  onValue(ref(db, 'homepage/config'), snap => {
+    const c = snap.val() || {};
+    if (isHttps(c.shopee)) $('#dShopee').href = c.shopee;
+    if (c.phone) $('#fPhone').textContent = c.phone;
+    if (isEmail(c.email)) { $('#fMail').textContent = c.email; $('#fMail').href = 'mailto:' + c.email; }
+    if (c.shopName) $('#fShop').textContent = c.shopName;
+    if (c.address) $('#fAddr').textContent = c.address;
+  });
+
+  /* 名字隐藏:ab***fg */
+  const maskName = n => {
+    const s = Array.from(String(n).trim());
+    const L = s.length;
+    if (!L || s.includes('*')) return s.join('');
+    if (L <= 2) return s[0] + '*';
+    if (L <= 4) return s[0] + '*'.repeat(L - 2) + s[L - 1];
+    return s.slice(0, 2).join('') + '***' + s.slice(-2).join('');
+  };
+  const fmtNames = (t, on) => String(t).split(/[,，、;；]/).map(x => x.trim()).filter(Boolean).map(x => on ? maskName(x) : x).join(', ');
+
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+
+  onValue(ref(db, 'homepage/draw'), snap => {
+    const d = snap.val() || {};
+
+    const mEl = $('#dMonth'); mEl.textContent = d.month || ''; mEl.hidden = !d.month;
+    if (d.intro) $('#dIntro').textContent = d.intro;
+
+    const okImg = isImg(d.image);
+    if (okImg) $('#dImg').src = d.image;
+    $('#dImgBox').hidden = !okImg;
+
+    const prizes = String(d.prizes || '').split(/\n+/).map(x => x.trim()).filter(Boolean);
+    const pu = $('#dPrizes'); pu.innerHTML = '';
+    prizes.forEach(p => pu.appendChild(mk('li', '', p)));
+    $('#prizeBlock').hidden = prizes.length === 0;
+
+    const on = d.mask !== false;
+    const lines = String(d.winners || '').split(/\n+/).map(x => x.trim()).filter(Boolean);
+    const box = $('#dWinners'); box.innerHTML = '';
+    if (!lines.length) {
+      const e = mk('div', 'fig-empty');
+      e.appendChild(mk('div', 'ico', '🎁'));
+      e.appendChild(mk('p', '', 'The winners will be announced here after the draw.'));
+      box.appendChild(e);
+    } else if (lines.some(l => l.includes('|'))) {
+      const t = mk('div', 'winner-table');
+      const head = mk('div', 'wt-row wt-head'); head.append(mk('div', '', 'Prize'), mk('div', '', 'Winner')); t.appendChild(head);
+      lines.forEach(l => {
+        const i = l.indexOf('|');
+        const prize = i >= 0 ? l.slice(0, i).trim() : '';
+        const names = i >= 0 ? l.slice(i + 1) : l;
+        const r = mk('div', 'wt-row'); r.append(mk('div', '', prize), mk('div', 'wt-name', fmtNames(names, on))); t.appendChild(r);
+      });
+      box.appendChild(t);
+    } else {
+      const ul = mk('ol', 'winner-list');
+      lines.forEach((l, i) => {
+        const li = mk('li'); li.append(mk('span', 'rk', String(i + 1)), mk('span', 'nm', fmtNames(l, on)));
+        ul.appendChild(li);
+      });
+      box.appendChild(ul);
+    }
+
+    const pdf = (typeof d.pdf === 'string' && /^(https:\/\/|\/assets\/)/i.test(d.pdf)) ? d.pdf : '';
+    $('#dPdf').hidden = !pdf;
+    if (pdf) $('#dPdf a').href = pdf;
+  });
+</script>
+</body>
+</html>
