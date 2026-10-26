@@ -54,7 +54,7 @@
       <div class="draw-sec">
         <div class="section-head"><h2>Winners</h2></div>
         <div id="dWinners"></div>
-                <p class="draw-terms" id="dTerms"></p>
+        <div class="draw-terms" id="dTerms"></div>
       </div>
 
                 <div class="share-box">
@@ -119,8 +119,21 @@
   const isEmail = e => typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
   const isImg = s => typeof s === 'string' && /^(data:image\/|https:\/\/)/.test(s);
   const DEFAULT_INTRO = 'Our monthly prize draw. See the prizes and the lucky winners.';
-    const DEFAULT_TERMS = 'All winners will be notified. Prizes will be reserved for one month for claiming.';
-
+  const DEFAULT_TERMS = 'All winners will be notified.\nPrizes will be reserved for one month for claiming.';
+  const TERM_ICONS = [
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg>'
+  ];
+  function renderTerms(text) {
+    const box = $('#dTerms'); box.innerHTML = '';
+    String(text || '').split(/\n+/).map(x => x.trim()).filter(Boolean).forEach((t, i) => {
+      const row = mk('div', 'dt-line');
+      const ic = mk('span', 'dt-ico'); ic.innerHTML = TERM_ICONS[Math.min(i, TERM_ICONS.length - 1)];
+      row.append(ic, mk('span', 'dt-txt', t));
+      box.appendChild(row);
+    });
+  }
   $('#menuBtn').onclick = () => $('#menu').classList.toggle('open');
 
   /* 页脚、Shopee 链接 */
@@ -202,8 +215,7 @@
   
     function renderDraw(d) {
     $('#dIntro').textContent = d.intro || DEFAULT_INTRO;
-          $('#dTerms').textContent = (d.terms || '').trim() || DEFAULT_TERMS;
-
+    renderTerms((d.terms || '').trim() || DEFAULT_TERMS);
     const okImg = isImg(d.image);
     if (okImg) $('#dImg').src = d.image;
     $('#dImgBox').hidden = !okImg;
