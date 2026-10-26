@@ -88,6 +88,19 @@
     #loginView .big { margin-top: 18px; background: #1c1722; }
            body.loading { background: #1c1722; }
     body.loading #loginView, body.loading #mainView { display: none; }
+        details.fold > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: .74rem; letter-spacing: 2px; text-transform: uppercase; color: #8b8190; font-weight: 700; }
+    details.fold > summary::-webkit-details-marker { display: none; }
+    details.fold > summary::after { content: "展开 ▾"; letter-spacing: 0; text-transform: none; font-weight: 600; font-size: .82rem; color: #2b2430; }
+    details.fold[open] > summary::after { content: "收起 ▴"; }
+    details.fold[open] > summary { margin-bottom: 12px; }
+
+    .cfm { position: fixed; inset: 0; z-index: 100; background: rgba(12,8,16,.6); display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .cfm-card { width: 100%; max-width: 380px; background: #fff; border-radius: 14px; border-top: 3px solid #e11d48; padding: 20px; }
+    .cfm-card h3 { font-size: 1.1rem; margin-bottom: 10px; }
+    .cfm-row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid #f0eaee; font-size: .88rem; }
+    .cfm-row span { color: #8b8190; flex-shrink: 0; }
+    .cfm-row strong { text-align: right; font-weight: 600; word-break: break-word; }
+    .cfm-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
   </style>
 </head>
 <body class="loading">
@@ -135,8 +148,8 @@
       <div class="msg" id="msg" aria-live="polite"></div>
     </div>
 
-    <div class="card">
-      <h2>开播通知</h2>
+       <details class="card fold" id="noticeBox">
+      <summary>开播通知</summary>
       <select id="tpl" aria-label="使用的通知模板"></select>
 
       <div class="fld" id="fTitle" hidden>
@@ -187,8 +200,9 @@
 
         <div class="msg" id="tplMsg" aria-live="polite"></div>
         <p class="hint" id="tplNote" hidden>模板目前只保存在这台设备。要在手机和电脑同步,请先在 Firebase 规则里加上 hub。</p>
-      </details>
-    </div>
+        </details>
+    </details>
+
 
     <div class="card links">
       <h2>入口</h2>
@@ -199,7 +213,16 @@
     </div>
   </div>
 </div>
-
+<div class="cfm" id="cfm" hidden role="dialog" aria-modal="true" aria-labelledby="cfmT">
+  <div class="cfm-card">
+    <h3 id="cfmT">确认开始直播?</h3>
+    <div id="cfmBody"></div>
+    <div class="cfm-btns">
+      <button class="sec" id="cfmNo" style="margin-top:0">取消</button>
+      <button class="big" id="cfmYes" style="margin-top:0">确认开播</button>
+    </div>
+  </div>
+</div>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -488,7 +511,32 @@
     catch (e) { say(/permission/i.test(e.message) ? '没有权限:请确认这个账号的 UID 已写入 Firebase 规则' : '失败:' + e.message, false); return false; }
     finally { btns.forEach(b => b.disabled = false); }
   }
-  $('#goBtn').onclick = () => {
+    function ask(title, rows, yesText) {
+    return new Promise(resolve => {
+      $('#cfmT').textContent = title;
+      $('#cfmBody').replaceChildren(...rows.map(([k, v]) => {
+        const d = document.createElement('div'); d.className = 'cfm-row';
+        const a = document.createElement('span'); a.textContent = k;
+        const b = document.createElement('strong'); b.textContent = v;
+        d.append(a, b); return d;
+      }));
+      const yes = $('#cfmYes'), no = $('#cfmNo'), box = $('#cfm');
+      yes.textContent = yesText;
+      yes.disabled = true; setTimeout(() => { yes.disabled = false; }, 600);
+      box.hidden = false;
+      const onKey = e => { if (e.key === 'Escape') done(false); };
+      const done = v => {
+        box.hidden = true; document.removeEventListener('keydown', onKey);
+        yes.onclick = no.onclick = box.onclick = null; resolve(v);
+      };
+      document.addEventListener('keydown', onKey);
+      yes.onclick = () => done(true);
+      no.onclick = () => done(false);
+      box.onclick = e => { if (e.target === box) done(false); };
+    });
+  }
+
+  $('#goBtn').onclick = async () => {
     const list = chosen();
     if (!list.length) { say('请至少选择一个平台', false); return; }
     const liveUrls = {};
@@ -499,12 +547,20 @@
       liveUrls[k] = u;
     }
     const mins = Number($('#dur').value) || 0;
+    const already = liveList().length > 0;
+    const rows = [
+      ['平台', list.map(k => PLATS[k].name).join(' + ')],
+      ['直播链接', list.map(k => PLATS[k].name + (liveUrls[k] ? ' ✓' : ' 未粘贴')).join('、')],
+      ['自动下线', mins ? fmtTime(Date.now() + mins * 60000) + '(' + (mins / 60) + ' 小时后)' : '不自动下线']
+    ];
+    const ok = await ask(already ? '确认更新直播?' : '确认开始直播?', rows, already ? '确认更新' : '确认开播');
+    if (!ok) return;
     store.set('hubDur', String(mins));
-    write({
+       write({
       livePlatforms: list.join(','), liveStatus: 'on',
       liveUntil: mins ? Date.now() + mins * 60000 : null,
       liveUrls: Object.keys(liveUrls).length ? liveUrls : null
-    }, '已开播 ✓');
+    }, '已开播 ✓').then(function (done) { if (done) $('#noticeBox').open = true; });
   };
   $('#endBtn').onclick = async () => {
     const ok = await write({ livePlatforms: '', liveStatus: 'off', liveUntil: null, liveUrls: null }, '已结束直播 ✓');
