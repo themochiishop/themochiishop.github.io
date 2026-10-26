@@ -43,6 +43,7 @@
     select, textarea, input[type=text], input[type=email], input[type=password] { width: 100%; padding: 12px; border: 1px solid #d8d0db; border-radius: 8px; font: inherit; background: #fff; }
     textarea { min-height: 96px; resize: vertical; }
     #dur { margin-bottom: 14px; }
+    #tpl { margin-bottom: 10px; }
     .urlrow { margin-bottom: 10px; }
     .urlrow label, .fld label { display: block; font-size: .8rem; font-weight: 600; margin-bottom: 4px; }
     .urlrow .in { display: flex; gap: 8px; }
@@ -60,12 +61,18 @@
     .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .two .sec { margin-top: 10px; }
 
-    .tplrow { display: flex; gap: 8px; margin-bottom: 10px; }
-    .tplrow select { flex: 1; min-width: 0; }
     details.tplbox { margin-top: 14px; border-top: 1px solid #f0eaee; padding-top: 12px; }
     details.tplbox summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
+    .tlist { margin-top: 10px; }
+    .trow { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-top: 1px solid #f0eaee; }
+    .trow:first-child { border-top: 0; }
+    .tname { flex: 1; min-width: 0; font-weight: 600; font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tuse { font-size: .68rem; color: #e11d48; font-weight: 700; margin-left: 6px; }
+    .tb { flex: 0 0 auto; padding: 6px 10px; border: 1px solid #d8d0db; background: #fff; border-radius: 8px; font: inherit; font-size: .78rem; font-weight: 600; cursor: pointer; }
+    .tb.del { color: #c0392b; border-color: #e8b4ad; }
+    .teditor { margin-top: 14px; padding: 14px; background: #faf7fb; border: 1px solid #ebe3ee; border-radius: 10px; }
     .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
-    .chip { border: 1px solid #d8d0db; background: #faf7fb; border-radius: 999px; padding: 4px 10px; font: inherit; font-size: .78rem; cursor: pointer; }
+    .chip { border: 1px solid #d8d0db; background: #fff; border-radius: 999px; padding: 4px 10px; font: inherit; font-size: .78rem; cursor: pointer; }
     .hint { font-size: .76rem; color: #8b8190; margin-top: 6px; }
 
     .links a { display: flex; justify-content: space-between; align-items: center; padding: 14px 2px; border-top: 1px solid #f0eaee; color: #2b2430; text-decoration: none; font-weight: 600; }
@@ -125,9 +132,7 @@
 
     <div class="card">
       <h2>开播通知</h2>
-      <div class="tplrow">
-        <select id="tpl" aria-label="通知模板"></select>
-      </div>
+      <select id="tpl" aria-label="使用的通知模板"></select>
 
       <div class="fld" id="fTitle" hidden>
         <label for="title">标题</label>
@@ -149,21 +154,27 @@
       </div>
 
       <details class="tplbox" id="tplBox">
-        <summary>编辑模板</summary>
-        <div class="fld">
-          <label for="tplName">模板名称</label>
-                   <input type="text" id="tplName">
+        <summary>管理模板</summary>
+        <div class="tlist" id="tplList"></div>
+        <button class="sec" id="tplNew">＋ 新建空白模板</button>
+
+        <div class="teditor" id="tplEditor" hidden>
+          <div class="fld" style="margin-top:0">
+            <label for="tplName">模板名称</label>
+            <input type="text" id="tplName" maxlength="100" placeholder="例如 会员优惠券">
+          </div>
+          <div class="fld">
+            <label for="tplBody">模板内容</label>
+            <div class="chips" id="chips"></div>
+            <textarea id="tplBody" style="min-height:220px"></textarea>
+            <p class="hint">点上面的占位符,会插入到光标位置。要点"保存模板"才会生效。</p>
+          </div>
+          <div class="two">
+            <button class="sec dark" id="tplSave">保存模板</button>
+            <button class="sec" id="tplCancel">取消</button>
+          </div>
         </div>
-        <div class="fld">
-          <label for="tplBody">模板内容</label>
-          <div class="chips" id="chips"></div>
-          <textarea id="tplBody" style="min-height:220px"></textarea>
-          <p class="hint">点上面的占位符,会插入到光标位置。修改后自动保存,通知内容马上更新。</p>
-        </div>
-        <div class="two">
-          <button class="sec" id="tplNew">新建模板(复制当前)</button>
-          <button class="sec" id="tplDel">删除这个模板</button>
-        </div>
+
         <div class="msg" id="tplMsg" aria-live="polite"></div>
         <p class="hint" id="tplNote" hidden>模板目前只保存在这台设备。要在手机和电脑同步,请先在 Firebase 规则里加上 hub。</p>
       </details>
@@ -208,7 +219,7 @@
   };
 
   const DEFAULT_TPL = [{
-    id: 't1', name: 'Shopee Live 通知',
+    id: 't1', name: 'Shopee Live 通知', ts: 0,
     body: `{title}\n\nDon't miss out!\n\nJoin our Shopee Live here：\n{link}\n━━━━━━━━\nCustomer Support:\nhttps://wa.me/60177503767\nSee you there!`
   }];
 
@@ -223,7 +234,9 @@
   let st = { tpl: 't1', title: '', code: '' };
   const urls = { shopee: '', tiktok: '', facebook: '' };
   let urlsAt = 0;
+  let editing = null, lastDel = null, undoT;
   const curTpl = () => tpls.find(x => x.id === st.tpl) || tpls[0];
+  const newId = () => 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4);
 
   const cleanUrl = u => { const m = String(u || '').match(/https?:\/\/[^\s]+/i); return m ? m[0].replace(/[)）\]】>,，。.!！、]+$/, '') : ''; };
   const liveList = () => {
@@ -236,29 +249,22 @@
   const say = (t, ok = true) => { const m = $('#msg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); };
   const sayT = (t, ok = true) => { const m = $('#tplMsg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); };
 
-  /* ---------- 保存 / 读取(模板、标题、链接) ---------- */
-  const snapshot = () => ({
-    templates: tpls.map(t => ({ id: t.id, name: t.name, body: t.body })),
-    state: { tpl: st.tpl, title: st.title, code: st.code, urls: { shopee: urls.shopee, tiktok: urls.tiktok, facebook: urls.facebook }, urlsAt }
-  });
-  let saveT;
-  function persist() {
-    clearTimeout(saveT);
-    saveT = setTimeout(async () => {
-      const data = snapshot();
-      store.set('hubData', JSON.stringify(data));
-      if (!auth.currentUser) return;
-      try { await set(ref(db, 'hub'), data); remoteOk = true; }
-      catch (e) { remoteOk = false; }
-      $('#tplNote').hidden = remoteOk;
-    }, 600);
+  /* ---------- 保存 / 读取 ---------- */
+  const tplVal = t => ({ name: t.name, body: t.body, ts: t.ts || 0 });
+  const stateObj = () => ({ tpl: st.tpl, title: st.title, code: st.code, urls: { shopee: urls.shopee, tiktok: urls.tiktok, facebook: urls.facebook }, urlsAt });
+  const saveLocal = () => store.set('hubData', JSON.stringify({ templates: tpls, state: stateObj() }));
+  async function remote(fn) {
+    if (!auth.currentUser) return;
+    try { await fn(); remoteOk = true; } catch (e) { remoteOk = false; }
+    $('#tplNote').hidden = remoteOk;
   }
-  function applyData(d) {
-    if (!d || typeof d !== 'object') return;
-    const t = Array.isArray(d.templates) ? d.templates : Object.values(d.templates || {});
-    const ok = t.filter(x => x && x.id && typeof x.body === 'string').map(x => ({ id: String(x.id), name: String(x.name || '未命名'), body: x.body }));
-    if (ok.length) tpls = ok;
-    const s = d.state || {};
+  let stT;
+  function persistState() {
+    saveLocal(); clearTimeout(stT);
+    stT = setTimeout(() => remote(() => set(ref(db, 'hub/state'), stateObj())), 600);
+  }
+  function applyState(s) {
+    s = s || {};
     st.tpl = tpls.some(x => x.id === s.tpl) ? s.tpl : tpls[0].id;
     st.title = typeof s.title === 'string' ? s.title : '';
     st.code = typeof s.code === 'string' ? s.code : '';
@@ -266,16 +272,43 @@
     const fresh = Date.now() - urlsAt < 12 * 3600 * 1000;
     Object.keys(urls).forEach(k => { urls[k] = fresh && s.urls && typeof s.urls[k] === 'string' ? s.urls[k] : ''; });
   }
-  try { applyData(JSON.parse(store.get('hubData', 'null'))); } catch (e) {}
+  let localTpls = [];
+  try {
+    const d = JSON.parse(store.get('hubData', 'null'));
+    if (d) {
+      const ok = (Array.isArray(d.templates) ? d.templates : []).filter(x => x && x.id && typeof x.body === 'string')
+        .map(x => ({ id: String(x.id), name: String(x.name || '未命名'), body: x.body, ts: Number(x.ts) || 0 }));
+      if (ok.length) tpls = ok;
+      applyState(d.state);
+    }
+  } catch (e) {}
+  localTpls = tpls.map(x => ({ ...x }));
 
   async function loadRemote() {
     try {
       const snap = await get(ref(db, 'hub'));
-      if (snap.exists()) applyData(snap.val()); else persist();
+      const v = snap.val() || {};
+      const raw = v.templates;
+      let list = [];
+      if (raw && typeof raw === 'object') {
+        list = Object.entries(raw).filter(([k, x]) => x && typeof x.body === 'string')
+          .map(([k, x]) => ({ id: String(x.id || k), name: String(x.name || '未命名'), body: x.body, ts: Number(x.ts) || 0 }));
+      }
+      let write = Array.isArray(raw);
+      if (!list.length) { list = localTpls.map(x => ({ ...x })); write = true; }
+      if (!store.get('hubMig2', '')) {
+        const have = new Set(list.map(t => t.id));
+        localTpls.forEach(t => { if (!have.has(t.id)) { list.push({ ...t }); write = true; } });
+        store.set('hubMig2', '1');
+      }
+      list.sort((a, b) => a.ts - b.ts);
+      tpls = list;
+      if (write) { const o = {}; tpls.forEach(t => { o[t.id] = tplVal(t); }); await set(ref(db, 'hub/templates'), o); }
+      applyState(v.state || stateObj());
       remoteOk = true;
     } catch (e) { remoteOk = false; }
     $('#tplNote').hidden = remoteOk;
-    renderAll();
+    saveLocal(); renderAll();
   }
 
   /* ---------- 通知文案 ---------- */
@@ -302,8 +335,8 @@
     $('#fCode').hidden = !b.includes('{code}');
     $('#title').value = st.title; $('#code').value = st.code;
   }
-  $('#title').addEventListener('input', () => { st.title = $('#title').value; persist(); refreshNotice(); });
-  $('#code').addEventListener('input', () => { st.code = $('#code').value; persist(); refreshNotice(); });
+  $('#title').addEventListener('input', () => { st.title = $('#title').value; persistState(); refreshNotice(); });
+  $('#code').addEventListener('input', () => { st.code = $('#code').value; persistState(); refreshNotice(); });
 
   /* ---------- 平台、链接 ---------- */
   function renderPlats() {
@@ -335,7 +368,7 @@
         const c = cleanUrl(inp.value);
         if (c && c !== inp.value.trim()) inp.value = c;
         urls[k] = c || inp.value.trim(); urlsAt = Date.now();
-        persist(); refreshNotice();
+        persistState(); refreshNotice();
       };
       inp.addEventListener('input', set1);
       const pb = document.createElement('button'); pb.type = 'button'; pb.className = 'pbtn'; pb.textContent = '粘贴';
@@ -353,37 +386,82 @@
     box.hidden = !chosen().length;
   }
 
-  /* ---------- 模板 ---------- */
+  /* ---------- 模板:使用 ---------- */
   function renderTplSelect() {
     $('#tpl').replaceChildren(...tpls.map(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; return o; }));
     $('#tpl').value = st.tpl;
   }
-  function loadTplEditor() { const t = curTpl(); $('#tplName').value = t.name; $('#tplBody').value = t.body; }
-  $('#tpl').addEventListener('change', () => { st.tpl = $('#tpl').value; persist(); loadTplEditor(); syncFields(); refreshNotice(); });
-  $('#tplName').addEventListener('input', () => {
-    const t = curTpl(); t.name = $('#tplName').value || '未命名';
-    const o = $('#tpl').querySelector('option[value="' + t.id + '"]'); if (o) o.textContent = t.name;
-    persist();
-  });
-  $('#tplBody').addEventListener('input', () => { curTpl().body = $('#tplBody').value; persist(); syncFields(); refreshNotice(); });
+  $('#tpl').addEventListener('change', () => { st.tpl = $('#tpl').value; persistState(); renderTplList(); syncFields(); refreshNotice(); });
+
+  /* ---------- 模板:管理(要点"保存模板"才生效) ---------- */
+  function renderTplList() {
+    $('#tplList').replaceChildren(...tpls.map(t => {
+      const row = document.createElement('div'); row.className = 'trow';
+      const nm = document.createElement('div'); nm.className = 'tname'; nm.textContent = t.name;
+      if (t.id === st.tpl) { const u = document.createElement('span'); u.className = 'tuse'; u.textContent = '使用中'; nm.appendChild(u); }
+      const mk = (txt, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tb ' + cls; b.textContent = txt; b.onclick = fn; return b; };
+      row.append(nm,
+        mk('编辑', '', () => openEditor({ ...t }, false)),
+        mk('复制', '', () => openEditor({ id: newId(), name: t.name + ' 副本', body: t.body }, true)),
+        mk('删除', 'del', () => delTpl(t.id)));
+      return row;
+    }));
+  }
+  function openEditor(t, isNew) {
+    editing = { id: t.id, isNew };
+    $('#tplName').value = t.name; $('#tplBody').value = t.body;
+    $('#tplEditor').hidden = false; sayT('');
+    $('#tplEditor').scrollIntoView({ block: 'nearest' });
+    $('#tplName').focus();
+  }
+  function closeEditor() { editing = null; $('#tplEditor').hidden = true; }
+
+  $('#tplNew').onclick = () => openEditor({ id: newId(), name: '', body: '' }, true);
+  $('#tplCancel').onclick = () => { closeEditor(); sayT(''); };
+  $('#tplSave').onclick = () => {
+    if (!editing) return;
+    const name = $('#tplName').value.trim(), body = $('#tplBody').value;
+    if (!name) { sayT('请先填写模板名称', false); return; }
+    if (!body.trim()) { sayT('模板内容不能为空', false); return; }
+    let t = tpls.find(x => x.id === editing.id);
+    if (t) { t.name = name; t.body = body; }
+    else { t = { id: editing.id, name, body, ts: Date.now() }; tpls.push(t); }
+    if (editing.isNew) st.tpl = t.id;
+    saveLocal(); persistState();
+    remote(() => set(ref(db, 'hub/templates/' + t.id), tplVal(t)));
+    closeEditor();
+    renderTplSelect(); renderTplList(); syncFields(); refreshNotice();
+    sayT('已保存「' + name + '」✓');
+  };
+
+  function delTpl(id) {
+    if (tpls.length <= 1) { sayT('至少要保留一个模板', false); return; }
+    const t = tpls.find(x => x.id === id); if (!t) return;
+    if (!confirm('删除模板「' + t.name + '」?')) return;
+    tpls = tpls.filter(x => x.id !== id); lastDel = t;
+    if (st.tpl === id) st.tpl = tpls[0].id;
+    if (editing && editing.id === id) closeEditor();
+    saveLocal(); persistState();
+    remote(() => set(ref(db, 'hub/templates/' + id), null));
+    renderTplSelect(); renderTplList(); syncFields(); refreshNotice();
+    const m = $('#tplMsg'); m.className = 'msg ok'; m.textContent = '已删除「' + t.name + '」 ';
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = '撤销'; b.onclick = undoDel;
+    m.appendChild(b);
+    clearTimeout(undoT); undoT = setTimeout(() => { if (m.contains(b)) { m.textContent = ''; lastDel = null; } }, 12000);
+  }
+  function undoDel() {
+    if (!lastDel) return;
+    const t = lastDel; lastDel = null;
+    tpls.push(t); tpls.sort((a, b) => a.ts - b.ts);
+    saveLocal(); remote(() => set(ref(db, 'hub/templates/' + t.id), tplVal(t)));
+    renderTplSelect(); renderTplList();
+    sayT('已恢复「' + t.name + '」✓');
+  }
   ['{title}', '{link}', '{shopee}', '{tiktok}', '{facebook}', '{platform}', '{code}'].forEach(p => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = p;
-    b.onclick = () => { const el = $('#tplBody'); el.setRangeText(p, el.selectionStart, el.selectionEnd, 'end'); el.dispatchEvent(new Event('input')); el.focus(); };
+    b.onclick = () => { const el = $('#tplBody'); el.setRangeText(p, el.selectionStart, el.selectionEnd, 'end'); el.focus(); };
     $('#chips').appendChild(b);
   });
-  $('#tplNew').onclick = () => {
-    const c = curTpl(), t = { id: 't' + Date.now().toString(36), name: c.name + ' 副本', body: c.body };
-    tpls.push(t); st.tpl = t.id; persist();
-    renderTplSelect(); loadTplEditor(); syncFields(); refreshNotice();
-    sayT('已新建模板,改名称和内容即可 ✓');
-  };
-  $('#tplDel').onclick = () => {
-    if (tpls.length <= 1) { sayT('至少要保留一个模板', false); return; }
-    if (!confirm('删除模板「' + curTpl().name + '」?')) return;
-    tpls = tpls.filter(x => x.id !== st.tpl); st.tpl = tpls[0].id; persist();
-    renderTplSelect(); loadTplEditor(); syncFields(); refreshNotice();
-    sayT('已删除 ✓');
-  };
 
   /* ---------- 开播 / 结束 ---------- */
   function renderStatus() {
@@ -423,7 +501,7 @@
   };
   $('#endBtn').onclick = async () => {
     const ok = await write({ livePlatforms: '', liveStatus: 'off', liveUntil: null, liveUrls: null }, '已结束直播 ✓');
-    if (ok) { Object.keys(urls).forEach(k => urls[k] = ''); urlsAt = 0; persist(); renderUrls(); refreshNotice(); }
+    if (ok) { Object.keys(urls).forEach(k => urls[k] = ''); urlsAt = 0; persistState(); renderUrls(); refreshNotice(); }
   };
 
   $('#copyBtn').onclick = async () => {
@@ -442,7 +520,7 @@
   });
   setInterval(renderStatus, 30000);
 
-  function renderAll() { renderPlats(); renderUrls(); renderTplSelect(); loadTplEditor(); syncFields(); refreshNotice(); renderStatus(); }
+  function renderAll() { renderPlats(); renderUrls(); renderTplSelect(); renderTplList(); syncFields(); refreshNotice(); renderStatus(); }
   renderAll();
 
   /* ---------- 登录 ---------- */
