@@ -411,3 +411,6 @@ footer a { color: var(--gold); }
 .share-opts .sopt:hover { border-color: var(--gold); background: var(--cream); }
 .share-opts .sopt.copy { grid-column: 1 / -1; background: var(--ink); color: #fff; border-color: var(--ink); }
 .share-opts .sopt.copy:hover { background: var(--ink-2); }
+/* ===== 中奖名单:奖项之间留间距(不显示文字) ===== */
+.winner-table .wt-gap { height: 20px; padding: 0; background: var(--cream); border-top: 1px solid var(--line); }
+@media (max-width: 600px) { .winner-table .wt-gap { height: 14px; } }
