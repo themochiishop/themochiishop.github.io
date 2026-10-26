@@ -75,8 +75,7 @@ function renderDonate() {
 
   const imgs = document.createElement('div'); imgs.className = 'dn-imgs';
   [['/assets/images/ohc-logo.png', 'One Hope Charity & Welfare'], ['/assets/images/ohc-slogan.png', '']].forEach(([src, alt]) => {
-    const im = document.createElement('img'); im.src = src; im.alt = alt; im.loading = 'lazy';
-    im.onerror = () => im.remove();
+    const im = document.createElement('img'); im.alt = alt; im.decoding = 'async'; im.src = src;    im.onerror = () => im.remove();
     imgs.appendChild(im);
   });
 
