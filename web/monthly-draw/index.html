@@ -56,16 +56,27 @@
         <div id="dWinners"></div>
       </div>
 
-            <div class="share-box">
-        <div class="share-title">Share this draw</div>
-        <div class="share-btns">
-          <button type="button" class="sbtn sb-native" id="shNative">Share</button>
-          <a class="sbtn sb-wa" id="shWa" href="#" target="_blank" rel="noopener">WhatsApp</a>
-          <a class="sbtn sb-fb" id="shFb" href="#" target="_blank" rel="noopener">Facebook</a>
-          <a class="sbtn sb-tg" id="shTg" href="#" target="_blank" rel="noopener">Telegram</a>
-          <button type="button" class="sbtn sb-copy" id="shCopy">Copy link</button>
+                <div class="share-box">
+        <button type="button" class="btn btn-dark share-main" id="shOpen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.3M8.3 13.2l7.4 4.3"/></svg>
+          Share this draw
+        </button>
+      </div>
+
+      <div class="share-modal" id="shModal" role="dialog" aria-modal="true" aria-label="Share this draw">
+        <div class="share-card">
+          <button type="button" class="share-x" id="shClose" aria-label="Close">✕</button>
+          <h3>Share this draw</h3>
+          <div class="share-sub" id="shSub"></div>
+          <div class="share-opts">
+            <a class="sopt" id="shWa" href="#" target="_blank" rel="noopener">WhatsApp</a>
+            <a class="sopt" id="shFb" href="#" target="_blank" rel="noopener">Facebook</a>
+            <a class="sopt" id="shTg" href="#" target="_blank" rel="noopener">Telegram</a>
+            <a class="sopt" id="shMail" href="#">Email</a>
+            <button type="button" class="sopt copy" id="shCopy">Copy link</button>
+          </div>
+          <div class="share-msg" id="shMsg" aria-live="polite"></div>
         </div>
-        <div class="share-msg" id="shMsg" aria-live="polite"></div>
       </div>
     </div>
   </section>
@@ -211,9 +222,10 @@
       box.appendChild(t);
     }
   }
-  /* 分享当前页 */
+    /* 分享当前页:单按钮 + 弹窗 */
   const BASE = 'https://www.themochiishop.com/monthly-draw/';
   let shareUrl = BASE, shareText = 'The Mochii Shop · Monthly Draw';
+  const modal = $('#shModal');
   function updateShare() {
     const p = periods.find(x => x.id === currentId);
     shareUrl = BASE + (p ? '#' + encodeURIComponent(p.month) : '');
@@ -222,11 +234,27 @@
     $('#shWa').href = 'https://wa.me/?text=' + encodeURIComponent(shareText + '\n' + shareUrl);
     $('#shFb').href = 'https://www.facebook.com/sharer/sharer.php?u=' + u;
     $('#shTg').href = 'https://t.me/share/url?url=' + u + '&text=' + t;
+    $('#shMail').href = 'mailto:?subject=' + t + '&body=' + encodeURIComponent(shareText + '\n' + shareUrl);
+    $('#shSub').textContent = p ? p.month : '';
   }
   const flash = msg => {
     const m = $('#shMsg'); m.textContent = msg;
     clearTimeout(flash.t); flash.t = setTimeout(() => { m.textContent = ''; }, 2500);
   };
+  const openModal = () => { $('#shMsg').textContent = ''; modal.classList.add('open'); document.body.style.overflow = 'hidden'; };
+  const closeModal = () => { modal.classList.remove('open'); document.body.style.overflow = ''; };
+
+  $('#shOpen').onclick = async () => {
+    if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+      try { await navigator.share({ title: 'Monthly Draw - The Mochii Shop', text: shareText, url: shareUrl }); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    openModal();
+  };
+  $('#shClose').onclick = closeModal;
+  modal.onclick = e => { if (e.target === modal) closeModal(); };
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('open')) closeModal(); });
+  ['shWa', 'shFb', 'shTg', 'shMail'].forEach(id => $('#' + id).addEventListener('click', () => setTimeout(closeModal, 150)));
   $('#shCopy').onclick = async () => {
     try { await navigator.clipboard.writeText(shareUrl); flash('Link copied ✓'); }
     catch (e) {
@@ -237,10 +265,6 @@
       ta.remove();
     }
   };
-  if (navigator.share) {
-    const nb = $('#shNative'); nb.style.display = 'inline-flex';
-    nb.onclick = () => navigator.share({ title: 'Monthly Draw - The Mochii Shop', text: shareText, url: shareUrl }).catch(() => {});
-  }
   onValue(ref(db, 'homepage/drawIndex'), snap => {
     const v = snap.val();
     periods = (Array.isArray(v) ? v : Object.values(v || {})).filter(x => x && x.id && typeof x.month === 'string' && x.month.trim());
