@@ -71,6 +71,19 @@
       .slide-item img { width: 84px; height: 60px; }
       #who { display: none; }
     }
+        /* ===== 标签栏:分两组 ===== */
+    .tabbar { display: block; max-width: 1100px; margin: 0 auto; padding: 8px 16px 10px; overflow: visible; -webkit-mask-image: none; mask-image: none; }
+    .tabgroup { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
+    .tabgroup + .tabgroup { border-top: 1px dashed #ddd5e0; margin-top: 6px; padding-top: 10px; }
+    .tg-label { flex: 0 0 40px; font-size: .74rem; font-weight: 700; letter-spacing: 2px; color: #8b8190; }
+    .tg-tabs { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+    @media (max-width: 600px) {
+      .tabbar { overflow: visible; -webkit-mask-image: none; mask-image: none; }
+      .tabgroup { flex-direction: column; align-items: stretch; gap: 2px; }
+      .tg-label { flex: none; }
+      .tg-tabs { flex-wrap: nowrap; overflow-x: auto; padding: 6px 2px 4px; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 90%, transparent); mask-image: linear-gradient(90deg, #000 90%, transparent); }
+      .tg-tabs::-webkit-scrollbar { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -100,16 +113,26 @@
         <button class="btn ghost small" id="logoutBtn">退出</button>
       </div>
     </header>
-    <div class="tabbar" id="tabbar">
-      <button class="tab" data-tab="home">🏠 首页</button>
-      <button class="tab" data-tab="slides">🖼️ 轮播图</button>
-      <button class="tab" data-tab="live">🔴 Live 直播<span class="dot" id="liveDot" hidden></span></button>
-      <button class="tab" data-tab="figures">🧸 Figures Toy</button>
-            <button class="tab" data-tab="draw">🎁 每月抽奖</button>
-      <button class="tab" data-tab="about">💝 About Us</button>
-      <button class="tab" data-tab="contact">✉️ Contact Us</button>
-      <button class="tab" data-tab="social">🔗 社交链接</button>
-            <button class="tab" data-tab="nav">🧭 导航菜单</button>
+        <div class="tabbar" id="tabbar">
+      <div class="tabgroup">
+        <div class="tg-label">内容</div>
+        <div class="tg-tabs">
+          <button class="tab" data-tab="home">🏠 首页</button>
+          <button class="tab" data-tab="slides">🖼️ 轮播图</button>
+          <button class="tab" data-tab="figures">🧸 Figures Toy</button>
+          <button class="tab" data-tab="draw">🎁 每月抽奖</button>
+          <button class="tab" data-tab="about">💝 About Us</button>
+        </div>
+      </div>
+      <div class="tabgroup">
+        <div class="tg-label">设置</div>
+        <div class="tg-tabs">
+          <button class="tab" data-tab="live">🔴 Live 直播<span class="dot" id="liveDot" hidden></span></button>
+          <button class="tab" data-tab="contact">✉️ Contact Us</button>
+          <button class="tab" data-tab="social">🔗 社交链接</button>
+          <button class="tab" data-tab="nav">🧭 导航菜单</button>
+        </div>
+      </div>
     </div>
   </div>
 
