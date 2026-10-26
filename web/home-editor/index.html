@@ -17,9 +17,8 @@
     header .right { display: flex; gap: 8px; align-items: center; font-size: .82rem; color: #cfc6d4; }
     #who { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    .tabbar { display: flex; gap: 10px; max-width: 900px; margin: 0 auto; padding: 12px 16px; overflow-x: auto; scrollbar-width: none; }
-    .tabbar::-webkit-scrollbar { display: none; }
-    .tab { flex: 0 0 auto; position: relative; display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 10px; border: 1px solid #ddd5e0; background: #fff; color: #2b2430; font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .15s; }
+    .tabbar { display: flex; flex-wrap: wrap; gap: 8px; max-width: 1100px; margin: 0 auto; padding: 10px 16px; }    .tabbar::-webkit-scrollbar { display: none; }
+      .tab { flex: 0 0 auto; position: relative; display: flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 10px; border: 1px solid #ddd5e0; background: #fff; color: #2b2430; font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .15s; }
     .tab:hover { border-color: #e0628a; }
     .tab.on { background: #1c1722; color: #fff; border-color: #1c1722; box-shadow: 0 6px 14px rgba(28,23,34,.25); }
     .tab .dot { position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; border-radius: 50%; background: #e11d48; border: 2px solid #f4f1f5; }
@@ -66,6 +65,8 @@
     #loginView label { text-align: left; }
 
     @media (max-width: 600px) {
+            .tabbar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); }
+      .tabbar::-webkit-scrollbar { display: none; }
       .card { padding: 18px 16px; }
       .slide-item img { width: 84px; height: 60px; }
       #who { display: none; }
