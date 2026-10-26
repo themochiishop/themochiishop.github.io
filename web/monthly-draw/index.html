@@ -186,7 +186,7 @@
     } catch (e) { console.error('draw:', e); }
   }
 
-  function renderDraw(d) {
+    function renderDraw(d) {
     $('#dIntro').textContent = d.intro || DEFAULT_INTRO;
 
     const okImg = isImg(d.image);
@@ -199,9 +199,10 @@
     $('#prizeBlock').hidden = prizes.length === 0;
 
     const mName = d.maskName !== false, mOrder = d.maskOrder !== false;
-    const rows = parseRows(d.winners);
+    let groups = [d.w1, d.w2, d.w3].map(parseRows).filter(g => g.length);
+    if (!groups.length && d.winners) groups = [parseRows(d.winners)].filter(g => g.length);   // 兼容旧数据
     const box = $('#dWinners'); box.innerHTML = '';
-    if (!rows.length) {
+    if (!groups.length) {
       const e = mk('div', 'fig-empty');
       e.appendChild(mk('div', 'ico', '🎁'));
       e.appendChild(mk('p', '', 'The winners will be announced here after the draw.'));
@@ -211,13 +212,16 @@
       const head = mk('div', 'wt-row wt-head');
       head.append(mk('div', '', 'Prize'), mk('div', '', 'Winner'), mk('div', '', 'Order ID'));
       t.appendChild(head);
-      rows.forEach(r => {
-        const tr = mk('div', 'wt-row');
-        const c1 = mk('div', r.prize ? '' : 'wt-dim', r.prize || '—');
-        const c2 = mk('div', 'wt-name', fmtNames(r.winner, mName) || '—');
-        const o = r.order ? (mOrder ? maskOrder(r.order) : r.order) : '—';
-        const c3 = mk('div', r.order ? 'wt-oid' : 'wt-oid wt-dim', o);
-        tr.append(c1, c2, c3); t.appendChild(tr);
+      groups.forEach((g, gi) => {
+        if (gi > 0) t.appendChild(mk('div', 'wt-gap'));   // 奖项之间的间距,不显示文字
+        g.forEach(r => {
+          const tr = mk('div', 'wt-row');
+          const c1 = mk('div', r.prize ? '' : 'wt-dim', r.prize || '—');
+          const c2 = mk('div', 'wt-name', fmtNames(r.winner, mName) || '—');
+          const o = r.order ? (mOrder ? maskOrder(r.order) : r.order) : '—';
+          const c3 = mk('div', r.order ? 'wt-oid' : 'wt-oid wt-dim', o);
+          tr.append(c1, c2, c3); t.appendChild(tr);
+        });
       });
       box.appendChild(t);
     }
