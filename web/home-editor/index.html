@@ -324,6 +324,7 @@
 
           <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer;margin-top:16px"><input type="checkbox" id="drawMaskName"> 自动隐藏部分名字(例如 ab***fg)</label>
           <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer;margin-top:8px"><input type="checkbox" id="drawMaskOrder"> 自动隐藏部分订单号(例如 2510****A9X2)</label>
+                                 <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer;margin-top:8px"><input type="checkbox" id="drawMaskOrder"> 自动隐藏部分订单号(例如 2510****A9X2)</label>
         </div>
       </div>
     </div>
@@ -676,8 +677,7 @@
   let draws = [];
   let curDraw = -1;
   let drawLoadedIds = [];
-  const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', prizes: 'drawPrizes' };
-  function renderPeriods() {
+  const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', prizes: 'drawPrizes', terms: 'drawTerms' };  function renderPeriods() {
     const bar = $('#periodBar'); bar.innerHTML = '';
     draws.forEach((d, i) => {
       const b = document.createElement('button'); b.type = 'button';
@@ -756,7 +756,7 @@
     idx.forEach(it => {
       if (!it || !it.id) return;
       const d = data[it.id] || {};
-            draws.push({ id: it.id, month: d.month || it.month || '', intro: d.intro || '', prizes: d.prizes || '', w1: d.w1 || '', w2: d.w2 || d.winners || '', w3: d.w3 || '', image: typeof d.image === 'string' ? d.image : '', maskName: d.maskName !== false, maskOrder: d.maskOrder !== false });
+            draws.push({ id: it.id, month: d.month || it.month || '', intro: d.intro || '', prizes: d.prizes || '', w1: d.w1 || '', w2: d.w2 || d.winners || '', w3: d.w3 || '', terms: d.terms || '', image: typeof d.image === 'string' ? d.image : '', maskName: d.maskName !== false, maskOrder: d.maskOrder !== false });
     });
     if (!draws.length && v.draw && typeof v.draw === 'object') {
       const o = v.draw;
@@ -942,8 +942,7 @@
       await set(ref(db, 'homepage/drawIndex'), draws.length ? draws.map(d => ({ id: d.id, month: d.month.trim() })) : null);
       for (const d of draws) {
         const o = { month: d.month.trim(), maskName: d.maskName !== false, maskOrder: d.maskOrder !== false };
-                ['intro', 'prizes', 'w1', 'w2', 'w3'].forEach(k => { const t = (d[k] || '').trim(); if (t) o[k] = t; });
-        if (d.image) o.image = d.image;
+        ['intro', 'prizes', 'w1', 'w2', 'w3', 'terms'].forEach(k => { const t = (d[k] || '').trim(); if (t) o[k] = t; });        if (d.image) o.image = d.image;
         await set(ref(db, 'homepage/drawData/' + d.id), o);
       }
       for (const id of drawLoadedIds) if (!idsNow.has(id)) await set(ref(db, 'homepage/drawData/' + id), null);
