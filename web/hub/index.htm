@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="color-scheme" content="light">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#1c1722">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Mochii Hub">
+  <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
+  <link rel="icon" href="/assets/images/logo.png">
+  <title>Mochii Hub</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f4f1f5; color: #2b2430; line-height: 1.5; min-height: 100vh; padding-bottom: env(safe-area-inset-bottom); }
+    .top { background: #1c1722; color: #fff; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 2px solid #c9a45c; }
+    .top h1 { font-size: 1rem; }
+    .top .r { display: flex; gap: 10px; align-items: center; font-size: .78rem; color: #cfc6d4; min-width: 0; }
+    #who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+    .logout { background: none; border: 1px solid rgba(255,255,255,.4); color: #fff; border-radius: 8px; padding: 6px 12px; font: inherit; cursor: pointer; }
+    .wrap { max-width: 520px; margin: 0 auto; padding: 16px 14px 40px; }
+    .card { background: #fff; border: 1px solid #e9e2e6; border-radius: 12px; padding: 18px; margin-bottom: 14px; }
+    .card h2 { font-size: .74rem; letter-spacing: 2px; text-transform: uppercase; color: #8b8190; margin-bottom: 12px; }
+
+    .st { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; background: #f4f1f5; border-left: 4px solid #9a909f; margin-bottom: 14px; }
+    .st.on { background: #fff5f6; border-left-color: #e11d48; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; background: #9a909f; flex-shrink: 0; }
+    .st.on .dot { background: #e11d48; animation: pulse 1.4s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(225,29,72,.55); } 70% { box-shadow: 0 0 0 10px rgba(225,29,72,0); } 100% { box-shadow: 0 0 0 0 rgba(225,29,72,0); } }
+    #stT { font-weight: 700; }
+    .st.on #stT { color: #e11d48; }
+    #stS { font-size: .82rem; color: #7a6f80; }
+
+    .plats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+    .plat { border: 2px solid #e9e2e6; background: #fff; border-radius: 12px; padding: 12px 4px; display: flex; flex-direction: column; align-items: center; gap: 6px; font: inherit; font-weight: 600; cursor: pointer; color: #2b2430; }
+    .plat img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #fff; border: 1px solid #e9e2e6; }
+    .plat .tag { font-size: .7rem; font-weight: 500; color: #8b8190; }
+    .plat.on { border-color: #e11d48; background: #fff5f6; }
+    .plat.on .tag { color: #e11d48; font-weight: 700; }
+
+    select, textarea, input[type=email], input[type=password] { width: 100%; padding: 12px; border: 1px solid #d8d0db; border-radius: 8px; font: inherit; background: #fff; }
+    textarea { min-height: 84px; resize: vertical; }
+    select { margin-bottom: 14px; }
+    .big { width: 100%; padding: 16px; border: 0; border-radius: 12px; font: inherit; font-size: 1.05rem; font-weight: 700; cursor: pointer; color: #fff; background: #e11d48; }
+    .big:disabled { opacity: .6; }
+    .sec { width: 100%; padding: 12px; border: 1px solid #d8d0db; border-radius: 10px; background: #fff; font: inherit; font-weight: 600; cursor: pointer; margin-top: 10px; color: #2b2430; text-align: center; text-decoration: none; display: block; }
+    .sec:disabled { opacity: .6; }
+    .sec.dark { background: #1c1722; border-color: #1c1722; color: #fff; }
+    .msg { font-size: .88rem; margin-top: 12px; min-height: 1.3em; }
+    .msg.ok { color: #1d8a38; } .msg.err { color: #c0392b; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .two .sec { margin-top: 10px; }
+
+    .links a { display: flex; justify-content: space-between; align-items: center; padding: 14px 2px; border-top: 1px solid #f0eaee; color: #2b2430; text-decoration: none; font-weight: 600; }
+    .links a:first-of-type { border-top: 0; }
+    .links a span:last-child { color: #c9a45c; }
+
+    #loginView { max-width: 380px; margin: 90px auto; padding: 0 16px; }
+    #loginView .card { text-align: center; }
+    #loginView label { display: block; text-align: left; font-size: .85rem; font-weight: 600; margin: 14px 0 6px; }
+    #loginView .big { margin-top: 18px; background: #1c1722; }
+  </style>
+</head>
+<body>
+
+<div id="loginView">
+  <div class="card">
+    <h1 style="font-size:1.3rem;margin-bottom:4px;">Mochii Hub</h1>
+    <p style="color:#8b8190;font-size:.85rem;">仅限管理员</p>
+    <label for="em">邮箱</label>
+    <input type="email" id="em" autocomplete="username">
+    <label for="pw">密码</label>
+    <input type="password" id="pw" autocomplete="current-password">
+    <button class="big" id="loginBtn">登录</button>
+    <div class="msg err" id="loginMsg"></div>
+  </div>
+</div>
+
+<div id="mainView" hidden>
+  <div class="top">
+    <h1>Mochii Hub</h1>
+    <div class="r"><span id="who"></span><button class="logout" id="logout">退出</button></div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <h2>直播</h2>
+      <div class="st" id="st">
+        <div class="dot"></div>
+        <div><div id="stT">未直播</div><div id="stS"></div></div>
+      </div>
+
+      <div class="plats" id="plats"></div>
+
+      <select id="dur" aria-label="自动下线时间">
+        <option value="120">2 小时后自动下线</option>
+        <option value="180">3 小时后自动下线</option>
+        <option value="240">4 小时后自动下线</option>
+        <option value="360">6 小时后自动下线</option>
+        <option value="0">不自动下线</option>
+      </select>
+
+      <button class="big" id="goBtn">开始直播</button>
+      <button class="sec" id="endBtn" hidden>结束直播</button>
+      <div class="msg" id="msg" aria-live="polite"></div>
+    </div>
+
+    <div class="card">
+      <h2>开播通知</h2>
+      <textarea id="notice" aria-label="开播通知文案"></textarea>
+      <div class="two">
+        <button class="sec dark" id="copyBtn">复制通知</button>
+        <a class="sec" id="waLink" href="https://whatsapp.com/channel/0029Vb7zsqb8F2pABPvoOR2I" target="_blank" rel="noopener">打开 WhatsApp 频道</a>
+      </div>
+    </div>
+
+    <div class="card links">
+      <h2>入口</h2>
+      <a href="/home-editor/"><span>网站后台编辑</span><span>→</span></a>
+      <a href="https://admin.themochiishop.com/" target="_blank" rel="noopener"><span>工具与控制台 Dashboard</span><span>→</span></a>
+      <a href="/live-stream/" target="_blank" rel="noopener"><span>查看直播页</span><span>→</span></a>
+      <a href="/" target="_blank" rel="noopener"><span>查看网站</span><span>→</span></a>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyDJrsKAjWqz0AmjEtBzz4CeswiskdQqASw",
+    authDomain: "admin-status-c3bdb.firebaseapp.com",
+    databaseURL: "https://admin-status-c3bdb-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "admin-status-c3bdb",
+    storageBucket: "admin-status-c3bdb.firebasestorage.app",
+    messagingSenderId: "377694458194",
+    appId: "1:377694458194:web:71a78ba5dbed4df1b1aa8b"
+  });
+  const auth = getAuth(app), db = getDatabase(app);
+  const $ = s => document.querySelector(s);
+
+  const PLATS = {
+    shopee:   { name: 'Shopee',   img: '/assets/images/logo-shopee.png' },
+    tiktok:   { name: 'TikTok',   img: '/assets/images/tiktok.png' },
+    facebook: { name: 'Facebook', img: '/assets/images/Facebook_logo.png' }
+  };
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  const sel = new Set(String(store.get('hubSel', 'shopee')).split(',').filter(k => PLATS[k]));
+  if (!sel.size) sel.add('shopee');
+  const chosen = () => Object.keys(PLATS).filter(k => sel.has(k));
+  $('#dur').value = store.get('hubDur', '180');
+  if (!$('#dur').value) $('#dur').value = '180';
+
+  let cfg = {}, edited = false;
+
+  const liveList = () => {
+    const until = Number(cfg.liveUntil) || 0;
+    if (until && Date.now() >= until) return [];
+    return String(cfg.livePlatforms || '').split(',').filter(k => PLATS[k]);
+  };
+  const fmtTime = t => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const left = ms => { const m = Math.max(0, Math.round(ms / 60000)), h = Math.floor(m / 60); return h ? h + ' 小时 ' + (m % 60) + ' 分' : m + ' 分'; };
+  const say = (t, ok = true) => { const m = $('#msg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); };
+
+  function renderStatus() {
+    const l = liveList(), until = Number(cfg.liveUntil) || 0;
+    $('#st').classList.toggle('on', l.length > 0);
+    $('#stT').textContent = l.length ? '正在直播 · ' + l.map(k => PLATS[k].name).join(' + ') : '未直播';
+    $('#stS').textContent = l.length
+      ? (until ? fmtTime(until) + ' 自动下线(还剩 ' + left(until - Date.now()) + ')' : '不会自动下线')
+      : '网站显示"Currently offline"';
+    $('#goBtn').textContent = l.length ? '更新直播' : '开始直播';
+    $('#endBtn').hidden = !l.length;
+  }
+
+  function renderPlats() {
+    $('#plats').replaceChildren(...Object.keys(PLATS).map(k => {
+      const b = document.createElement('button'); b.type = 'button';
+      b.className = 'plat' + (sel.has(k) ? ' on' : '');
+      b.setAttribute('aria-pressed', sel.has(k) ? 'true' : 'false');
+      const im = document.createElement('img'); im.src = PLATS[k].img; im.alt = '';
+      const n = document.createElement('span'); n.textContent = PLATS[k].name;
+      const t = document.createElement('span'); t.className = 'tag'; t.textContent = sel.has(k) ? '已选择' : '点一下选择';
+      b.append(im, n, t);
+      b.onclick = () => {
+        if (sel.has(k)) sel.delete(k); else sel.add(k);
+        store.set('hubSel', chosen().join(','));
+        renderPlats(); refreshNotice();
+      };
+      return b;
+    }));
+  }
+
+  const noticeText = () => {
+    const n = chosen().map(k => PLATS[k].name).join(' + ') || 'our channels';
+    return '🔴 LIVE NOW on ' + n + '!\nJoin us: https://www.themochiishop.com/live-stream/';
+  };
+  function refreshNotice() { if (!edited) $('#notice').value = noticeText(); }
+  $('#notice').addEventListener('input', () => { edited = true; });
+
+  async function write(upd, okText) {
+    const btns = [$('#goBtn'), $('#endBtn')];
+    btns.forEach(b => b.disabled = true); say('保存中…');
+    try { await update(ref(db, 'homepage/config'), upd); say(okText + ' ' + fmtTime(Date.now())); }
+    catch (e) { say(/permission/i.test(e.message) ? '没有权限:请确认这个账号的 UID 已写入 Firebase 规则' : '失败:' + e.message, false); }
+    finally { btns.forEach(b => b.disabled = false); }
+  }
+  $('#goBtn').onclick = () => {
+    const list = chosen();
+    if (!list.length) { say('请至少选择一个平台', false); return; }
+    const mins = Number($('#dur').value) || 0;
+    store.set('hubDur', String(mins));
+    write({ livePlatforms: list.join(','), liveStatus: 'on', liveUntil: mins ? Date.now() + mins * 60000 : null }, '已开播 ✓');
+  };
+  $('#endBtn').onclick = () => write({ livePlatforms: '', liveStatus: 'off', liveUntil: null }, '已结束直播 ✓');
+
+  $('#copyBtn').onclick = async () => {
+    const t = $('#notice').value;
+    try { await navigator.clipboard.writeText(t); say('通知已复制 ✓'); }
+    catch (e) {
+      $('#notice').select();
+      try { document.execCommand('copy'); say('通知已复制 ✓'); } catch (e2) { say('请长按文字手动复制', false); }
+    }
+  };
+
+  onValue(ref(db, 'homepage/config'), snap => {
+    cfg = snap.val() || {};
+    if (/^https:\/\//i.test(cfg.whatsapp || '')) $('#waLink').href = cfg.whatsapp;
+    renderStatus();
+  });
+  setInterval(renderStatus, 30000);
+
+  renderPlats(); refreshNotice(); renderStatus();
+
+  $('#loginBtn').onclick = login;
+  $('#pw').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  async function login() {
+    const m = $('#loginMsg'); m.textContent = '';
+    try { await signInWithEmailAndPassword(auth, $('#em').value.trim(), $('#pw').value); }
+    catch (e) { m.textContent = '登录失败:邮箱或密码不正确'; }
+  }
+  $('#logout').onclick = () => signOut(auth);
+  onAuthStateChanged(auth, u => {
+    $('#loginView').hidden = !!u;
+    $('#mainView').hidden = !u;
+    $('#who').textContent = u ? (u.email || '') : '';
+  });
+</script>
+</body>
+</html>
