@@ -54,11 +54,22 @@ function renderSitemap(items, here) {
   box.replaceChildren(title, ul);
 }
 
+function renderCompanyTitle() {
+  if (!foot || foot.querySelector('.foot-title')) return;
+  const sm = foot.querySelector('.sitemap');
+  const first = sm ? sm.nextElementSibling : foot.firstElementChild;
+  if (!first) return;
+  const t = document.createElement('div');
+  t.className = 'foot-title';
+  t.textContent = 'Company';
+  foot.insertBefore(t, first);
+}
 function render(list) {
   const here = norm(location.pathname);
   const items = list.filter(x => x.show !== false);
   renderMenu(items, here);
   renderSitemap(items, here);
+    renderCompanyTitle();
 }
 
 /* 先用上次记住的菜单(没有就用默认),避免闪烁 */
