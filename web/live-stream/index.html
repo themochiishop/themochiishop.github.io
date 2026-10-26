@@ -147,6 +147,11 @@ Follow our channels to get notified when we start.</div>
     if (isHttps(c.liveShopee)) $('#lShopee').href = c.liveShopee;
     if (isHttps(c.tiktok)) $('#lTiktok').href = c.tiktok;
     if (isHttps(c.facebook)) $('#lFacebook').href = c.facebook;
+        if (livePs.length && c.liveUrls) {
+      if (livePs.includes('shopee') && isHttps(c.liveUrls.shopee)) $('#lShopee').href = c.liveUrls.shopee;
+      if (livePs.includes('tiktok') && isHttps(c.liveUrls.tiktok)) $('#lTiktok').href = c.liveUrls.tiktok;
+      if (livePs.includes('facebook') && isHttps(c.liveUrls.facebook)) $('#lFacebook').href = c.liveUrls.facebook;
+    }
 
     if (c.phone) $('#fPhone').textContent = c.phone;
     if (isEmail(c.email)) { $('#fMail').textContent = c.email; $('#fMail').href = 'mailto:' + c.email; }
