@@ -80,8 +80,10 @@ function renderDonate() {
     imgs.appendChild(im);
   });
 
-  const l = document.createElement('div'); l.className = 'dn-line'; l.textContent = 'Support One Hope Charity & Welfare. Your kindness brings health and hope.';
-  const go = document.createElement('span'); go.className = 'dn-go'; go.textContent = 'View Cases →';
+  const l = document.createElement('div'); l.className = 'dn-line';
+  const s1 = document.createElement('span'); s1.textContent = 'Support One Hope Charity & Welfare.';
+  const s2 = document.createElement('span'); s2.textContent = 'Your kindness brings health and hope.';
+  l.append(s1, document.createTextNode(' '), s2);  const go = document.createElement('span'); go.className = 'dn-go'; go.textContent = 'View Cases →';
   const n = document.createElement('div'); n.className = 'dn-note'; n.textContent = "Opens the charity's own website. Donations are made directly to them.";
 
   a.append(t, imgs, l, go, n);
