@@ -11,6 +11,7 @@ const DEFAULT_NAV = [
 ];
 const CACHE_KEY = 'navCache';
 const menu = document.getElementById('menu');
+const foot = document.querySelector('footer');
 
 const norm = p => {
   p = String(p || '/').split('#')[0].split('?')[0];
@@ -23,20 +24,41 @@ const clean = list => (Array.isArray(list) ? list : Object.values(list || {}))
   .filter(x => x && typeof x.label === 'string' && typeof x.href === 'string' && x.label.trim() && /^(\/|https:\/\/)/.test(x.href.trim()))
   .map(x => ({ label: x.label.trim(), href: x.href.trim(), show: x.show !== false }));
 
-function render(list) {
+function makeLink(x, here, activeClass) {
+  const a = document.createElement('a');
+  a.textContent = x.label;
+  a.href = x.href;
+  if (/^https:\/\//i.test(x.href)) { a.target = '_blank'; a.rel = 'noopener'; }
+  else if (norm(x.href) === here) a.className = activeClass;
+  return a;
+}
+
+function renderMenu(items, here) {
   if (!menu) return;
+  const lis = items.map(x => { const li = document.createElement('li'); li.appendChild(makeLink(x, here, 'active')); return li; });
+  if (lis.length) menu.replaceChildren(...lis);
+}
+
+function renderSitemap(items, here) {
+  if (!foot) return;
+  let box = foot.querySelector('.sitemap');
+  if (!box) {
+    box = document.createElement('nav');
+    box.className = 'sitemap';
+    box.setAttribute('aria-label', 'Site map');
+    foot.insertBefore(box, foot.firstChild);
+  }
+  const title = document.createElement('div'); title.className = 'sm-title'; title.textContent = 'Site Map';
+  const ul = document.createElement('ul');
+  items.forEach(x => { const li = document.createElement('li'); li.appendChild(makeLink(x, here, 'cur')); ul.appendChild(li); });
+  box.replaceChildren(title, ul);
+}
+
+function render(list) {
   const here = norm(location.pathname);
-  const items = list.filter(x => x.show !== false).map(x => {
-    const li = document.createElement('li');
-    const a = document.createElement('a');
-    a.textContent = x.label;
-    a.href = x.href;
-    if (/^https:\/\//i.test(x.href)) { a.target = '_blank'; a.rel = 'noopener'; }
-    else if (norm(x.href) === here) a.className = 'active';
-    li.appendChild(a);
-    return li;
-  });
-  if (items.length) menu.replaceChildren(...items);
+  const items = list.filter(x => x.show !== false);
+  renderMenu(items, here);
+  renderSitemap(items, here);
 }
 
 /* 先用上次记住的菜单(没有就用默认),避免闪烁 */
