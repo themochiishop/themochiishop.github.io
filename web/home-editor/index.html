@@ -421,6 +421,7 @@
   const MAX_SLIDES = 6, MAX_FIGS = 12;
   let slides = [], figs = [], about = { story: '', dream: '' };
   let loading = false, dirty = false;
+    let keepUntil = 0, loadedPlatforms = '';
 
   /* ---------- 状态提示 ---------- */
   function showSave(text, ok) { const m = $('#saveMsg'); m.style.color = ''; m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = text; }
@@ -480,6 +481,7 @@
       FIELDS.forEach(f => { $('#' + f).value = (cfg[f] !== undefined) ? cfg[f] : DEFAULTS[f]; });
 
       const lp = String(cfg.livePlatforms || '').split(',');
+            keepUntil = Number(cfg.liveUntil) || 0; loadedPlatforms = String(cfg.livePlatforms || '');
       ['shopee','tiktok','facebook'].forEach(k => { $('#liveP_' + k).checked = lp.includes(k); });
       updateLiveDot();
 
@@ -815,6 +817,7 @@
     const livePs = ['shopee','tiktok','facebook'].filter(k => $('#liveP_' + k).checked);
     cfg.livePlatforms = livePs.join(',');
     cfg.liveStatus = livePs.length ? 'on' : 'off';
+        if (keepUntil && cfg.livePlatforms === loadedPlatforms) cfg.liveUntil = keepUntil;
 
         const navErr = validateNav();
     if (navErr) { showSave(navErr, false); openTab('nav'); return; }
