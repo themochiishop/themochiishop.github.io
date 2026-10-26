@@ -102,6 +102,14 @@
       .wcols { display: none; }
       .wrow { grid-template-columns: 1fr 1fr 34px; grid-template-areas: "p p x" "n o x"; padding-bottom: 8px; border-bottom: 1px dashed #ebe3ee; }
     }
+        .wcols, .wrow { grid-template-columns: 1.2fr 1fr 1fr 30px 30px 34px; grid-template-areas: "p n o u d x"; }
+    .wrow .u { grid-area: u; } .wrow .d { grid-area: d; }
+    .wm { width: 30px; height: 34px; border: 1px solid #d8d0db; background: #fff; color: #2b2430; border-radius: 8px; cursor: pointer; font: inherit; padding: 0; }
+    .wm:disabled { opacity: .35; cursor: default; }
+    @media (max-width: 600px) {
+      .wrow { grid-template-columns: 1fr 1fr 34px 34px 34px; grid-template-areas: "p p u d x" "n o u d x"; }
+      .wm { width: 34px; height: 100%; min-height: 34px; }
+    }
   </style>
 </head>
 <body>
@@ -846,7 +854,7 @@
       if (box) box.replaceChildren(...wRows[g].map((r, i) => wRow(g, r, i)));
     });
   }
-  function wRow(g, r, i) {
+    function wRow(g, r, i) {
     const row = document.createElement('div'); row.className = 'wrow';
     const mk = (k, ph) => {
       const inp = document.createElement('input'); inp.type = 'text'; inp.className = k; inp.placeholder = ph; inp.value = r[k]; inp.autocomplete = 'off';
@@ -854,9 +862,16 @@
       inp.addEventListener('paste', e => wPaste(e, g, i, k));
       return inp;
     };
+    const mv = (cls, txt, label, dir) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'wm ' + cls; b.textContent = txt; b.setAttribute('aria-label', label);
+      const j = i + dir;
+      b.disabled = j < 0 || j >= wRows[g].length;
+      b.onclick = () => { [wRows[g][i], wRows[g][j]] = [wRows[g][j], wRows[g][i]]; wSync(); wRender(); markDirty(); };
+      return b;
+    };
     const x = document.createElement('button'); x.type = 'button'; x.className = 'wx'; x.textContent = '×'; x.setAttribute('aria-label', '删除这一行');
     x.onclick = () => { wRows[g].splice(i, 1); while (wRows[g].length < 2) wRows[g].push(blank()); wSync(); wRender(); markDirty(); };
-    row.append(mk('p', '奖品名'), mk('n', '名字'), mk('o', '单号'), x);
+    row.append(mk('p', '奖品名'), mk('n', '名字'), mk('o', '单号'), mv('u', '↑', '上移一行', -1), mv('d', '↓', '下移一行', 1), x);
     return row;
   }
   function wPaste(e, g, i, k) {
