@@ -110,6 +110,19 @@
       .wrow { grid-template-columns: 1fr 1fr 34px 34px 34px; grid-template-areas: "p p u d x" "n o u d x"; }
       .wm { width: 34px; height: 100%; min-height: 34px; }
     }
+        .prow { display: grid; grid-template-columns: 52px 1fr 30px 30px 34px; gap: 6px; align-items: center; margin-bottom: 8px; }
+    .pbox { position: relative; width: 52px; height: 52px; }
+    .pth-b { width: 52px; height: 52px; border: 1px dashed #cfc6d4; background: #fff; border-radius: 8px; cursor: pointer; padding: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; color: #8b8190; font: inherit; font-size: .7rem; }
+    .pth-b img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .pimgx { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; border: 1px solid #e8b4ad; background: #fff; color: #c0392b; font-size: .8rem; line-height: 1; cursor: pointer; padding: 0; }
+    .prow .pn { padding: 9px 10px; font-size: .86rem; min-width: 0; }
+    .prow .wm { height: 34px; }
+    @media (max-width: 600px) {
+      .prow { grid-template-columns: 52px 1fr 34px 34px 34px; grid-template-areas: "t n n n n" "t . u d x"; }
+      .prow .pbox { grid-area: t; align-self: start; }
+      .prow .pn { grid-area: n; }
+      .prow .u { grid-area: u; } .prow .d { grid-area: d; } .prow .x2 { grid-area: x; }
+    }
   </style>
 </head>
 <body>
@@ -295,8 +308,15 @@
           </div>
           <input type="file" id="drawFile" accept="image/*" hidden>
           <div class="msg" id="drawMsg"></div>
-          <label for="drawPrizes">奖品清单(每行一个,可留空)</label>
-          <textarea id="drawPrizes"></textarea>
+                   <label style="margin-top:18px">奖品清单(缩略图 + 名称,可留空)</label>
+          <p class="small-note" style="margin-bottom:8px">点缩略图上传小图。名称后面写 x2 会显示成 ×2。点"批量选图"可以一次选多张图,每张自动建一行,文件名当作名称。名称框里可以粘贴多行文字,自动分成多行。</p>
+          <div id="prizeRows"></div>
+          <div class="row">
+            <input type="file" id="prizeFiles" accept="image/*" multiple hidden>
+            <button type="button" class="btn dark small" id="prizeAdd">＋ 添加奖品</button>
+            <button type="button" class="btn ghost small" id="prizeImgs">＋ 批量选图</button>
+          </div>
+          <div class="msg" id="prizeMsg"></div>
         </div>
 
                      <div class="card">
@@ -678,7 +698,7 @@
   let draws = [];
   let curDraw = -1;
   let drawLoadedIds = [];
-  const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', prizes: 'drawPrizes', terms: 'drawTerms' };
+const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms' };
   const newDrawId = () => 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 
   function renderPeriods() {    const bar = $('#periodBar'); bar.innerHTML = '';
@@ -699,6 +719,7 @@
       for (const k in DRAW_FIELDS) $('#' + DRAW_FIELDS[k]).value = d[k] || '';
             WG.forEach(g => { wRows[g] = wParse(d[g]); while (wRows[g].length < 2) wRows[g].push(blank()); });
       wRender();
+            renderPrizes();
       $('#drawMaskName').checked = d.maskName !== false;
       $('#drawMaskOrder').checked = d.maskOrder !== false;
       const im = $('#drawPrev');
@@ -765,6 +786,7 @@
       const o = v.draw;
            draws.push({ id: 'd1', month: o.month || 'Current', intro: o.intro || '', prizes: o.prizes || '', w1: '', w2: o.winners || '', w3: '', image: typeof o.image === 'string' ? o.image : '', maskName: o.mask !== false, maskOrder: true });
     }
+        draws.forEach(dd => { dd.items = readItems((data[dd.id] || {}).prizeItems, dd.prizes); });
     drawLoadedIds = Object.keys(data);
     curDraw = draws.length ? 0 : -1;
     renderPeriods();
@@ -772,6 +794,7 @@
   function validateDraws() {
     for (const d of draws) {
       if (!(d.month || '').trim()) return '每月抽奖:有一期没有填写期数 / 月份';
+            if ((d.items || []).some(x => x.i && !x.n.trim())) return '每月抽奖:有奖品只有缩略图、没有名称(' + d.month + ')';      if ((d.items || []).some(x => x.i && !x.n.trim())) return '每月抽奖:有奖品只有缩略图、没有名称(' + d.month + ')';
     }
     const names = draws.map(d => d.month.trim().toLowerCase());
     if (new Set(names).size !== names.length) return '每月抽奖:有两期的名称重复了';
@@ -907,6 +930,86 @@
       wRows[g] = [blank(), blank()]; wSync(); wRender(); markDirty();
     };
   });
+    /* ---------- 奖品清单(缩略图 + 名称) ---------- */
+  const readItems = (raw, text) => {
+    const arr = Array.isArray(raw) ? raw : Object.values(raw || {});
+    const ok = arr.filter(x => x && typeof x.n === 'string').map(x => ({ n: x.n, i: typeof x.i === 'string' ? x.i : '' }));
+    if (ok.length) return ok;
+    return String(text || '').split(/\n+/).map(x => x.trim()).filter(Boolean).map(n => ({ n, i: '' }));
+  };
+  const THUMB = f => compressImage(f, 240, 0.8, 40000);
+  const fileName = n => String(n || '').replace(/\.[a-z0-9]+$/i, '').replace(/_+/g, ' ').trim();
+  const pmsg = (t, ok = true) => { const m = $('#prizeMsg'); m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = t; };
+
+  function renderPrizes() {
+    const d = draws[curDraw]; if (!d) return;
+    if (!Array.isArray(d.items)) d.items = [];
+    $('#prizeRows').replaceChildren(...d.items.map((it, i) => prizeRow(d, it, i)));
+  }
+  function prizeRow(d, it, i) {
+    const row = document.createElement('div'); row.className = 'prow';
+
+    const box = document.createElement('div'); box.className = 'pbox';
+    const pick = document.createElement('button'); pick.type = 'button'; pick.className = 'pth-b'; pick.setAttribute('aria-label', '上传缩略图');
+    if (it.i) { const im = document.createElement('img'); im.src = it.i; im.alt = ''; pick.appendChild(im); } else pick.textContent = '＋图';
+    const file = document.createElement('input'); file.type = 'file'; file.accept = 'image/*'; file.hidden = true;
+    pick.onclick = () => file.click();
+    file.onchange = async () => {
+      const f = file.files[0]; if (!f) return;
+      try { it.i = await THUMB(f); if (!it.n.trim()) it.n = fileName(f.name); renderPrizes(); markDirty(); }
+      catch (err) { pmsg(f.name + ':' + err.message, false); }
+    };
+    box.append(pick, file);
+    if (it.i) {
+      const cx = document.createElement('button'); cx.type = 'button'; cx.className = 'pimgx'; cx.textContent = '×'; cx.setAttribute('aria-label', '清除缩略图');
+      cx.onclick = () => { it.i = ''; renderPrizes(); markDirty(); };
+      box.appendChild(cx);
+    }
+
+    const name = document.createElement('input'); name.type = 'text'; name.className = 'pn'; name.placeholder = '奖品名称,例如 Air Fryer x1';
+    name.value = it.n; name.autocomplete = 'off';
+    name.addEventListener('input', () => { it.n = name.value; });
+    name.addEventListener('paste', e => {
+      const t = (e.clipboardData || window.clipboardData).getData('text');
+      if (!t || !/[\r\n]/.test(t)) return;
+      e.preventDefault();
+      const lines = t.replace(/\r/g, '').split('\n').map(x => x.split('\t')[0].trim()).filter(Boolean);
+      lines.forEach((l, k) => { if (k === 0) d.items[i].n = l; else d.items.splice(i + k, 0, { n: l, i: '' }); });
+      renderPrizes(); markDirty();
+    });
+
+    const mv = (cls, txt, label, dir) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'wm ' + cls; b.textContent = txt; b.setAttribute('aria-label', label);
+      const j = i + dir; b.disabled = j < 0 || j >= d.items.length;
+      b.onclick = () => { [d.items[i], d.items[j]] = [d.items[j], d.items[i]]; renderPrizes(); markDirty(); };
+      return b;
+    };
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'wx x2'; x.textContent = '×'; x.setAttribute('aria-label', '删除这个奖品');
+    x.onclick = () => { d.items.splice(i, 1); renderPrizes(); markDirty(); };
+
+    row.append(box, name, mv('u', '↑', '上移', -1), mv('d', '↓', '下移', 1), x);
+    return row;
+  }
+  $('#prizeAdd').onclick = () => {
+    const d = draws[curDraw]; if (!d) return;
+    (d.items = d.items || []).push({ n: '', i: '' });
+    renderPrizes(); markDirty();
+    const ins = $('#prizeRows').querySelectorAll('.pn'); if (ins.length) ins[ins.length - 1].focus();
+  };
+  $('#prizeImgs').onclick = () => { if (draws[curDraw]) $('#prizeFiles').click(); };
+  $('#prizeFiles').onchange = async e => {
+    const files = [...e.target.files]; e.target.value = '';
+    const d = draws[curDraw]; if (!d || !files.length) return;
+    if (!Array.isArray(d.items)) d.items = [];
+    let ok = 0; const errs = [];
+    for (const f of files) {
+      try { pmsg('正在处理 ' + f.name + ' ...'); d.items.push({ n: fileName(f.name), i: await THUMB(f) }); ok++; }
+      catch (err) { errs.push(f.name + ':' + err.message); }
+    }
+    renderPrizes(); markDirty();
+    if (errs.length) pmsg((ok ? '已添加 ' + ok + ' 个。' : '') + errs.join(' '), false);
+    else pmsg('已添加 ' + ok + ' 个,请检查名称,再点"保存到网站"。');
+  };
   /* ---------- 保存 ---------- */
   $('#saveBtn').onclick = async () => {
     const cfg = {};
@@ -945,7 +1048,9 @@
       await set(ref(db, 'homepage/drawIndex'), draws.length ? draws.map(d => ({ id: d.id, month: d.month.trim() })) : null);
       for (const d of draws) {
         const o = { month: d.month.trim(), maskName: d.maskName !== false, maskOrder: d.maskOrder !== false };
-        ['intro', 'prizes', 'w1', 'w2', 'w3', 'terms'].forEach(k => { const t = (d[k] || '').trim(); if (t) o[k] = t; });        if (d.image) o.image = d.image;
+        ['intro', 'w1', 'w2', 'w3', 'terms'].forEach(k => { const t = (d[k] || '').trim(); if (t) o[k] = t; });
+        const pit = (d.items || []).filter(x => x.n.trim()).map(x => x.i ? { n: x.n.trim(), i: x.i } : { n: x.n.trim() });
+        if (pit.length) o.prizeItems = pit;        if (d.image) o.image = d.image;
         await set(ref(db, 'homepage/drawData/' + d.id), o);
       }
       for (const id of drawLoadedIds) if (!idsNow.has(id)) await set(ref(db, 'homepage/drawData/' + id), null);
