@@ -488,3 +488,12 @@ footer strong { font-weight: 400; }
   .dn-go { padding: 9px 16px; font-size: .84rem; }
   .dn-note { font-size: .66rem; line-height: 1.45; color: #8a8090; }
 }
+/* ===== 手机端捐款卡片:标题居中带金线,logo 在口号图左边 ===== */
+@media (max-width: 600px) {
+  .dn-card { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "title title" "line line" "logo slogan" "go go" "note note"; align-items: center; justify-items: stretch; column-gap: 12px; row-gap: 10px; }
+  .dn-title { grid-area: title; justify-content: center; }
+  .dn-title::before { display: block; }
+  .dn-line span { display: block; }
+  .dn-imgs .dn-logo { grid-area: logo; height: 46px; width: auto; justify-self: start; }
+  .dn-imgs .dn-slogan { grid-area: slogan; width: 100%; height: 60px; padding: 4px 8px; object-fit: contain; object-position: center; }
+}
