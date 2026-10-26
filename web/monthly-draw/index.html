@@ -54,6 +54,7 @@
       <div class="draw-sec">
         <div class="section-head"><h2>Winners</h2></div>
         <div id="dWinners"></div>
+                <p class="draw-terms" id="dTerms"></p>
       </div>
 
                 <div class="share-box">
@@ -118,6 +119,7 @@
   const isEmail = e => typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
   const isImg = s => typeof s === 'string' && /^(data:image\/|https:\/\/)/.test(s);
   const DEFAULT_INTRO = 'Our monthly prize draw. See the prizes and the lucky winners.';
+    const DEFAULT_TERMS = 'All winners will be notified. Prizes will be reserved for one month for claiming.';
 
   $('#menuBtn').onclick = () => $('#menu').classList.toggle('open');
 
@@ -188,6 +190,7 @@
 
     function renderDraw(d) {
     $('#dIntro').textContent = d.intro || DEFAULT_INTRO;
+          $('#dTerms').textContent = (d.terms || '').trim() || DEFAULT_TERMS;
 
     const okImg = isImg(d.image);
     if (okImg) $('#dImg').src = d.image;
