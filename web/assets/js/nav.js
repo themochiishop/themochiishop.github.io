@@ -71,21 +71,20 @@ function renderDonate() {
   a.href = 'https://www.onehopecharity.org/case'; a.target = '_blank'; a.rel = 'noopener';
   a.setAttribute('aria-label', 'One Hope Charity & Welfare (opens in a new tab)');
 
+  const t = document.createElement('div'); t.className = 'dn-title'; t.textContent = 'Share the Love';
+
   const imgs = document.createElement('div'); imgs.className = 'dn-imgs';
-  [['/assets/images/OHC_Logo-white.png', 'One Hope Charity & Welfare'], ['/assets/images/OHC-Slogan.png', '']].forEach(([src, alt]) => {    const im = document.createElement('img'); im.src = src; im.alt = alt; im.loading = 'lazy';
+  [['/assets/images/ohc-logo.png', 'One Hope Charity & Welfare'], ['/assets/images/ohc-slogan.png', '']].forEach(([src, alt]) => {
+    const im = document.createElement('img'); im.src = src; im.alt = alt; im.loading = 'lazy';
     im.onerror = () => im.remove();
     imgs.appendChild(im);
   });
 
-  const txt = document.createElement('div'); txt.className = 'dn-txt';
-  const t = document.createElement('div'); t.className = 'dn-title'; t.textContent = 'Share the Love';
   const l = document.createElement('div'); l.className = 'dn-line'; l.textContent = 'Support One Hope Charity & Welfare. Your kindness brings health and hope.';
-  const n = document.createElement('div'); n.className = 'dn-note'; n.textContent = "Opens the charity's own website. Donations are made directly to them.";
-  txt.append(t, l, n);
-
   const go = document.createElement('span'); go.className = 'dn-go'; go.textContent = 'View Cases →';
+  const n = document.createElement('div'); n.className = 'dn-note'; n.textContent = "Opens the charity's own website. Donations are made directly to them.";
 
-  a.append(imgs, txt, go);
+  a.append(t, imgs, l, go, n);
   box.appendChild(a);
   foot.insertBefore(box, foot.firstChild);
 }
