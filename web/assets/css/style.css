@@ -459,3 +459,10 @@ footer strong { font-weight: 400; }
   .dn-go { align-self: stretch; text-align: center; padding: 10px 16px; }
   .dn-note { font-size: .7rem; }
 }
+/* ===== 捐款卡片:修复图片宽度被压成 0 ===== */
+.dn-imgs { flex-shrink: 0; min-width: 0; }
+.dn-imgs img { max-width: none; flex-shrink: 0; }
+@media (max-width: 600px) {
+  .dn-imgs { flex-wrap: wrap; row-gap: 10px; }
+  .dn-imgs img { max-width: 46vw; }
+}
