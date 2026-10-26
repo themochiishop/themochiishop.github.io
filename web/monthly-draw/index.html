@@ -8,7 +8,7 @@
   <title>Monthly Draw - The Mochii Shop</title>
   <link rel="icon" href="/assets/images/logo.png">
   <link rel="stylesheet" href="/assets/css/style.css?v=__V__">
-    <script type="module" src="/assets/js/nav.js?v=__V__"></script>
+  <script type="module" src="/assets/js/nav.js?v=__V__"></script>
 </head>
 <body>
 
@@ -32,13 +32,13 @@
 
   <section class="page-hero">
     <h1>Monthly Draw</h1>
-    <p id="dIntro">Our monthly prize draw. See this month's prizes and the lucky winners.</p>
+    <p id="dIntro">Our monthly prize draw. See the prizes and the lucky winners.</p>
   </section>
 
   <section class="section">
     <div class="container">
-      <div class="draw-month" id="dMonth" hidden></div>
-      <div class="fig-banner" id="dImgBox" hidden><img id="dImg" alt="This month's prizes"></div>
+      <div class="draw-periods" id="dPeriods" hidden></div>
+      <div class="fig-banner" id="dImgBox" hidden><img id="dImg" alt="Prizes"></div>
 
       <div class="draw-sec" id="prizeBlock" hidden>
         <div class="section-head"><h2>Prizes</h2></div>
@@ -75,7 +75,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
   const app = initializeApp({
     apiKey: "AIzaSyDJrsKAjWqz0AmjEtBzz4CeswiskdQqASw",
@@ -88,9 +88,11 @@
   });
   const db = getDatabase(app);
   const $ = s => document.querySelector(s);
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
   const isHttps = u => typeof u === 'string' && /^https:\/\//i.test(u);
   const isEmail = e => typeof e === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
   const isImg = s => typeof s === 'string' && /^(data:image\/|https:\/\/)/.test(s);
+  const DEFAULT_INTRO = 'Our monthly prize draw. See the prizes and the lucky winners.';
 
   $('#menuBtn').onclick = () => $('#menu').classList.toggle('open');
 
@@ -104,24 +106,63 @@
     if (c.address) $('#fAddr').textContent = c.address;
   });
 
-  /* 名字隐藏:ab***fg */
+  /* 隐藏部分字符 */
   const maskName = n => {
-    const s = Array.from(String(n).trim());
-    const L = s.length;
+    const s = Array.from(String(n).trim()), L = s.length;
     if (!L || s.includes('*')) return s.join('');
     if (L <= 2) return s[0] + '*';
     if (L <= 4) return s[0] + '*'.repeat(L - 2) + s[L - 1];
     return s.slice(0, 2).join('') + '***' + s.slice(-2).join('');
   };
+  const maskOrder = n => {
+    const s = Array.from(String(n).trim()), L = s.length;
+    if (!L || s.includes('*')) return s.join('');
+    if (L >= 10) return s.slice(0, 4).join('') + '****' + s.slice(-4).join('');
+    if (L >= 6) return s.slice(0, 2).join('') + '***' + s.slice(-2).join('');
+    return s.join('');
+  };
   const fmtNames = (t, on) => String(t).split(/[,，、;；]/).map(x => x.trim()).filter(Boolean).map(x => on ? maskName(x) : x).join(', ');
 
-  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+  /* 解析名单:Prize | Winner | Order ID(也支持制表符) */
+  function parseRows(text) {
+    const rows = [];
+    String(text || '').split(/\n+/).map(l => l.trim()).filter(Boolean).forEach(l => {
+      const c = l.split(/\s*\|\s*|\t+/).map(x => x.trim());
+      const low = c.join(' ').toLowerCase();
+      if (/winner/.test(low) && /(prize|order)/.test(low)) return;   // 标题行
+      if (c.length === 1) rows.push({ prize: '', winner: c[0], order: '' });
+      else rows.push({ prize: c[0], winner: c[1] || '', order: c[2] || '' });
+    });
+    return rows;
+  }
 
-  onValue(ref(db, 'homepage/draw'), snap => {
-    const d = snap.val() || {};
+  /* 期数按钮 */
+  let periods = [], currentId = null, token = 0;
+  function renderPills() {
+    const box = $('#dPeriods'); box.innerHTML = '';
+    box.hidden = periods.length < 2;
+    periods.forEach(p => {
+      const b = mk('button', '', p.month); b.type = 'button';
+      if (p.id === currentId) b.classList.add('on');
+      b.onclick = () => select(p.id, true);
+      box.appendChild(b);
+    });
+  }
 
-    const mEl = $('#dMonth'); mEl.textContent = d.month || ''; mEl.hidden = !d.month;
-    if (d.intro) $('#dIntro').textContent = d.intro;
+  async function select(id, setHash) {
+    currentId = id; renderPills();
+    const p = periods.find(x => x.id === id);
+    if (setHash && p) { try { history.replaceState(null, '', '#' + encodeURIComponent(p.month)); } catch (e) {} }
+    const my = ++token;
+    try {
+      const snap = await get(ref(db, 'homepage/drawData/' + id));
+      if (my !== token) return;
+      renderDraw(snap.val() || {});
+    } catch (e) { console.error('draw:', e); }
+  }
+
+  function renderDraw(d) {
+    $('#dIntro').textContent = d.intro || DEFAULT_INTRO;
 
     const okImg = isImg(d.image);
     if (okImg) $('#dImg').src = d.image;
@@ -132,36 +173,45 @@
     prizes.forEach(p => pu.appendChild(mk('li', '', p)));
     $('#prizeBlock').hidden = prizes.length === 0;
 
-    const on = d.mask !== false;
-    const lines = String(d.winners || '').split(/\n+/).map(x => x.trim()).filter(Boolean);
+    const mName = d.maskName !== false, mOrder = d.maskOrder !== false;
+    const rows = parseRows(d.winners);
     const box = $('#dWinners'); box.innerHTML = '';
-    if (!lines.length) {
+    if (!rows.length) {
       const e = mk('div', 'fig-empty');
       e.appendChild(mk('div', 'ico', '🎁'));
       e.appendChild(mk('p', '', 'The winners will be announced here after the draw.'));
       box.appendChild(e);
-    } else if (lines.some(l => l.includes('|'))) {
+    } else {
       const t = mk('div', 'winner-table');
-      const head = mk('div', 'wt-row wt-head'); head.append(mk('div', '', 'Prize'), mk('div', '', 'Winner')); t.appendChild(head);
-      lines.forEach(l => {
-        const i = l.indexOf('|');
-        const prize = i >= 0 ? l.slice(0, i).trim() : '';
-        const names = i >= 0 ? l.slice(i + 1) : l;
-        const r = mk('div', 'wt-row'); r.append(mk('div', '', prize), mk('div', 'wt-name', fmtNames(names, on))); t.appendChild(r);
+      const head = mk('div', 'wt-row wt-head');
+      head.append(mk('div', '', 'Prize'), mk('div', '', 'Winner'), mk('div', '', 'Order ID'));
+      t.appendChild(head);
+      rows.forEach(r => {
+        const tr = mk('div', 'wt-row');
+        const c1 = mk('div', r.prize ? '' : 'wt-dim', r.prize || '—');
+        const c2 = mk('div', 'wt-name', fmtNames(r.winner, mName) || '—');
+        const o = r.order ? (mOrder ? maskOrder(r.order) : r.order) : '—';
+        const c3 = mk('div', r.order ? 'wt-oid' : 'wt-oid wt-dim', o);
+        tr.append(c1, c2, c3); t.appendChild(tr);
       });
       box.appendChild(t);
-    } else {
-      const ul = mk('ol', 'winner-list');
-      lines.forEach((l, i) => {
-        const li = mk('li'); li.append(mk('span', 'rk', String(i + 1)), mk('span', 'nm', fmtNames(l, on)));
-        ul.appendChild(li);
-      });
-      box.appendChild(ul);
     }
 
     const pdf = (typeof d.pdf === 'string' && /^(https:\/\/|\/assets\/)/i.test(d.pdf)) ? d.pdf : '';
     $('#dPdf').hidden = !pdf;
     if (pdf) $('#dPdf a').href = pdf;
+  }
+
+  onValue(ref(db, 'homepage/drawIndex'), snap => {
+    const v = snap.val();
+    periods = (Array.isArray(v) ? v : Object.values(v || {})).filter(x => x && x.id && typeof x.month === 'string' && x.month.trim());
+    if (!periods.length) { currentId = null; renderPills(); renderDraw({}); return; }
+    renderPills();
+    if (!periods.some(p => p.id === currentId)) {
+      let want = ''; try { want = decodeURIComponent(location.hash.slice(1)).toLowerCase(); } catch (e) {}
+      const hit = periods.find(p => p.month.toLowerCase() === want);
+      select((hit || periods[0]).id, false);
+    }
   });
 </script>
 </body>
