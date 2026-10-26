@@ -72,8 +72,7 @@ function renderDonate() {
   a.setAttribute('aria-label', 'One Hope Charity & Welfare (opens in a new tab)');
 
   const imgs = document.createElement('div'); imgs.className = 'dn-imgs';
-  [['/assets/images/ohc-logo.png', 'One Hope Charity & Welfare'], ['/assets/images/ohc-slogan.png', '']].forEach(([src, alt]) => {
-    const im = document.createElement('img'); im.src = src; im.alt = alt; im.loading = 'lazy';
+  [['/assets/images/OHC_Logo-white.png', 'One Hope Charity & Welfare'], ['/assets/images/OHC-Slogan.png', '']].forEach(([src, alt]) => {    const im = document.createElement('img'); im.src = src; im.alt = alt; im.loading = 'lazy';
     im.onerror = () => im.remove();
     imgs.appendChild(im);
   });
