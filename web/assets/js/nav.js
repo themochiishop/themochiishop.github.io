@@ -66,6 +66,7 @@ function renderCompanyTitle() {
 }
 function renderDonate() {
   if (!foot || foot.querySelector('.donate')) return;
+  if (norm(location.pathname) !== '/') return;
   const box = document.createElement('div'); box.className = 'donate';
   const a = document.createElement('a'); a.className = 'dn-card';
   a.href = 'https://www.onehopecharity.org/case'; a.target = '_blank'; a.rel = 'noopener';
