@@ -382,3 +382,15 @@ footer a { color: var(--gold); }
   .winner-table .wt-row { grid-template-columns: 1fr 1fr .9fr; gap: 8px; padding: 12px 10px; font-size: .82rem; }
   .wt-oid { font-size: .74rem; }
 }
+/* ===== Monthly Draw:分享 ===== */
+.share-box { margin-top: 44px; text-align: center; }
+.share-title { font-family: Georgia, "Songti SC", "Noto Serif SC", serif; font-weight: 700; color: var(--ink); margin-bottom: 14px; }
+.share-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.sbtn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; border-radius: 999px; border: 1px solid transparent; font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; color: #fff; transition: filter .2s, transform .2s; }
+.sbtn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+.sb-native { background: var(--pink); display: none; }
+.sb-wa { background: #25a244; }
+.sb-fb { background: #1877f2; }
+.sb-tg { background: #229ed9; }
+.sb-copy { background: var(--ink); }
+.share-msg { min-height: 1.4em; margin-top: 12px; font-size: .88rem; color: #1d8a38; }
