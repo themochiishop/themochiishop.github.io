@@ -5,6 +5,12 @@
   <meta name="color-scheme" content="light">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="The Mochii Shop monthly draw - prizes and winners.">
+    <meta property="og:type" content="website">
+  <meta property="og:site_name" content="The Mochii Shop">
+  <meta property="og:title" content="Monthly Draw - The Mochii Shop">
+  <meta property="og:description" content="See the prizes and the lucky winners of our monthly draw.">
+  <meta property="og:image" content="https://www.themochiishop.com/assets/images/logo.png">
+  <meta property="og:url" content="https://www.themochiishop.com/monthly-draw/">
   <title>Monthly Draw - The Mochii Shop</title>
   <link rel="icon" href="/assets/images/logo.png">
   <link rel="stylesheet" href="/assets/css/style.css?v=__V__">
@@ -50,8 +56,16 @@
         <div id="dWinners"></div>
       </div>
 
-      <div class="draw-pdf" id="dPdf" hidden>
-        <a class="btn btn-dark" href="#" target="_blank" rel="noopener">Download Full Results (PDF)</a>
+            <div class="share-box">
+        <div class="share-title">Share this draw</div>
+        <div class="share-btns">
+          <button type="button" class="sbtn sb-native" id="shNative">Share</button>
+          <a class="sbtn sb-wa" id="shWa" href="#" target="_blank" rel="noopener">WhatsApp</a>
+          <a class="sbtn sb-fb" id="shFb" href="#" target="_blank" rel="noopener">Facebook</a>
+          <a class="sbtn sb-tg" id="shTg" href="#" target="_blank" rel="noopener">Telegram</a>
+          <button type="button" class="sbtn sb-copy" id="shCopy">Copy link</button>
+        </div>
+        <div class="share-msg" id="shMsg" aria-live="polite"></div>
       </div>
     </div>
   </section>
@@ -150,7 +164,7 @@
   }
 
   async function select(id, setHash) {
-    currentId = id; renderPills();
+        currentId = id; renderPills(); updateShare();
     const p = periods.find(x => x.id === id);
     if (setHash && p) { try { history.replaceState(null, '', '#' + encodeURIComponent(p.month)); } catch (e) {} }
     const my = ++token;
@@ -196,16 +210,41 @@
       });
       box.appendChild(t);
     }
-
-    const pdf = (typeof d.pdf === 'string' && /^(https:\/\/|\/assets\/)/i.test(d.pdf)) ? d.pdf : '';
-    $('#dPdf').hidden = !pdf;
-    if (pdf) $('#dPdf a').href = pdf;
   }
-
+  /* 分享当前页 */
+  const BASE = 'https://www.themochiishop.com/monthly-draw/';
+  let shareUrl = BASE, shareText = 'The Mochii Shop · Monthly Draw';
+  function updateShare() {
+    const p = periods.find(x => x.id === currentId);
+    shareUrl = BASE + (p ? '#' + encodeURIComponent(p.month) : '');
+    shareText = 'The Mochii Shop · Monthly Draw' + (p ? ' · ' + p.month : '') + ' — see the prizes and winners';
+    const u = encodeURIComponent(shareUrl), t = encodeURIComponent(shareText);
+    $('#shWa').href = 'https://wa.me/?text=' + encodeURIComponent(shareText + '\n' + shareUrl);
+    $('#shFb').href = 'https://www.facebook.com/sharer/sharer.php?u=' + u;
+    $('#shTg').href = 'https://t.me/share/url?url=' + u + '&text=' + t;
+  }
+  const flash = msg => {
+    const m = $('#shMsg'); m.textContent = msg;
+    clearTimeout(flash.t); flash.t = setTimeout(() => { m.textContent = ''; }, 2500);
+  };
+  $('#shCopy').onclick = async () => {
+    try { await navigator.clipboard.writeText(shareUrl); flash('Link copied ✓'); }
+    catch (e) {
+      const ta = document.createElement('textarea');
+      ta.value = shareUrl; ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); flash('Link copied ✓'); } catch (e2) { flash(shareUrl); }
+      ta.remove();
+    }
+  };
+  if (navigator.share) {
+    const nb = $('#shNative'); nb.style.display = 'inline-flex';
+    nb.onclick = () => navigator.share({ title: 'Monthly Draw - The Mochii Shop', text: shareText, url: shareUrl }).catch(() => {});
+  }
   onValue(ref(db, 'homepage/drawIndex'), snap => {
     const v = snap.val();
     periods = (Array.isArray(v) ? v : Object.values(v || {})).filter(x => x && x.id && typeof x.month === 'string' && x.month.trim());
-    if (!periods.length) { currentId = null; renderPills(); renderDraw({}); return; }
+        if (!periods.length) { currentId = null; renderPills(); renderDraw({}); updateShare(); return; }
     renderPills();
     if (!periods.some(p => p.id === currentId)) {
       let want = ''; try { want = decodeURIComponent(location.hash.slice(1)).toLowerCase(); } catch (e) {}
