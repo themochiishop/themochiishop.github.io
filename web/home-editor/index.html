@@ -110,18 +110,21 @@
       .wrow { grid-template-columns: 1fr 1fr 34px 34px 34px; grid-template-areas: "p p u d x" "n o u d x"; }
       .wm { width: 34px; height: 100%; min-height: 34px; }
     }
-        .prow { display: grid; grid-template-columns: 52px 1fr 30px 30px 34px; gap: 6px; align-items: center; margin-bottom: 8px; }
-    .pbox { position: relative; width: 52px; height: 52px; }
-    .pth-b { width: 52px; height: 52px; border: 1px dashed #cfc6d4; background: #fff; border-radius: 8px; cursor: pointer; padding: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; color: #8b8190; font: inherit; font-size: .7rem; }
+           .prow { display: grid; grid-template-columns: 38px minmax(0, 1fr) 62px 26px 26px 26px; gap: 5px; align-items: center; margin-bottom: 5px; }
+    .pbox { position: relative; width: 38px; height: 38px; }
+    .pth-b { width: 38px; height: 38px; border: 1px dashed #cfc6d4; background: #fff; border-radius: 6px; cursor: pointer; padding: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; color: #8b8190; font: inherit; font-size: .62rem; }
     .pth-b img { width: 100%; height: 100%; object-fit: contain; display: block; }
-    .pimgx { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; border: 1px solid #e8b4ad; background: #fff; color: #c0392b; font-size: .8rem; line-height: 1; cursor: pointer; padding: 0; }
-    .prow .pn { padding: 9px 10px; font-size: .86rem; min-width: 0; }
-    .prow .wm { height: 34px; }
+    .pimgx { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; border: 1px solid #e8b4ad; background: #fff; color: #c0392b; font-size: .75rem; line-height: 1; cursor: pointer; padding: 0; }
+    .prow .pn { padding: 7px 8px; font-size: .82rem; min-width: 0; }
+    .prow .pq { padding: 7px 2px; font-size: .82rem; border: 1px solid #d8d0db; border-radius: 6px; background: #fff; width: 62px; }
+    .prow .wm, .prow .wx { width: 26px; height: 32px; padding: 0; border-radius: 6px; }
     @media (max-width: 600px) {
-      .prow { grid-template-columns: 52px 1fr 34px 34px 34px; grid-template-areas: "t n n n n" "t . u d x"; }
-      .prow .pbox { grid-area: t; align-self: start; }
+      .prow { grid-template-columns: 38px 1fr 1fr 1fr 54px; grid-template-areas: "t n n n q" "t u d x2 ."; }
+      .prow .pbox { grid-area: t; }
       .prow .pn { grid-area: n; }
-      .prow .u { grid-area: u; } .prow .d { grid-area: d; } .prow .x2 { grid-area: x; }
+      .prow .pq { grid-area: q; width: 54px; }
+            .prow .u { grid-area: u; } .prow .d { grid-area: d; } .prow .x2 { grid-area: x2; }
+      .prow .u, .prow .d, .prow .x2 { width: 100%; }
     }
   </style>
 </head>
@@ -933,10 +936,9 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
     /* ---------- 奖品清单(缩略图 + 名称) ---------- */
   const readItems = (raw, text) => {
     const arr = Array.isArray(raw) ? raw : Object.values(raw || {});
-    const ok = arr.filter(x => x && typeof x.n === 'string').map(x => ({ n: x.n, i: typeof x.i === 'string' ? x.i : '' }));
-    if (ok.length) return ok;
-    return String(text || '').split(/\n+/).map(x => x.trim()).filter(Boolean).map(n => ({ n, i: '' }));
-  };
+    const split = n => { const m = String(n).trim().match(/^(.*?)\s*[x×]\s*(\d+)\s*$/i); return m && m[1] ? { n: m[1], q: Math.min(30, Number(m[2]) || 1) } : { n: String(n).trim(), q: 1 }; };
+    const ok = arr.filter(x => x && typeof x.n === 'string').map(x => { const s = Number(x.q) ? { n: x.n, q: Math.min(30, Number(x.q)) } : split(x.n); return { n: s.n, q: s.q, i: typeof x.i === 'string' ? x.i : '' }; });    if (ok.length) return ok;
+    return String(text || '').split(/\n+/).map(x => x.trim()).filter(Boolean).map(n => ({ ...split(n), i: '' }));  };
   const THUMB = f => compressImage(f, 240, 0.8, 40000);
   const fileName = n => String(n || '').replace(/\.[a-z0-9]+$/i, '').replace(/_+/g, ' ').trim();
   const pmsg = (t, ok = true) => { const m = $('#prizeMsg'); m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = t; };
@@ -978,6 +980,10 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
       renderPrizes(); markDirty();
     });
 
+        const qty = document.createElement('select'); qty.className = 'pq'; qty.setAttribute('aria-label', '数量');
+    for (let k = 1; k <= 30; k++) { const o = document.createElement('option'); o.value = k; o.textContent = '×' + k; qty.appendChild(o); }
+    qty.value = String(Math.min(30, Math.max(1, Number(it.q) || 1)));
+    qty.addEventListener('change', () => { it.q = Number(qty.value); });
     const mv = (cls, txt, label, dir) => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'wm ' + cls; b.textContent = txt; b.setAttribute('aria-label', label);
       const j = i + dir; b.disabled = j < 0 || j >= d.items.length;
@@ -987,8 +993,7 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
     const x = document.createElement('button'); x.type = 'button'; x.className = 'wx x2'; x.textContent = '×'; x.setAttribute('aria-label', '删除这个奖品');
     x.onclick = () => { d.items.splice(i, 1); renderPrizes(); markDirty(); };
 
-    row.append(box, name, mv('u', '↑', '上移', -1), mv('d', '↓', '下移', 1), x);
-    return row;
+    row.append(box, name, qty, mv('u', '↑', '上移', -1), mv('d', '↓', '下移', 1), x);    return row;
   }
   $('#prizeAdd').onclick = () => {
     const d = draws[curDraw]; if (!d) return;
@@ -1049,8 +1054,7 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
       for (const d of draws) {
         const o = { month: d.month.trim(), maskName: d.maskName !== false, maskOrder: d.maskOrder !== false };
         ['intro', 'w1', 'w2', 'w3', 'terms'].forEach(k => { const t = (d[k] || '').trim(); if (t) o[k] = t; });
-        const pit = (d.items || []).filter(x => x.n.trim()).map(x => x.i ? { n: x.n.trim(), i: x.i } : { n: x.n.trim() });
-        if (pit.length) o.prizeItems = pit;        if (d.image) o.image = d.image;
+        const pit = (d.items || []).filter(x => x.n.trim()).map(x => { const o2 = { n: x.n.trim() }; if (Number(x.q) > 1) o2.q = Math.min(30, Number(x.q)); if (x.i) o2.i = x.i; return o2; });        if (pit.length) o.prizeItems = pit;        if (d.image) o.image = d.image;
         await set(ref(db, 'homepage/drawData/' + d.id), o);
       }
       for (const id of drawLoadedIds) if (!idsNow.has(id)) await set(ref(db, 'homepage/drawData/' + id), null);
