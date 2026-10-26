@@ -394,3 +394,20 @@ footer a { color: var(--gold); }
 .sb-tg { background: #229ed9; }
 .sb-copy { background: var(--ink); }
 .share-msg { min-height: 1.4em; margin-top: 12px; font-size: .88rem; color: #1d8a38; }
+/* ===== 分享:单按钮 + 弹窗 ===== */
+.share-box { margin-top: 44px; text-align: center; }
+.share-main { display: inline-flex; align-items: center; gap: 8px; }
+.share-main svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.share-modal { position: fixed; inset: 0; z-index: 120; background: rgba(12,8,16,.6); display: none; align-items: center; justify-content: center; padding: 20px; }
+.share-modal.open { display: flex; }
+.share-card { position: relative; width: 100%; max-width: 360px; background: #fff; border-top: 3px solid var(--gold); border-radius: 8px; padding: 26px 22px 22px; text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,.35); }
+.share-x { position: absolute; top: 8px; right: 12px; border: none; background: none; font-size: 1.1rem; color: #8b8190; cursor: pointer; }
+.share-x:hover { color: var(--ink); }
+.share-card h3 { font-family: Georgia, "Songti SC", serif; color: var(--ink); font-size: 1.2rem; margin-bottom: 4px; }
+.share-sub { color: var(--muted); font-size: .85rem; margin-bottom: 18px; }
+.share-opts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.share-opts .sopt { display: flex; align-items: center; justify-content: center; padding: 12px 8px; border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer; transition: border-color .2s, background .2s; }
+.share-opts .sopt:hover { border-color: var(--gold); background: var(--cream); }
+.share-opts .sopt.copy { grid-column: 1 / -1; background: var(--ink); color: #fff; border-color: var(--ink); }
+.share-opts .sopt.copy:hover { background: var(--ink-2); }
