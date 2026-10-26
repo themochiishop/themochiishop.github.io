@@ -414,3 +414,14 @@ footer a { color: var(--gold); }
 /* ===== 中奖名单:奖项之间留间距(不显示文字) ===== */
 .winner-table .wt-gap { height: 20px; padding: 0; background: var(--cream); border-top: 1px solid var(--line); }
 @media (max-width: 600px) { .winner-table .wt-gap { height: 14px; } }
+/* ===== 页脚 Site Map ===== */
+.sitemap { max-width: 1120px; margin: 0 auto 18px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,.12); }
+.sm-title { color: var(--gold); font-size: .72rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+.sitemap ul { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 24px; }
+.sitemap a { color: #cfc6d4; font-size: .85rem; transition: color .2s; }
+.sitemap a:hover { color: var(--gold); }
+.sitemap a.cur { color: #fff; }
+@media (max-width: 600px) {
+  .sitemap { margin-bottom: 14px; padding-bottom: 14px; }
+  .sitemap ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; }
+}
