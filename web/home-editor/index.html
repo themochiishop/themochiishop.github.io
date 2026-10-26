@@ -84,6 +84,10 @@
       .tg-tabs { flex-wrap: nowrap; overflow-x: auto; padding: 6px 2px 4px; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 90%, transparent); mask-image: linear-gradient(90deg, #000 90%, transparent); }
       .tg-tabs::-webkit-scrollbar { display: none; }
     }
+        .period-bar { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pbtn { padding: 8px 16px; border-radius: 999px; border: 1px solid #ddd5e0; background: #fff; color: #2b2430; font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
+    .pbtn:hover { border-color: #e0628a; }
+    .pbtn.on { background: #1c1722; color: #fff; border-color: #1c1722; }
   </style>
 </head>
 <body>
@@ -230,41 +234,59 @@
         <div class="msg" id="figMsg"></div>
       </div>
     </div>
-    <!-- 每月抽奖 -->
+       <!-- 每月抽奖 -->
     <div class="panel" id="panel-draw">
       <div class="panel-head"><h2>🎁 每月抽奖</h2><a class="btn ghost small" href="/monthly-draw/" target="_blank" rel="noopener">查看页面 ↗</a></div>
 
       <div class="card">
-        <h3>本期信息</h3>
-        <p class="hint">每月开奖后,更新这里,点"保存到网站"即可。</p>
-        <label for="drawMonth" style="margin-top:0">期数 / 月份(例如 October 2026)</label>
-        <input type="text" id="drawMonth">
-        <label for="drawIntro">页面说明(可留空)</label>
-        <textarea id="drawIntro" style="min-height:64px"></textarea>
-      </div>
-
-      <div class="card">
-        <h3>奖品</h3>
-        <p class="hint">奖品图建议用实拍照。上传时会自动压缩。</p>
-        <div class="slide-item">
-          <img id="drawPrev" alt="" style="visibility:hidden;width:130px;height:130px;object-fit:contain">
-          <div class="mid"><div style="font-size:.85rem;font-weight:600">奖品图</div></div>
-          <div class="ops"><button class="btn dark small" id="drawBtn">上传 / 更换</button><button class="btn danger small" id="drawDel">删除</button></div>
+        <h3>期数</h3>
+        <p class="hint">每期抽奖一个标签,点标签切换要编辑的那一期。新增的一期会排在最前面,访客默认看到第一个。</p>
+        <div class="period-bar" id="periodBar"></div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn dark small" id="periodAdd">＋ 新增一期</button>
+          <button class="btn ghost small" id="periodLeft">← 前移</button>
+          <button class="btn ghost small" id="periodRight">后移 →</button>
+          <button class="btn danger small" id="periodDel">删除这一期</button>
         </div>
-        <input type="file" id="drawFile" accept="image/*" hidden>
-        <div class="msg" id="drawMsg"></div>
-        <label for="drawPrizes">奖品清单(每行一个,可留空)</label>
-        <textarea id="drawPrizes"></textarea>
       </div>
 
-      <div class="card">
-        <h3>中奖名单</h3>
-        <p class="hint">每行一位。想对应奖品,写成"奖品 | 中奖者",例如 <b>Air Fryer | abcdefg</b>。同一个奖品有多人时,名字之间用逗号隔开。</p>
-        <textarea id="drawWinners" style="min-height:200px"></textarea>
-        <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer"><input type="checkbox" id="drawMask"> 自动隐藏部分名字(例如 ab***fg,保护中奖者隐私)</label>
-        <label for="drawPdf">完整结果 PDF 链接(可留空)</label>
-        <input type="text" id="drawPdf" placeholder="/assets/draws/2026-10.pdf">
-        <p class="small-note" style="margin-top:6px">PDF 里通常是完整名字。要隐藏名字的话,不要放 PDF。</p>
+      <div class="card" id="periodEmpty" hidden>
+        <p class="hint" style="margin:0">还没有任何一期,点上面的"＋ 新增一期"开始。</p>
+      </div>
+
+      <div id="periodEditor">
+        <div class="card">
+          <h3>本期信息</h3>
+          <label for="drawMonth" style="margin-top:0">期数 / 月份(显示在按钮上,例如 October 2026,不能重复)</label>
+          <input type="text" id="drawMonth" maxlength="30">
+          <label for="drawIntro">页面说明(可留空)</label>
+          <textarea id="drawIntro" style="min-height:64px"></textarea>
+        </div>
+
+        <div class="card">
+          <h3>奖品</h3>
+          <p class="hint">奖品图建议用实拍照。上传时会自动压缩。</p>
+          <div class="slide-item">
+            <img id="drawPrev" alt="" style="visibility:hidden;width:130px;height:130px;object-fit:contain">
+            <div class="mid"><div style="font-size:.85rem;font-weight:600">奖品图</div></div>
+            <div class="ops"><button class="btn dark small" id="drawBtn">上传 / 更换</button><button class="btn danger small" id="drawDel">删除</button></div>
+          </div>
+          <input type="file" id="drawFile" accept="image/*" hidden>
+          <div class="msg" id="drawMsg"></div>
+          <label for="drawPrizes">奖品清单(每行一个,可留空)</label>
+          <textarea id="drawPrizes"></textarea>
+        </div>
+
+        <div class="card">
+          <h3>中奖名单</h3>
+          <p class="hint">每行一位,格式:<b>Prize | Winner | Order ID</b>,例如 <b>Air Fryer | abcdefg | 2510XXXXXXXX</b>。也可以直接从 Excel / Google 表格复制粘贴。同一个奖品有多人时,名字之间用逗号隔开。第一行如果是标题行(Prize / Winner / Order ID)会自动忽略。</p>
+          <textarea id="drawWinners" style="min-height:220px"></textarea>
+          <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer"><input type="checkbox" id="drawMaskName"> 自动隐藏部分名字(例如 ab***fg)</label>
+          <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer;margin-top:8px"><input type="checkbox" id="drawMaskOrder"> 自动隐藏部分订单号(例如 2510****A9X2)</label>
+          <label for="drawPdf">完整结果 PDF 链接(可留空)</label>
+          <input type="text" id="drawPdf" placeholder="/assets/draws/2026-10.pdf">
+          <p class="small-note" style="margin-top:6px">PDF 里通常是完整名字和订单号。要隐藏的话,不要放 PDF。</p>
+        </div>
       </div>
     </div>
     <!-- About Us -->
@@ -459,7 +481,7 @@
       ['shopee','tiktok','facebook'].forEach(k => { $('#liveP_' + k).checked = lp.includes(k); });
       updateLiveDot();
 
-            loadDraw(v.draw);
+            loadDraws(v);
             loadNav(v.nav);
       const ab = v.about || {};
       about = { story: typeof ab.story === 'string' ? ab.story : '', dream: typeof ab.dream === 'string' ? ab.dream : '' };
@@ -609,48 +631,112 @@
       msg.className = 'msg ok'; msg.textContent = '已更新,记得点下方"保存到网站"。';
     } catch (err) { msg.className = 'msg err'; msg.textContent = err.message; }
   };
-    /* ---------- 每月抽奖 ---------- */
-  let drawImg = '';
-  function renderDrawImg() {
-    const im = $('#drawPrev');
-    if (drawImg) { im.src = drawImg; im.style.visibility = 'visible'; }
-    else { im.removeAttribute('src'); im.style.visibility = 'hidden'; }
-    $('#drawDel').disabled = !drawImg;
-    markDirty();
+
+  /* ---------- 每月抽奖(多期) ---------- */
+  let draws = [];
+  let curDraw = -1;
+  let drawLoadedIds = [];
+  const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', prizes: 'drawPrizes', winners: 'drawWinners', pdf: 'drawPdf' };
+  const newDrawId = () => 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+
+  function renderPeriods() {
+    const bar = $('#periodBar'); bar.innerHTML = '';
+    draws.forEach((d, i) => {
+      const b = document.createElement('button'); b.type = 'button';
+      b.className = 'pbtn' + (i === curDraw ? ' on' : '');
+      b.textContent = (d.month || '').trim() || '(未命名)';
+      b.onclick = () => { curDraw = i; renderPeriods(); };
+      bar.appendChild(b);
+    });
+    const d = draws[curDraw];
+    $('#periodEditor').hidden = !d;
+    $('#periodEmpty').hidden = !!d;
+    $('#periodDel').disabled = !d;
+    $('#periodLeft').disabled = !d || curDraw === 0;
+    $('#periodRight').disabled = !d || curDraw === draws.length - 1;
+    if (d) {
+      for (const k in DRAW_FIELDS) $('#' + DRAW_FIELDS[k]).value = d[k] || '';
+      $('#drawMaskName').checked = d.maskName !== false;
+      $('#drawMaskOrder').checked = d.maskOrder !== false;
+      const im = $('#drawPrev');
+      if (d.image) { im.src = d.image; im.style.visibility = 'visible'; }
+      else { im.removeAttribute('src'); im.style.visibility = 'hidden'; }
+      $('#drawDel').disabled = !d.image;
+    }
   }
-  $('#drawBtn').onclick = () => $('#drawFile').click();
-  $('#drawDel').onclick = () => { drawImg = ''; renderDrawImg(); };
+
+  Object.entries(DRAW_FIELDS).forEach(([k, id]) => {
+    $('#' + id).addEventListener('input', () => {
+      const d = draws[curDraw]; if (!d) return;
+      d[k] = $('#' + id).value;
+      if (k === 'month') { const on = document.querySelector('#periodBar .pbtn.on'); if (on) on.textContent = d.month.trim() || '(未命名)'; }
+    });
+  });
+  $('#drawMaskName').addEventListener('change', () => { const d = draws[curDraw]; if (d) d.maskName = $('#drawMaskName').checked; });
+  $('#drawMaskOrder').addEventListener('change', () => { const d = draws[curDraw]; if (d) d.maskOrder = $('#drawMaskOrder').checked; });
+
+  $('#periodAdd').onclick = () => {
+    const label = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    draws.unshift({ id: newDrawId(), month: label, intro: '', prizes: '', winners: '', pdf: '', image: '', maskName: true, maskOrder: true });
+    curDraw = 0; renderPeriods(); markDirty();
+  };
+  $('#periodDel').onclick = () => {
+    const d = draws[curDraw]; if (!d) return;
+    if (!confirm('删除「' + (d.month || '未命名') + '」这一期?点保存后才会真正生效。')) return;
+    draws.splice(curDraw, 1);
+    curDraw = draws.length ? Math.min(curDraw, draws.length - 1) : -1;
+    renderPeriods(); markDirty();
+  };
+  const moveDraw = dir => {
+    const j = curDraw + dir; if (j < 0 || j >= draws.length) return;
+    [draws[curDraw], draws[j]] = [draws[j], draws[curDraw]]; curDraw = j; renderPeriods(); markDirty();
+  };
+  $('#periodLeft').onclick = () => moveDraw(-1);
+  $('#periodRight').onclick = () => moveDraw(1);
+
+  $('#drawBtn').onclick = () => { if (draws[curDraw]) $('#drawFile').click(); };
+  $('#drawDel').onclick = () => { const d = draws[curDraw]; if (d) { d.image = ''; renderPeriods(); markDirty(); } };
   $('#drawFile').onchange = async e => {
     const f = e.target.files[0]; e.target.value = '';
     const msg = $('#drawMsg'); msg.className = 'msg'; msg.textContent = '';
-    if (!f) return;
+    const d = draws[curDraw]; if (!f || !d) return;
     try {
       msg.textContent = '正在处理 ...';
-      drawImg = await compressImage(f, 1400, 0.88, 600000);
-      renderDrawImg();
+      d.image = await compressImage(f, 1200, 0.88, 450000);
+      renderPeriods(); markDirty();
       msg.className = 'msg ok'; msg.textContent = '已更新,记得点下方"保存到网站"。';
     } catch (err) { msg.className = 'msg err'; msg.textContent = err.message; }
   };
-  function loadDraw(d) {
-    d = d || {};
-    $('#drawMonth').value = d.month || '';
-    $('#drawIntro').value = d.intro || '';
-    $('#drawPrizes').value = d.prizes || '';
-    $('#drawWinners').value = d.winners || '';
-    $('#drawPdf').value = d.pdf || '';
-    $('#drawMask').checked = d.mask !== false;
-    drawImg = typeof d.image === 'string' ? d.image : '';
-    renderDrawImg();
+
+  function loadDraws(v) {
+    v = v || {};
+    const idx = Array.isArray(v.drawIndex) ? v.drawIndex : Object.values(v.drawIndex || {});
+    const data = v.drawData || {};
+    draws = [];
+    idx.forEach(it => {
+      if (!it || !it.id) return;
+      const d = data[it.id] || {};
+      draws.push({ id: it.id, month: d.month || it.month || '', intro: d.intro || '', prizes: d.prizes || '', winners: d.winners || '', pdf: d.pdf || '', image: typeof d.image === 'string' ? d.image : '', maskName: d.maskName !== false, maskOrder: d.maskOrder !== false });
+    });
+    if (!draws.length && v.draw && typeof v.draw === 'object') {
+      const o = v.draw;
+      draws.push({ id: 'd1', month: o.month || 'Current', intro: o.intro || '', prizes: o.prizes || '', winners: o.winners || '', pdf: o.pdf || '', image: typeof o.image === 'string' ? o.image : '', maskName: o.mask !== false, maskOrder: true });
+    }
+    drawLoadedIds = Object.keys(data);
+    curDraw = draws.length ? 0 : -1;
+    renderPeriods();
   }
-  function collectDraw() {
-    const o = {};
-    const put = (k, id) => { const v = $('#' + id).value.trim(); if (v) o[k] = v; };
-    put('month', 'drawMonth'); put('intro', 'drawIntro'); put('prizes', 'drawPrizes');
-    put('winners', 'drawWinners'); put('pdf', 'drawPdf');
-    o.mask = $('#drawMask').checked;
-    if (drawImg) o.image = drawImg;
-    return o;
+  function validateDraws() {
+    for (const d of draws) {
+      if (!(d.month || '').trim()) return '每月抽奖:有一期没有填写期数 / 月份';
+      const p = (d.pdf || '').trim();
+      if (p && !/^(https:\/\/|\/assets\/)/i.test(p)) return '每月抽奖:PDF 链接必须以 https:// 或 /assets/ 开头(' + d.month + ')';
+    }
+    const names = draws.map(d => d.month.trim().toLowerCase());
+    if (new Set(names).size !== names.length) return '每月抽奖:有两期的名称重复了';
+    return '';
   }
+  
     /* ---------- 导航菜单 ---------- */
   const NAV_DEFAULT = [
     { label: 'Home', href: '/', show: true },
@@ -725,8 +811,8 @@
       if (f === 'announcement') cfg[f] = v;   // 允许留空 = 隐藏公告
       else if (v) cfg[f] = v;                  // 留空 = 使用页面默认
     }
-        const pdfV = $('#drawPdf').value.trim();
-    if (pdfV && !/^(https:\/\/|\/assets\/)/i.test(pdfV)) { showSave('PDF 链接必须以 https:// 或 /assets/ 开头', false); openTab('draw'); return; }
+            const drawErr = validateDraws();
+    if (drawErr) { showSave(drawErr, false); openTab('draw'); return; }
     const livePs = ['shopee','tiktok','facebook'].filter(k => $('#liveP_' + k).checked);
     cfg.livePlatforms = livePs.join(',');
     cfg.liveStatus = livePs.length ? 'on' : 'off';
@@ -742,8 +828,17 @@
       const abOut = {}; if (about.story) abOut.story = about.story; if (about.dream) abOut.dream = about.dream;
       await set(ref(db, 'homepage/about'), Object.keys(abOut).length ? abOut : null);
             await set(ref(db, 'homepage/nav'), navItems.map(x => ({ label: x.label.trim(), href: x.href.trim(), show: x.show !== false })));
-            const dr = collectDraw();
-      await set(ref(db, 'homepage/draw'), Object.keys(dr).some(k => k !== 'mask') ? dr : null);
+                  const idsNow = new Set(draws.map(d => d.id));
+      await set(ref(db, 'homepage/drawIndex'), draws.length ? draws.map(d => ({ id: d.id, month: d.month.trim() })) : null);
+      for (const d of draws) {
+        const o = { month: d.month.trim(), maskName: d.maskName !== false, maskOrder: d.maskOrder !== false };
+        ['intro', 'prizes', 'winners', 'pdf'].forEach(k => { const t = (d[k] || '').trim(); if (t) o[k] = t; });
+        if (d.image) o.image = d.image;
+        await set(ref(db, 'homepage/drawData/' + d.id), o);
+      }
+      for (const id of drawLoadedIds) if (!idsNow.has(id)) await set(ref(db, 'homepage/drawData/' + id), null);
+      drawLoadedIds = [...idsNow];
+      await set(ref(db, 'homepage/draw'), null);
       dirty = false;
       showSave('✅ 已保存,网站已更新(' + new Date().toLocaleTimeString() + ')', true);
     } catch (e) {
