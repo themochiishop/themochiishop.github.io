@@ -74,8 +74,7 @@ function renderDonate() {
   const t = document.createElement('div'); t.className = 'dn-title'; t.textContent = 'Share the Love';
 
   const imgs = document.createElement('div'); imgs.className = 'dn-imgs';
-  [['/assets/images/ohc-logo.png', 'One Hope Charity & Welfare'], ['/assets/images/ohc-slogan.png', '']].forEach(([src, alt]) => {
-    const im = document.createElement('img'); im.alt = alt; im.decoding = 'async'; im.src = src;    im.onerror = () => im.remove();
+  [['/assets/images/OHC_Logo-white.png', 'One Hope Charity & Welfare'], ['/assets/images/OHC-Slogan.png', '']].forEach(([src, alt]) => {    const im = document.createElement('img'); im.alt = alt; im.decoding = 'async'; im.src = src;    im.onerror = () => im.remove();
     imgs.appendChild(im);
   });
 
