@@ -478,3 +478,13 @@ footer strong { font-weight: 400; }
   .dn-go { grid-area: go; justify-self: stretch; text-align: center; }
   .dn-note { grid-area: note; }
 }
+/* ===== 手机端捐款卡片:精简排版 ===== */
+@media (max-width: 600px) {
+  .dn-card { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "logo title" "line line" "slogan slogan" "go go" "note note"; column-gap: 12px; row-gap: 10px; padding: 14px; }
+  .dn-imgs .dn-logo { height: 36px; }
+  .dn-title { font-size: .7rem; letter-spacing: 2.5px; }
+  .dn-line { font-size: .82rem; line-height: 1.5; }
+  .dn-imgs .dn-slogan { justify-self: stretch; width: 100%; max-width: none; height: 68px; box-sizing: border-box; padding: 4px 8px; object-fit: contain; object-position: center; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); border-radius: 8px; }
+  .dn-go { padding: 9px 16px; font-size: .84rem; }
+  .dn-note { font-size: .66rem; line-height: 1.45; color: #8a8090; }
+}
