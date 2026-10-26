@@ -466,3 +466,15 @@ footer strong { font-weight: 400; }
   .dn-imgs { flex-wrap: wrap; row-gap: 10px; }
   .dn-imgs img { max-width: 46vw; }
 }
+/* ===== 手机端捐款卡片:logo 在标题左边,口号图在说明下方 ===== */
+@media (max-width: 600px) {
+  .dn-card { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "logo title" "line line" "slogan slogan" "go go" "note note"; align-items: center; justify-items: start; column-gap: 12px; row-gap: 12px; padding: 16px; text-align: left; }
+  .dn-imgs { display: contents; }
+  .dn-imgs .dn-logo { grid-area: logo; height: 40px; width: auto; max-width: none; }
+  .dn-imgs .dn-slogan { grid-area: slogan; height: auto; width: auto; max-width: 100%; max-height: 56px; padding: 0; border: 0; }
+  .dn-title { grid-area: title; width: 100%; }
+  .dn-title::before { display: none; }
+  .dn-line { grid-area: line; }
+  .dn-go { grid-area: go; justify-self: stretch; text-align: center; }
+  .dn-note { grid-area: note; }
+}
