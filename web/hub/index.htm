@@ -40,9 +40,16 @@
     .plat.on { border-color: #e11d48; background: #fff5f6; }
     .plat.on .tag { color: #e11d48; font-weight: 700; }
 
-    select, textarea, input[type=email], input[type=password] { width: 100%; padding: 12px; border: 1px solid #d8d0db; border-radius: 8px; font: inherit; background: #fff; }
-    textarea { min-height: 84px; resize: vertical; }
-    select { margin-bottom: 14px; }
+    select, textarea, input[type=text], input[type=email], input[type=password] { width: 100%; padding: 12px; border: 1px solid #d8d0db; border-radius: 8px; font: inherit; background: #fff; }
+    textarea { min-height: 96px; resize: vertical; }
+    #dur { margin-bottom: 14px; }
+    .urlrow { margin-bottom: 10px; }
+    .urlrow label, .fld label { display: block; font-size: .8rem; font-weight: 600; margin-bottom: 4px; }
+    .urlrow .in { display: flex; gap: 8px; }
+    .urlrow input { flex: 1; min-width: 0; }
+    .pbtn { flex: 0 0 auto; padding: 0 14px; border: 1px solid #d8d0db; background: #fff; border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer; }
+    .fld { margin-top: 12px; }
+
     .big { width: 100%; padding: 16px; border: 0; border-radius: 12px; font: inherit; font-size: 1.05rem; font-weight: 700; cursor: pointer; color: #fff; background: #e11d48; }
     .big:disabled { opacity: .6; }
     .sec { width: 100%; padding: 12px; border: 1px solid #d8d0db; border-radius: 10px; background: #fff; font: inherit; font-weight: 600; cursor: pointer; margin-top: 10px; color: #2b2430; text-align: center; text-decoration: none; display: block; }
@@ -52,6 +59,14 @@
     .msg.ok { color: #1d8a38; } .msg.err { color: #c0392b; }
     .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .two .sec { margin-top: 10px; }
+
+    .tplrow { display: flex; gap: 8px; margin-bottom: 10px; }
+    .tplrow select { flex: 1; min-width: 0; }
+    details.tplbox { margin-top: 14px; border-top: 1px solid #f0eaee; padding-top: 12px; }
+    details.tplbox summary { cursor: pointer; font-weight: 600; font-size: .9rem; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+    .chip { border: 1px solid #d8d0db; background: #faf7fb; border-radius: 999px; padding: 4px 10px; font: inherit; font-size: .78rem; cursor: pointer; }
+    .hint { font-size: .76rem; color: #8b8190; margin-top: 6px; }
 
     .links a { display: flex; justify-content: space-between; align-items: center; padding: 14px 2px; border-top: 1px solid #f0eaee; color: #2b2430; text-decoration: none; font-weight: 600; }
     .links a:first-of-type { border-top: 0; }
@@ -93,6 +108,7 @@
       </div>
 
       <div class="plats" id="plats"></div>
+      <div id="urls"></div>
 
       <select id="dur" aria-label="自动下线时间">
         <option value="120">2 小时后自动下线</option>
@@ -109,17 +125,55 @@
 
     <div class="card">
       <h2>开播通知</h2>
-      <textarea id="notice" aria-label="开播通知文案"></textarea>
+      <div class="tplrow">
+        <select id="tpl" aria-label="通知模板"></select>
+      </div>
+
+      <div class="fld" id="fTitle" hidden>
+        <label for="title">标题</label>
+        <input type="text" id="title" placeholder="例如 Gelang Premium Live">
+      </div>
+      <div class="fld" id="fCode" hidden>
+        <label for="code">优惠码</label>
+        <input type="text" id="code" placeholder="只显示在通知里,不会放到网站">
+      </div>
+
+      <div class="fld">
+        <label for="notice">通知内容(可以再手动修改)</label>
+        <textarea id="notice" style="min-height:220px"></textarea>
+      </div>
+
       <div class="two">
         <button class="sec dark" id="copyBtn">复制通知</button>
         <a class="sec" id="waLink" href="https://whatsapp.com/channel/0029Vb7zsqb8F2pABPvoOR2I" target="_blank" rel="noopener">打开 WhatsApp 频道</a>
       </div>
+
+      <details class="tplbox" id="tplBox">
+        <summary>编辑模板</summary>
+        <div class="fld">
+          <label for="tplName">模板名称</label>
+          <input type="text" id="tplName" maxlength="40">
+        </div>
+        <div class="fld">
+          <label for="tplBody">模板内容</label>
+          <div class="chips" id="chips"></div>
+          <textarea id="tplBody" style="min-height:220px"></textarea>
+          <p class="hint">点上面的占位符,会插入到光标位置。修改后自动保存,通知内容马上更新。</p>
+        </div>
+        <div class="two">
+          <button class="sec" id="tplNew">新建模板(复制当前)</button>
+          <button class="sec" id="tplDel">删除这个模板</button>
+        </div>
+        <div class="msg" id="tplMsg" aria-live="polite"></div>
+        <p class="hint" id="tplNote" hidden>模板目前只保存在这台设备。要在手机和电脑同步,请先在 Firebase 规则里加上 hub。</p>
+      </details>
     </div>
 
     <div class="card links">
       <h2>入口</h2>
       <a href="https://admin.themochiishop.com/" target="_blank" rel="noopener"><span>工具与控制台 Dashboard</span><span>→</span></a>
       <a href="/home-editor/"><span>网站后台编辑</span><span>→</span></a>
+      
       <a href="/" target="_blank" rel="noopener"><span>查看网站</span><span>→</span></a>
     </div>
   </div>
@@ -128,7 +182,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-  import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getDatabase, ref, onValue, update, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
   const app = initializeApp({
     apiKey: "AIzaSyDJrsKAjWqz0AmjEtBzz4CeswiskdQqASw",
@@ -147,10 +201,16 @@
     tiktok:   { name: 'TikTok',   img: '/assets/images/tiktok.png' },
     facebook: { name: 'Facebook', img: '/assets/images/Facebook_logo.png' }
   };
+  const FALLBACK = 'https://www.themochiishop.com/live-stream/';
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   };
+
+  const DEFAULT_TPL = [{
+    id: 't1', name: 'Shopee Live 通知',
+    body: `{title}\n\nDon't miss out!\n\nJoin our Shopee Live here：\n{link}\n━━━━━━━━\nCustomer Support:\nhttps://wa.me/60177503767\nSee you there!`
+  }];
 
   const sel = new Set(String(store.get('hubSel', 'shopee')).split(',').filter(k => PLATS[k]));
   if (!sel.size) sel.add('shopee');
@@ -158,8 +218,14 @@
   $('#dur').value = store.get('hubDur', '180');
   if (!$('#dur').value) $('#dur').value = '180';
 
-  let cfg = {}, edited = false;
+  let cfg = {}, remoteOk = true;
+  let tpls = DEFAULT_TPL.map(x => ({ ...x }));
+  let st = { tpl: 't1', title: '', code: '' };
+  const urls = { shopee: '', tiktok: '', facebook: '' };
+  let urlsAt = 0;
+  const curTpl = () => tpls.find(x => x.id === st.tpl) || tpls[0];
 
+  const cleanUrl = u => { const m = String(u || '').match(/https?:\/\/[^\s]+/i); return m ? m[0].replace(/[)）\]】>,，。.!！、]+$/, '') : ''; };
   const liveList = () => {
     const until = Number(cfg.liveUntil) || 0;
     if (until && Date.now() >= until) return [];
@@ -168,18 +234,78 @@
   const fmtTime = t => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
   const left = ms => { const m = Math.max(0, Math.round(ms / 60000)), h = Math.floor(m / 60); return h ? h + ' 小时 ' + (m % 60) + ' 分' : m + ' 分'; };
   const say = (t, ok = true) => { const m = $('#msg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); };
+  const sayT = (t, ok = true) => { const m = $('#tplMsg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); };
 
-  function renderStatus() {
-    const l = liveList(), until = Number(cfg.liveUntil) || 0;
-    $('#st').classList.toggle('on', l.length > 0);
-    $('#stT').textContent = l.length ? '正在直播 · ' + l.map(k => PLATS[k].name).join(' + ') : '未直播';
-    $('#stS').textContent = l.length
-      ? (until ? fmtTime(until) + ' 自动下线(还剩 ' + left(until - Date.now()) + ')' : '不会自动下线')
-      : '网站显示"Currently offline"';
-    $('#goBtn').textContent = l.length ? '更新直播' : '开始直播';
-    $('#endBtn').hidden = !l.length;
+  /* ---------- 保存 / 读取(模板、标题、链接) ---------- */
+  const snapshot = () => ({
+    templates: tpls.map(t => ({ id: t.id, name: t.name, body: t.body })),
+    state: { tpl: st.tpl, title: st.title, code: st.code, urls: { shopee: urls.shopee, tiktok: urls.tiktok, facebook: urls.facebook }, urlsAt }
+  });
+  let saveT;
+  function persist() {
+    clearTimeout(saveT);
+    saveT = setTimeout(async () => {
+      const data = snapshot();
+      store.set('hubData', JSON.stringify(data));
+      if (!auth.currentUser) return;
+      try { await set(ref(db, 'hub'), data); remoteOk = true; }
+      catch (e) { remoteOk = false; }
+      $('#tplNote').hidden = remoteOk;
+    }, 600);
+  }
+  function applyData(d) {
+    if (!d || typeof d !== 'object') return;
+    const t = Array.isArray(d.templates) ? d.templates : Object.values(d.templates || {});
+    const ok = t.filter(x => x && x.id && typeof x.body === 'string').map(x => ({ id: String(x.id), name: String(x.name || '未命名'), body: x.body }));
+    if (ok.length) tpls = ok;
+    const s = d.state || {};
+    st.tpl = tpls.some(x => x.id === s.tpl) ? s.tpl : tpls[0].id;
+    st.title = typeof s.title === 'string' ? s.title : '';
+    st.code = typeof s.code === 'string' ? s.code : '';
+    urlsAt = Number(s.urlsAt) || 0;
+    const fresh = Date.now() - urlsAt < 12 * 3600 * 1000;
+    Object.keys(urls).forEach(k => { urls[k] = fresh && s.urls && typeof s.urls[k] === 'string' ? s.urls[k] : ''; });
+  }
+  try { applyData(JSON.parse(store.get('hubData', 'null'))); } catch (e) {}
+
+  async function loadRemote() {
+    try {
+      const snap = await get(ref(db, 'hub'));
+      if (snap.exists()) applyData(snap.val()); else persist();
+      remoteOk = true;
+    } catch (e) { remoteOk = false; }
+    $('#tplNote').hidden = remoteOk;
+    renderAll();
   }
 
+  /* ---------- 通知文案 ---------- */
+  function fill(body) {
+    const names = chosen();
+    const u = k => (urls[k] || '').trim() || FALLBACK;
+    let link;
+    if (names.length <= 1) link = names.length ? u(names[0]) : FALLBACK;
+    else link = names.map(k => PLATS[k].name + ': ' + u(k)).join('\n');
+    return String(body)
+      .replace(/\{title\}/g, (st.title || '').trim())
+      .replace(/\{link\}/g, link)
+      .replace(/\{shopee\}/g, u('shopee'))
+      .replace(/\{tiktok\}/g, u('tiktok'))
+      .replace(/\{facebook\}/g, u('facebook'))
+      .replace(/\{platform\}/g, names.map(k => PLATS[k].name).join(' + ') || 'our channels')
+      .replace(/\{code\}/g, (st.code || '').trim())
+      .replace(/^\s+/, '').replace(/\n{3,}/g, '\n\n');
+  }
+  function refreshNotice() { $('#notice').value = fill(curTpl().body); }
+  function syncFields() {
+    const b = curTpl().body;
+    $('#fTitle').hidden = !b.includes('{title}');
+    $('#fCode').hidden = !b.includes('{code}');
+    $('#title').value = st.title; $('#code').value = st.code;
+  }
+  $('#title').addEventListener('input', () => { st.title = $('#title').value; persist(); refreshNotice(); });
+  $('#code').addEventListener('input', () => { st.code = $('#code').value; persist(); refreshNotice(); });
+
+  /* ---------- 平台、链接 ---------- */
   function renderPlats() {
     $('#plats').replaceChildren(...Object.keys(PLATS).map(k => {
       const b = document.createElement('button'); b.type = 'button';
@@ -192,34 +318,113 @@
       b.onclick = () => {
         if (sel.has(k)) sel.delete(k); else sel.add(k);
         store.set('hubSel', chosen().join(','));
-        renderPlats(); refreshNotice();
+        renderPlats(); renderUrls(); refreshNotice();
       };
       return b;
     }));
   }
+  function renderUrls() {
+    const box = $('#urls');
+    box.replaceChildren(...chosen().map(k => {
+      const row = document.createElement('div'); row.className = 'urlrow';
+      const lab = document.createElement('label'); lab.textContent = PLATS[k].name + ' 直播链接'; lab.htmlFor = 'u_' + k;
+      const wrap = document.createElement('div'); wrap.className = 'in';
+      const inp = document.createElement('input'); inp.type = 'text'; inp.id = 'u_' + k; inp.inputMode = 'url';
+      inp.placeholder = '粘贴这场直播的链接 https://…'; inp.value = urls[k]; inp.autocomplete = 'off';
+      const set1 = () => {
+        const c = cleanUrl(inp.value);
+        if (c && c !== inp.value.trim()) inp.value = c;
+        urls[k] = c || inp.value.trim(); urlsAt = Date.now();
+        persist(); refreshNotice();
+      };
+      inp.addEventListener('input', set1);
+      const pb = document.createElement('button'); pb.type = 'button'; pb.className = 'pbtn'; pb.textContent = '粘贴';
+      pb.onclick = async () => {
+        try {
+          const t = await navigator.clipboard.readText();
+          const c = cleanUrl(t);
+          if (!c) { say('剪贴板里没有找到链接', false); return; }
+          inp.value = c; set1(); say('已粘贴 ' + PLATS[k].name + ' 链接 ✓');
+        } catch (e) { say('无法读取剪贴板,请长按输入框手动粘贴', false); }
+      };
+      wrap.append(inp, pb); row.append(lab, wrap);
+      return row;
+    }));
+    box.hidden = !chosen().length;
+  }
 
-  const noticeText = () => {
-    const n = chosen().map(k => PLATS[k].name).join(' + ') || 'our channels';
-    return '🔴 LIVE NOW on ' + n + '!\nJoin us: https://www.themochiishop.com/live-stream/';
+  /* ---------- 模板 ---------- */
+  function renderTplSelect() {
+    $('#tpl').replaceChildren(...tpls.map(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; return o; }));
+    $('#tpl').value = st.tpl;
+  }
+  function loadTplEditor() { const t = curTpl(); $('#tplName').value = t.name; $('#tplBody').value = t.body; }
+  $('#tpl').addEventListener('change', () => { st.tpl = $('#tpl').value; persist(); loadTplEditor(); syncFields(); refreshNotice(); });
+  $('#tplName').addEventListener('input', () => {
+    const t = curTpl(); t.name = $('#tplName').value || '未命名';
+    const o = $('#tpl').querySelector('option[value="' + t.id + '"]'); if (o) o.textContent = t.name;
+    persist();
+  });
+  $('#tplBody').addEventListener('input', () => { curTpl().body = $('#tplBody').value; persist(); syncFields(); refreshNotice(); });
+  ['{title}', '{link}', '{shopee}', '{tiktok}', '{facebook}', '{platform}', '{code}'].forEach(p => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = p;
+    b.onclick = () => { const el = $('#tplBody'); el.setRangeText(p, el.selectionStart, el.selectionEnd, 'end'); el.dispatchEvent(new Event('input')); el.focus(); };
+    $('#chips').appendChild(b);
+  });
+  $('#tplNew').onclick = () => {
+    const c = curTpl(), t = { id: 't' + Date.now().toString(36), name: c.name + ' 副本', body: c.body };
+    tpls.push(t); st.tpl = t.id; persist();
+    renderTplSelect(); loadTplEditor(); syncFields(); refreshNotice();
+    sayT('已新建模板,改名称和内容即可 ✓');
   };
-  function refreshNotice() { if (!edited) $('#notice').value = noticeText(); }
-  $('#notice').addEventListener('input', () => { edited = true; });
+  $('#tplDel').onclick = () => {
+    if (tpls.length <= 1) { sayT('至少要保留一个模板', false); return; }
+    if (!confirm('删除模板「' + curTpl().name + '」?')) return;
+    tpls = tpls.filter(x => x.id !== st.tpl); st.tpl = tpls[0].id; persist();
+    renderTplSelect(); loadTplEditor(); syncFields(); refreshNotice();
+    sayT('已删除 ✓');
+  };
 
+  /* ---------- 开播 / 结束 ---------- */
+  function renderStatus() {
+    const l = liveList(), until = Number(cfg.liveUntil) || 0;
+    $('#st').classList.toggle('on', l.length > 0);
+    $('#stT').textContent = l.length ? '正在直播 · ' + l.map(k => PLATS[k].name).join(' + ') : '未直播';
+    $('#stS').textContent = l.length
+      ? (until ? fmtTime(until) + ' 自动下线(还剩 ' + left(until - Date.now()) + ')' : '不会自动下线')
+      : '网站显示"Currently offline"';
+    $('#goBtn').textContent = l.length ? '更新直播' : '开始直播';
+    $('#endBtn').hidden = !l.length;
+  }
   async function write(upd, okText) {
     const btns = [$('#goBtn'), $('#endBtn')];
     btns.forEach(b => b.disabled = true); say('保存中…');
-    try { await update(ref(db, 'homepage/config'), upd); say(okText + ' ' + fmtTime(Date.now())); }
-    catch (e) { say(/permission/i.test(e.message) ? '没有权限:请确认这个账号的 UID 已写入 Firebase 规则' : '失败:' + e.message, false); }
+    try { await update(ref(db, 'homepage/config'), upd); say(okText + ' ' + fmtTime(Date.now())); return true; }
+    catch (e) { say(/permission/i.test(e.message) ? '没有权限:请确认这个账号的 UID 已写入 Firebase 规则' : '失败:' + e.message, false); return false; }
     finally { btns.forEach(b => b.disabled = false); }
   }
   $('#goBtn').onclick = () => {
     const list = chosen();
     if (!list.length) { say('请至少选择一个平台', false); return; }
+    const liveUrls = {};
+    for (const k of list) {
+      const u = (urls[k] || '').trim();
+      if (!u) continue;
+      if (!/^https:\/\//i.test(u)) { say(PLATS[k].name + ' 的链接要以 https:// 开头', false); return; }
+      liveUrls[k] = u;
+    }
     const mins = Number($('#dur').value) || 0;
     store.set('hubDur', String(mins));
-    write({ livePlatforms: list.join(','), liveStatus: 'on', liveUntil: mins ? Date.now() + mins * 60000 : null }, '已开播 ✓');
+    write({
+      livePlatforms: list.join(','), liveStatus: 'on',
+      liveUntil: mins ? Date.now() + mins * 60000 : null,
+      liveUrls: Object.keys(liveUrls).length ? liveUrls : null
+    }, '已开播 ✓');
   };
-  $('#endBtn').onclick = () => write({ livePlatforms: '', liveStatus: 'off', liveUntil: null }, '已结束直播 ✓');
+  $('#endBtn').onclick = async () => {
+    const ok = await write({ livePlatforms: '', liveStatus: 'off', liveUntil: null, liveUrls: null }, '已结束直播 ✓');
+    if (ok) { Object.keys(urls).forEach(k => urls[k] = ''); urlsAt = 0; persist(); renderUrls(); refreshNotice(); }
+  };
 
   $('#copyBtn').onclick = async () => {
     const t = $('#notice').value;
@@ -237,8 +442,10 @@
   });
   setInterval(renderStatus, 30000);
 
-  renderPlats(); refreshNotice(); renderStatus();
+  function renderAll() { renderPlats(); renderUrls(); renderTplSelect(); loadTplEditor(); syncFields(); refreshNotice(); renderStatus(); }
+  renderAll();
 
+  /* ---------- 登录 ---------- */
   $('#loginBtn').onclick = login;
   $('#pw').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
   async function login() {
@@ -251,6 +458,7 @@
     $('#loginView').hidden = !!u;
     $('#mainView').hidden = !u;
     $('#who').textContent = u ? (u.email || '') : '';
+    if (u) loadRemote();
   });
 </script>
 </body>
