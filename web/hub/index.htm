@@ -11,6 +11,7 @@
   <link rel="apple-touch-icon" href="/assets/images/apple-touch-icon.png">
   <link rel="icon" href="/assets/images/logo.png">
     <link rel="manifest" href="/hub/manifest.json">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <title>Mochii Hub</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -85,9 +86,11 @@
     #loginView .card { text-align: center; }
     #loginView label { display: block; text-align: left; font-size: .85rem; font-weight: 600; margin: 14px 0 6px; }
     #loginView .big { margin-top: 18px; background: #1c1722; }
+        #boot { position: fixed; inset: 0; z-index: 99; background: #1c1722; color: #cfc6d4; display: flex; align-items: center; justify-content: center; font-size: .9rem; letter-spacing: 3px; }
   </style>
 </head>
 <body>
+  <div id="boot">MOCHII HUB</div>
 
 <div id="loginView">
   <div class="card">
@@ -537,11 +540,13 @@
   }
   $('#logout').onclick = () => signOut(auth);
   onAuthStateChanged(auth, u => {
+        $('#boot').hidden = true;
     $('#loginView').hidden = !!u;
     $('#mainView').hidden = !u;
     $('#who').textContent = u ? (u.email || '') : '';
     if (u) loadRemote();
   });
+    setTimeout(() => { const b = $('#boot'); if (b) b.hidden = true; }, 4000);
 </script>
   <script>
   if ('serviceWorker' in navigator) {
