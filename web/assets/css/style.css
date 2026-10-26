@@ -428,3 +428,5 @@ footer a { color: var(--gold); }
 /* ===== 页脚:公司资料小标题 ===== */
 .foot-title { color: var(--gold); font-size: .72rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
 @media (max-width: 600px) { .foot-title { margin-bottom: 6px; } }
+/* ===== 页脚:店铺名与其他资料同样式(不加粗) ===== */
+footer strong { font-weight: 400; }
