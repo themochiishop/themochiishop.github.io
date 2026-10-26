@@ -108,6 +108,7 @@
       <button class="tab" data-tab="about">💝 About Us</button>
       <button class="tab" data-tab="contact">✉️ Contact Us</button>
       <button class="tab" data-tab="social">🔗 社交链接</button>
+            <button class="tab" data-tab="nav">🧭 导航菜单</button>
     </div>
   </div>
 
@@ -285,7 +286,26 @@
         <textarea id="contactNote" style="min-height:64px"></textarea>
       </div>
     </div>
-
+    <!-- 导航菜单 -->
+    <div class="panel" id="panel-nav">
+      <div class="panel-head"><h2>🧭 导航菜单</h2><a class="btn ghost small" href="/" target="_blank" rel="noopener">查看网站 ↗</a></div>
+      <div class="card">
+        <p class="hint">勾选 = 显示在页头。链接以 / 开头是本站页面(例如 /about-us/),以 https:// 开头是外部网站(会在新窗口打开)。用 ↑ ↓ 调整顺序,保存后所有页面同时生效。</p>
+        <div id="navList"></div>
+        <datalist id="navPages">
+          <option value="/"></option>
+          <option value="/live-stream/"></option>
+          <option value="/figures-toy/"></option>
+          <option value="/monthly-draw/"></option>
+          <option value="/about-us/"></option>
+          <option value="/contact-us/"></option>
+        </datalist>
+        <div class="row">
+          <button class="btn dark" id="navAdd">＋ 添加菜单项</button>
+          <button class="btn ghost" id="navReset">恢复默认</button>
+        </div>
+      </div>
+    </div>
     <!-- 社交链接 -->
     <div class="panel" id="panel-social">
       <div class="panel-head"><h2>🔗 社交链接</h2></div>
@@ -416,6 +436,7 @@
       updateLiveDot();
 
             loadDraw(v.draw);
+            loadNav(v.nav);
       const ab = v.about || {};
       about = { story: typeof ab.story === 'string' ? ab.story : '', dream: typeof ab.dream === 'string' ? ab.dream : '' };
       renderAbout();
@@ -606,6 +627,65 @@
     if (drawImg) o.image = drawImg;
     return o;
   }
+    /* ---------- 导航菜单 ---------- */
+  const NAV_DEFAULT = [
+    { label: 'Home', href: '/', show: true },
+    { label: 'Live Stream', href: '/live-stream/', show: true },
+    { label: 'Figures Toy', href: '/figures-toy/', show: true },
+    { label: 'Monthly Draw', href: '/monthly-draw/', show: true },
+    { label: 'About Us', href: '/about-us/', show: true },
+    { label: 'Contact Us', href: '/contact-us/', show: true }
+  ];
+  let navItems = NAV_DEFAULT.map(x => ({ ...x }));
+
+  function renderNav() {
+    const box = $('#navList'); box.innerHTML = '';
+    navItems.forEach((it, i) => {
+      const row = document.createElement('div'); row.className = 'slide-item';
+
+      const chk = document.createElement('input'); chk.type = 'checkbox'; chk.checked = it.show !== false; chk.title = '显示在页头';
+      chk.style.cssText = 'width:20px;height:20px;flex-shrink:0;cursor:pointer';
+      chk.onchange = () => { it.show = chk.checked; };
+
+      const mid = document.createElement('div'); mid.className = 'mid';
+      const lab = document.createElement('input'); lab.type = 'text'; lab.placeholder = '菜单名称'; lab.value = it.label; lab.maxLength = 24;
+      lab.oninput = () => { it.label = lab.value; };
+      const hr = document.createElement('input'); hr.type = 'text'; hr.placeholder = '链接,例如 /about-us/'; hr.value = it.href;
+      hr.setAttribute('list', 'navPages');
+      hr.oninput = () => { it.href = hr.value; };
+      mid.append(lab, hr);
+
+      const ops = document.createElement('div'); ops.className = 'ops';
+      const up = btn('↑', 'ghost small', () => { [navItems[i], navItems[i - 1]] = [navItems[i - 1], navItems[i]]; renderNav(); }); up.disabled = i === 0;
+      const dn = btn('↓', 'ghost small', () => { [navItems[i], navItems[i + 1]] = [navItems[i + 1], navItems[i]]; renderNav(); }); dn.disabled = i === navItems.length - 1;
+      const del = btn('删除', 'danger small', () => { navItems.splice(i, 1); renderNav(); });
+      ops.append(up, dn, del);
+
+      row.append(chk, mid, ops);
+      box.appendChild(row);
+    });
+    markDirty();
+  }
+  $('#navAdd').onclick = () => { navItems.push({ label: '', href: '/', show: true }); renderNav(); };
+  $('#navReset').onclick = () => {
+    if (!confirm('恢复成默认菜单?当前的修改会被覆盖(点保存后才会生效)。')) return;
+    navItems = NAV_DEFAULT.map(x => ({ ...x })); renderNav();
+  };
+  function loadNav(v) {
+    const list = Array.isArray(v) ? v : Object.values(v || {});
+    const ok = list.filter(x => x && typeof x.label === 'string' && typeof x.href === 'string')
+      .map(x => ({ label: x.label, href: x.href, show: x.show !== false }));
+    navItems = ok.length ? ok : NAV_DEFAULT.map(x => ({ ...x }));
+    renderNav();
+  }
+  function validateNav() {
+    for (const it of navItems) {
+      if (!it.label.trim()) return '导航菜单:有菜单项没有填写名称';
+      if (!/^(\/|https:\/\/)/.test(it.href.trim())) return '导航菜单:链接必须以 / 或 https:// 开头:' + it.label;
+    }
+    if (!navItems.some(x => x.show !== false)) return '导航菜单:至少要显示一项';
+    return '';
+  }
   /* ---------- 保存 ---------- */
   $('#saveBtn').onclick = async () => {
     const cfg = {};
@@ -627,6 +707,8 @@
     cfg.livePlatforms = livePs.join(',');
     cfg.liveStatus = livePs.length ? 'on' : 'off';
 
+        const navErr = validateNav();
+    if (navErr) { showSave(navErr, false); openTab('nav'); return; }
     const b = $('#saveBtn'); b.disabled = true; showSave('保存中...', true);
     try {
       await set(ref(db, 'homepage/config'), cfg);
@@ -635,6 +717,7 @@
             await set(ref(db, 'homepage/figuresBanner'), banner || null);
       const abOut = {}; if (about.story) abOut.story = about.story; if (about.dream) abOut.dream = about.dream;
       await set(ref(db, 'homepage/about'), Object.keys(abOut).length ? abOut : null);
+            await set(ref(db, 'homepage/nav'), navItems.map(x => ({ label: x.label.trim(), href: x.href.trim(), show: x.show !== false })));
             const dr = collectDraw();
       await set(ref(db, 'homepage/draw'), Object.keys(dr).some(k => k !== 'mask') ? dr : null);
       dirty = false;
