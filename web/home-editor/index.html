@@ -88,6 +88,20 @@
     .pbtn { padding: 8px 16px; border-radius: 999px; border: 1px solid #ddd5e0; background: #fff; color: #2b2430; font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
     .pbtn:hover { border-color: #e0628a; }
     .pbtn.on { background: #1c1722; color: #fff; border-color: #1c1722; }
+        .wgroup { margin-top: 16px; }
+    .wg-h { font-size: .88rem; font-weight: 700; margin-bottom: 6px; }
+    .wcols, .wrow { display: grid; grid-template-columns: 1.2fr 1fr 1fr 34px; grid-template-areas: "p n o x"; gap: 6px; align-items: center; }
+    .wcols { font-size: .72rem; color: #8b8190; font-weight: 600; margin-bottom: 4px; }
+    .wcols span:nth-child(1) { grid-area: p; } .wcols span:nth-child(2) { grid-area: n; } .wcols span:nth-child(3) { grid-area: o; }
+    .wrow { margin-bottom: 6px; }
+    .wrow input { padding: 9px 10px; font-size: .86rem; min-width: 0; }
+    .wrow .p { grid-area: p; } .wrow .n { grid-area: n; } .wrow .o { grid-area: o; }
+    .wx { grid-area: x; width: 34px; height: 34px; border: 1px solid #e8b4ad; background: #fff; color: #c0392b; border-radius: 8px; cursor: pointer; font: inherit; }
+    .wg-ops { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+    @media (max-width: 600px) {
+      .wcols { display: none; }
+      .wrow { grid-template-columns: 1fr 1fr 34px; grid-template-areas: "p p x" "n o x"; padding-bottom: 8px; border-bottom: 1px dashed #ebe3ee; }
+    }
   </style>
 </head>
 <body>
@@ -277,16 +291,30 @@
           <textarea id="drawPrizes"></textarea>
         </div>
 
-               <div class="card">
+                     <div class="card">
           <h3>中奖名单</h3>
-          <p class="hint">按奖项分三栏填写,每行一位,格式:<b>Prize | Winner | Order ID</b>,例如 <b>Air Fryer | abcdefg | 2510XXXXXXXX</b>。也可以直接从 Excel / Google 表格复制粘贴。同一个奖品有多人时,名字之间用逗号隔开。<br>网页上<b>不会显示"大奖 / 中奖 / 小奖"这些字</b>,只是把不同奖项之间隔开一点。哪一栏留空就不显示。</p>
-          <label for="drawW1" style="margin-top:0">🏆 大奖</label>
-          <textarea id="drawW1" style="min-height:90px"></textarea>
-          <label for="drawW2">🎖️ 中奖</label>
-          <textarea id="drawW2" style="min-height:130px"></textarea>
-          <label for="drawW3">🎁 小奖</label>
-          <textarea id="drawW3" style="min-height:130px"></textarea>
-          <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer"><input type="checkbox" id="drawMaskName"> 自动隐藏部分名字(例如 ab***fg)</label>
+          <p class="hint">按奖项分三栏,每行填 奖品名 / 名字 / 单号。可以直接从 Excel、Google 表格复制几列,粘贴到某一栏第一格,会自动分行分列。同一个奖品有多人时,名字之间用逗号隔开。网页上不会显示"大奖 / 中奖 / 小奖"这些字,只是把不同奖项之间隔开一点;哪一栏留空就不显示。</p>
+
+          <div class="wgroup" data-g="w1">
+            <div class="wg-h">🏆 大奖</div>
+            <div class="wcols"><span>奖品名</span><span>名字</span><span>单号</span></div>
+            <div class="wg-rows"></div>
+            <div class="wg-ops"><button type="button" class="btn ghost small wg-add">＋ 添加一行</button><button type="button" class="btn ghost small wg-clear">清空这一栏</button></div>
+          </div>
+          <div class="wgroup" data-g="w2">
+            <div class="wg-h">🎖️ 中奖</div>
+            <div class="wcols"><span>奖品名</span><span>名字</span><span>单号</span></div>
+            <div class="wg-rows"></div>
+            <div class="wg-ops"><button type="button" class="btn ghost small wg-add">＋ 添加一行</button><button type="button" class="btn ghost small wg-clear">清空这一栏</button></div>
+          </div>
+          <div class="wgroup" data-g="w3">
+            <div class="wg-h">🎁 小奖</div>
+            <div class="wcols"><span>奖品名</span><span>名字</span><span>单号</span></div>
+            <div class="wg-rows"></div>
+            <div class="wg-ops"><button type="button" class="btn ghost small wg-add">＋ 添加一行</button><button type="button" class="btn ghost small wg-clear">清空这一栏</button></div>
+          </div>
+
+          <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer;margin-top:16px"><input type="checkbox" id="drawMaskName"> 自动隐藏部分名字(例如 ab***fg)</label>
           <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer;margin-top:8px"><input type="checkbox" id="drawMaskOrder"> 自动隐藏部分订单号(例如 2510****A9X2)</label>
         </div>
       </div>
@@ -640,8 +668,7 @@
   let draws = [];
   let curDraw = -1;
   let drawLoadedIds = [];
-    const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', prizes: 'drawPrizes', w1: 'drawW1', w2: 'drawW2', w3: 'drawW3' };
-
+  const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', prizes: 'drawPrizes' };
   function renderPeriods() {
     const bar = $('#periodBar'); bar.innerHTML = '';
     draws.forEach((d, i) => {
@@ -659,6 +686,8 @@
     $('#periodRight').disabled = !d || curDraw === draws.length - 1;
     if (d) {
       for (const k in DRAW_FIELDS) $('#' + DRAW_FIELDS[k]).value = d[k] || '';
+            WG.forEach(g => { wRows[g] = wParse(d[g]); while (wRows[g].length < 2) wRows[g].push(blank()); });
+      wRender();
       $('#drawMaskName').checked = d.maskName !== false;
       $('#drawMaskOrder').checked = d.maskOrder !== false;
       const im = $('#drawPrev');
@@ -797,6 +826,69 @@
     if (!navItems.some(x => x.show !== false)) return '导航菜单:至少要显示一项';
     return '';
   }
+    /* ---------- 中奖名单:三栏表格(奖品名 / 名字 / 单号) ---------- */
+  const WG = ['w1', 'w2', 'w3'];
+  const COLS = ['p', 'n', 'o'];
+  const blank = () => ({ p: '', n: '', o: '' });
+  let wRows = { w1: [], w2: [], w3: [] };
+  const wClean = s => String(s || '').replace(/\|/g, '｜').replace(/[\r\n]+/g, ' ').trim();
+  const wParse = text => String(text || '').split(/\n+/).map(l => l.trim()).filter(Boolean).map(l => {
+    const c = l.split(/\s*\|\s*|\t+/).map(x => x.trim());
+    return c.length === 1 ? { p: '', n: c[0], o: '' } : { p: c[0] || '', n: c[1] || '', o: c[2] || '' };
+  });
+  const wSer = rows => rows.filter(r => r.p || r.n || r.o)
+    .map(r => (!r.p && !r.o) ? r.n : [r.p, r.n, r.o].join(' | ')).join('\n');
+
+  function wSync() { const d = draws[curDraw]; if (!d) return; WG.forEach(g => { d[g] = wSer(wRows[g]); }); }
+  function wRender() {
+    WG.forEach(g => {
+      const box = document.querySelector('.wgroup[data-g="' + g + '"] .wg-rows');
+      if (box) box.replaceChildren(...wRows[g].map((r, i) => wRow(g, r, i)));
+    });
+  }
+  function wRow(g, r, i) {
+    const row = document.createElement('div'); row.className = 'wrow';
+    const mk = (k, ph) => {
+      const inp = document.createElement('input'); inp.type = 'text'; inp.className = k; inp.placeholder = ph; inp.value = r[k]; inp.autocomplete = 'off';
+      inp.addEventListener('input', () => { r[k] = inp.value; wSync(); });
+      inp.addEventListener('paste', e => wPaste(e, g, i, k));
+      return inp;
+    };
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'wx'; x.textContent = '×'; x.setAttribute('aria-label', '删除这一行');
+    x.onclick = () => { wRows[g].splice(i, 1); while (wRows[g].length < 2) wRows[g].push(blank()); wSync(); wRender(); markDirty(); };
+    row.append(mk('p', '奖品名'), mk('n', '名字'), mk('o', '单号'), x);
+    return row;
+  }
+  function wPaste(e, g, i, k) {
+    const t = (e.clipboardData || window.clipboardData).getData('text');
+    if (!t || !/[\t\n\r|]/.test(t)) return;                    // 单个值:普通粘贴
+    e.preventDefault();
+    let lines = t.replace(/\r/g, '').split('\n').filter(l => l.trim());
+    if (lines.length && /(prize|奖品)/i.test(lines[0]) && /(winner|名字|中奖|姓名)/i.test(lines[0])) lines = lines.slice(1);   // 跳过标题行
+    const split = l => l.split(/\t|\s*\|\s*/).map(wClean);
+    const multi = lines.some(l => /\t|\|/.test(l));
+    const wide = multi && lines.some(l => split(l).length >= 3);
+    const start = wide ? 0 : COLS.indexOf(k);
+    lines.forEach((l, li) => {
+      const cells = multi ? split(l) : [wClean(l)];
+      while (wRows[g].length <= i + li) wRows[g].push(blank());
+      const row = wRows[g][i + li];
+      cells.forEach((c, ci) => { const col = COLS[start + ci]; if (col) row[col] = c; });
+    });
+    wSync(); wRender(); markDirty();
+  }
+  document.querySelectorAll('.wgroup').forEach(box => {
+    const g = box.dataset.g;
+    box.querySelector('.wg-add').onclick = () => {
+      wRows[g].push(blank()); wRender(); markDirty();
+      const rows = box.querySelectorAll('.wrow'); const last = rows[rows.length - 1];
+      if (last) last.querySelector('input').focus();
+    };
+    box.querySelector('.wg-clear').onclick = () => {
+      if (wRows[g].some(r => r.p || r.n || r.o) && !confirm('清空这一栏的全部行?')) return;
+      wRows[g] = [blank(), blank()]; wSync(); wRender(); markDirty();
+    };
+  });
   /* ---------- 保存 ---------- */
   $('#saveBtn').onclick = async () => {
     const cfg = {};
