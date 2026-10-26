@@ -67,6 +67,7 @@
     .trow { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-top: 1px solid #f0eaee; }
     .trow:first-child { border-top: 0; }
     .tname { flex: 1; min-width: 0; font-weight: 600; font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tsub { display: block; font-weight: 400; font-size: .74rem; color: #8b8190; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .tuse { font-size: .68rem; color: #e11d48; font-weight: 700; margin-left: 6px; }
     .tb { flex: 0 0 auto; padding: 6px 10px; border: 1px solid #d8d0db; background: #fff; border-radius: 8px; font: inherit; font-size: .78rem; font-weight: 600; cursor: pointer; }
     .tb.del { color: #c0392b; border-color: #e8b4ad; }
@@ -83,11 +84,6 @@
     #loginView .card { text-align: center; }
     #loginView label { display: block; text-align: left; font-size: .85rem; font-weight: 600; margin: 14px 0 6px; }
     #loginView .big { margin-top: 18px; background: #1c1722; }
-        .tchips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .tchip { display: inline-flex; align-items: center; border: 1px solid #d8d0db; background: #faf7fb; border-radius: 999px; font-size: .78rem; overflow: hidden; }
-    .tchip:hover { border-color: #c9a45c; }
-    .tchip button { border: 0; background: none; font: inherit; cursor: pointer; padding: 5px 10px; color: #2b2430; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .tchip .x { padding: 5px 9px 5px 2px; color: #8b8190; }
   </style>
 </head>
 <body>
@@ -140,9 +136,8 @@
       <select id="tpl" aria-label="使用的通知模板"></select>
 
       <div class="fld" id="fTitle" hidden>
-                <label for="title">本场标题(填入模板里的 {title})</label>
-        <input type="text" id="title" placeholder="例如 Gelang Premium Live">
-                <div class="tchips" id="tchips"></div>
+        <label for="title">临时改标题(留空 = 使用模板里的标题)</label>
+        <input type="text" id="title">
       </div>
       <div class="fld" id="fCode" hidden>
         <label for="code">优惠码</label>
@@ -167,8 +162,12 @@
         <div class="teditor" id="tplEditor" hidden>
           <div class="fld" style="margin-top:0">
             <label for="tplName">模板名称</label>
-            <input type="text" id="tplName" maxlength="100" placeholder="例如 会员优惠券">
-                        <p class="hint">只用来在下拉菜单里选择,不会出现在通知内容里。</p>
+            <input type="text" id="tplName" maxlength="100" placeholder="例如 模板1">
+            <p class="hint">只用来在下拉菜单里选择,不会出现在通知内容里。</p>
+          </div>
+          <div class="fld">
+            <label for="tplTitle">标题(自动代入内容里的 {title})</label>
+            <input type="text" id="tplTitle" placeholder="例如 Gelang Premium Live">
           </div>
           <div class="fld">
             <label for="tplBody">模板内容</label>
@@ -226,7 +225,7 @@
   };
 
   const DEFAULT_TPL = [{
-    id: 't1', name: 'Shopee Live 通知', ts: 0,
+    id: 't1', name: 'Shopee Live 通知', title: 'Gelang Premium Live', ts: 0,
     body: `{title}\n\nDon't miss out!\n\nJoin our Shopee Live here：\n{link}\n━━━━━━━━\nCustomer Support:\nhttps://wa.me/60177503767\nSee you there!`
   }];
 
@@ -242,9 +241,9 @@
   const urls = { shopee: '', tiktok: '', facebook: '' };
   let urlsAt = 0;
   let editing = null, lastDel = null, undoT;
-    let titles = [];
   const curTpl = () => tpls.find(x => x.id === st.tpl) || tpls[0];
   const newId = () => 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 4);
+  const normTpl = x => ({ id: String(x.id), name: String(x.name || '未命名'), title: String(x.title || ''), body: x.body, ts: Number(x.ts) || 0 });
 
   const cleanUrl = u => { const m = String(u || '').match(/https?:\/\/[^\s]+/i); return m ? m[0].replace(/[)）\]】>,，。.!！、]+$/, '') : ''; };
   const liveList = () => {
@@ -258,8 +257,9 @@
   const sayT = (t, ok = true) => { const m = $('#tplMsg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); };
 
   /* ---------- 保存 / 读取 ---------- */
-  const tplVal = t => ({ name: t.name, body: t.body, ts: t.ts || 0 });
-  const stateObj = () => ({ tpl: st.tpl, title: st.title, code: st.code, titles, urls: { shopee: urls.shopee, tiktok: urls.tiktok, facebook: urls.facebook }, urlsAt });  const saveLocal = () => store.set('hubData', JSON.stringify({ templates: tpls, state: stateObj() }));
+  const tplVal = t => ({ name: t.name, title: t.title || '', body: t.body, ts: t.ts || 0 });
+  const stateObj = () => ({ tpl: st.tpl, code: st.code, urls: { shopee: urls.shopee, tiktok: urls.tiktok, facebook: urls.facebook }, urlsAt });
+  const saveLocal = () => store.set('hubData', JSON.stringify({ templates: tpls, state: stateObj() }));
   async function remote(fn) {
     if (!auth.currentUser) return;
     try { await fn(); remoteOk = true; } catch (e) { remoteOk = false; }
@@ -273,9 +273,7 @@
   function applyState(s) {
     s = s || {};
     st.tpl = tpls.some(x => x.id === s.tpl) ? s.tpl : tpls[0].id;
-    st.title = typeof s.title === 'string' ? s.title : '';
     st.code = typeof s.code === 'string' ? s.code : '';
-        titles = Array.isArray(s.titles) ? s.titles.filter(x => typeof x === 'string' && x.trim()).slice(0, 8) : titles;
     urlsAt = Number(s.urlsAt) || 0;
     const fresh = Date.now() - urlsAt < 12 * 3600 * 1000;
     Object.keys(urls).forEach(k => { urls[k] = fresh && s.urls && typeof s.urls[k] === 'string' ? s.urls[k] : ''; });
@@ -284,8 +282,7 @@
   try {
     const d = JSON.parse(store.get('hubData', 'null'));
     if (d) {
-      const ok = (Array.isArray(d.templates) ? d.templates : []).filter(x => x && x.id && typeof x.body === 'string')
-        .map(x => ({ id: String(x.id), name: String(x.name || '未命名'), body: x.body, ts: Number(x.ts) || 0 }));
+      const ok = (Array.isArray(d.templates) ? d.templates : []).filter(x => x && x.id && typeof x.body === 'string').map(normTpl);
       if (ok.length) tpls = ok;
       applyState(d.state);
     }
@@ -299,16 +296,10 @@
       const raw = v.templates;
       let list = [];
       if (raw && typeof raw === 'object') {
-        list = Object.entries(raw).filter(([k, x]) => x && typeof x.body === 'string')
-          .map(([k, x]) => ({ id: String(x.id || k), name: String(x.name || '未命名'), body: x.body, ts: Number(x.ts) || 0 }));
+        list = Object.entries(raw).filter(([k, x]) => x && typeof x.body === 'string').map(([k, x]) => normTpl({ ...x, id: x.id || k }));
       }
       let write = Array.isArray(raw);
       if (!list.length) { list = localTpls.map(x => ({ ...x })); write = true; }
-      if (!store.get('hubMig2', '')) {
-        const have = new Set(list.map(t => t.id));
-        localTpls.forEach(t => { if (!have.has(t.id)) { list.push({ ...t }); write = true; } });
-        store.set('hubMig2', '1');
-      }
       list.sort((a, b) => a.ts - b.ts);
       tpls = list;
       if (write) { const o = {}; tpls.forEach(t => { o[t.id] = tplVal(t); }); await set(ref(db, 'hub/templates'), o); }
@@ -320,14 +311,15 @@
   }
 
   /* ---------- 通知文案 ---------- */
-  function fill(body) {
+  function fill(t) {
     const names = chosen();
     const u = k => (urls[k] || '').trim() || FALLBACK;
     let link;
     if (names.length <= 1) link = names.length ? u(names[0]) : FALLBACK;
     else link = names.map(k => PLATS[k].name + ': ' + u(k)).join('\n');
-    return String(body)
-      .replace(/\{title\}/g, (st.title || '').trim())
+    const title = (st.title || '').trim() || (t.title || '').trim();
+    return String(t.body)
+      .replace(/\{title\}/g, title)
       .replace(/\{link\}/g, link)
       .replace(/\{shopee\}/g, u('shopee'))
       .replace(/\{tiktok\}/g, u('tiktok'))
@@ -336,32 +328,16 @@
       .replace(/\{code\}/g, (st.code || '').trim())
       .replace(/^\s+/, '').replace(/\n{3,}/g, '\n\n');
   }
-  function refreshNotice() { $('#notice').value = fill(curTpl().body); }
+  function refreshNotice() { $('#notice').value = fill(curTpl()); }
   function syncFields() {
-    const b = curTpl().body;
-    $('#fTitle').hidden = !b.includes('{title}');
-    $('#fCode').hidden = !b.includes('{code}');
-    $('#title').value = st.title; $('#code').value = st.code;
+    const t = curTpl();
+    $('#fTitle').hidden = !t.body.includes('{title}');
+    $('#fCode').hidden = !t.body.includes('{code}');
+    $('#title').value = st.title;
+    $('#title').placeholder = t.title ? '使用模板标题:' + t.title : '这个模板还没填标题,可在这里临时填写';
+    $('#code').value = st.code;
   }
-  $('#title').addEventListener('input', () => { st.title = $('#title').value; persistState(); refreshNotice(); });
-    $('#title').addEventListener('change', () => rememberTitle($('#title').value));
-  function rememberTitle(t) {
-    t = (t || '').trim(); if (!t) return;
-    titles = [t, ...titles.filter(x => x !== t)].slice(0, 8);
-    persistState(); renderTitleChips();
-  }
-  function renderTitleChips() {
-    const box = $('#tchips');
-    box.replaceChildren(...titles.map(t => {
-      const w = document.createElement('span'); w.className = 'tchip';
-      const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.title = t;
-      b.onclick = () => { st.title = t; $('#title').value = t; persistState(); refreshNotice(); };
-      const x = document.createElement('button'); x.type = 'button'; x.className = 'x'; x.textContent = '×'; x.setAttribute('aria-label', '从列表移除');
-      x.onclick = () => { titles = titles.filter(y => y !== t); persistState(); renderTitleChips(); };
-      w.append(b, x); return w;
-    }));
-    box.hidden = !titles.length;
-  }
+  $('#title').addEventListener('input', () => { st.title = $('#title').value; refreshNotice(); });
   $('#code').addEventListener('input', () => { st.code = $('#code').value; persistState(); refreshNotice(); });
 
   /* ---------- 平台、链接 ---------- */
@@ -417,7 +393,7 @@
     $('#tpl').replaceChildren(...tpls.map(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; return o; }));
     $('#tpl').value = st.tpl;
   }
-  $('#tpl').addEventListener('change', () => { st.tpl = $('#tpl').value; persistState(); renderTplList(); syncFields(); refreshNotice(); });
+  $('#tpl').addEventListener('change', () => { st.tpl = $('#tpl').value; st.title = ''; persistState(); renderTplList(); syncFields(); refreshNotice(); });
 
   /* ---------- 模板:管理(要点"保存模板"才生效) ---------- */
   function renderTplList() {
@@ -425,34 +401,35 @@
       const row = document.createElement('div'); row.className = 'trow';
       const nm = document.createElement('div'); nm.className = 'tname'; nm.textContent = t.name;
       if (t.id === st.tpl) { const u = document.createElement('span'); u.className = 'tuse'; u.textContent = '使用中'; nm.appendChild(u); }
+      if (t.title) { const s = document.createElement('span'); s.className = 'tsub'; s.textContent = '标题:' + t.title; nm.appendChild(s); }
       const mk = (txt, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tb ' + cls; b.textContent = txt; b.onclick = fn; return b; };
       row.append(nm,
         mk('编辑', '', () => openEditor({ ...t }, false)),
-        mk('复制', '', () => openEditor({ id: newId(), name: t.name + ' 副本', body: t.body }, true)),
+        mk('复制', '', () => openEditor({ id: newId(), name: t.name + ' 副本', title: t.title, body: t.body }, true)),
         mk('删除', 'del', () => delTpl(t.id)));
       return row;
     }));
   }
   function openEditor(t, isNew) {
     editing = { id: t.id, isNew };
-    $('#tplName').value = t.name; $('#tplBody').value = t.body;
+    $('#tplName').value = t.name; $('#tplTitle').value = t.title || ''; $('#tplBody').value = t.body;
     $('#tplEditor').hidden = false; sayT('');
     $('#tplEditor').scrollIntoView({ block: 'nearest' });
     $('#tplName').focus();
   }
   function closeEditor() { editing = null; $('#tplEditor').hidden = true; }
 
-  $('#tplNew').onclick = () => openEditor({ id: newId(), name: '', body: '' }, true);
+  $('#tplNew').onclick = () => openEditor({ id: newId(), name: '', title: '', body: '' }, true);
   $('#tplCancel').onclick = () => { closeEditor(); sayT(''); };
   $('#tplSave').onclick = () => {
     if (!editing) return;
-    const name = $('#tplName').value.trim(), body = $('#tplBody').value;
+    const name = $('#tplName').value.trim(), title = $('#tplTitle').value.trim(), body = $('#tplBody').value;
     if (!name) { sayT('请先填写模板名称', false); return; }
     if (!body.trim()) { sayT('模板内容不能为空', false); return; }
     let t = tpls.find(x => x.id === editing.id);
-    if (t) { t.name = name; t.body = body; }
-    else { t = { id: editing.id, name, body, ts: Date.now() }; tpls.push(t); }
-    if (editing.isNew) st.tpl = t.id;
+    if (t) { t.name = name; t.title = title; t.body = body; }
+    else { t = { id: editing.id, name, title, body, ts: Date.now() }; tpls.push(t); }
+    if (editing.isNew) { st.tpl = t.id; st.title = ''; }
     saveLocal(); persistState();
     remote(() => set(ref(db, 'hub/templates/' + t.id), tplVal(t)));
     closeEditor();
@@ -465,7 +442,7 @@
     const t = tpls.find(x => x.id === id); if (!t) return;
     if (!confirm('删除模板「' + t.name + '」?')) return;
     tpls = tpls.filter(x => x.id !== id); lastDel = t;
-    if (st.tpl === id) st.tpl = tpls[0].id;
+    if (st.tpl === id) { st.tpl = tpls[0].id; st.title = ''; }
     if (editing && editing.id === id) closeEditor();
     saveLocal(); persistState();
     remote(() => set(ref(db, 'hub/templates/' + id), null));
@@ -531,7 +508,6 @@
   };
 
   $('#copyBtn').onclick = async () => {
-        rememberTitle(st.title);
     const t = $('#notice').value;
     try { await navigator.clipboard.writeText(t); say('通知已复制 ✓'); }
     catch (e) {
@@ -547,7 +523,8 @@
   });
   setInterval(renderStatus, 30000);
 
-  function renderAll() { renderPlats(); renderUrls(); renderTplSelect(); renderTplList(); syncFields(); renderTitleChips(); refreshNotice(); renderStatus(); }  renderAll();
+  function renderAll() { renderPlats(); renderUrls(); renderTplSelect(); renderTplList(); syncFields(); refreshNotice(); renderStatus(); }
+  renderAll();
 
   /* ---------- 登录 ---------- */
   $('#loginBtn').onclick = login;
