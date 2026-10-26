@@ -518,3 +518,6 @@ footer strong { font-weight: 400; }
   .band .social a { padding: 14px 6px; font-size: .8rem; gap: 8px; }
   .band .social a svg { width: 24px; height: 24px; }
 }
+/* ===== 页头 logo:浅色圆角底,让深色的 THE / SHOP 看得清 ===== */
+.brand img { height: 40px; width: auto; padding: 4px 6px; background: #fff7f9; border-radius: 12px; box-shadow: 0 0 0 1px rgba(201,164,92,.55); }
+@media (max-width: 600px) { .brand img { height: 36px; padding: 3px 5px; border-radius: 10px; } }
