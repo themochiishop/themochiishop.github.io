@@ -351,17 +351,17 @@ details summary { cursor: pointer; color: var(--muted); font-size: .85rem; }
 /* ---------- 俱乐部维修中：登录框模糊在背后，卡片盖在上面 ---------- */
 .auth-area { position: relative; }
 .auth-area.is-closed #loginBox {
-  filter: blur(5px); opacity: .55;
+   filter: blur(2.5px); opacity: .8;
   pointer-events: none; user-select: none;
 }
 .closed-card {
   position: absolute; inset: 0; z-index: 5;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; padding: 24px 22px;
-  background: rgba(11, 16, 32, .72);
+    background: rgba(11, 16, 32, .45);
   border: 1px solid rgba(251, 191, 36, .55);
   border-radius: var(--radius);
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(1px);
 }
 .closed-card.hidden { display: none; }
 .closed-card h2 { color: #fbbf24; font-size: 1.3rem; font-weight: 800; margin: 8px 0 10px; }
