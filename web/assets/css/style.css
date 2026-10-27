@@ -596,7 +596,7 @@ footer strong { font-weight: 400; }
 .sp-card { position: relative; width: 100%; max-width: 420px; background: #fff; border-radius: 16px; border-top: 4px solid var(--gold); padding: 32px 24px 24px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,.35); }
 .sp-x { position: absolute; top: 10px; right: 12px; background: none; border: 0; font-size: 1.1rem; color: #8b8190; cursor: pointer; padding: 4px 8px; }
 .sp-title { margin: 0 0 10px; font-size: 1.3rem; color: var(--ink); }
-.sp-text { margin: 0 0 22px; color: #5b5262; line-height: 1.6; white-space: pre-line; }
-.sp-btn { display: inline-block; background: var(--pink); color: #fff; font-weight: 700; padding: 12px 30px; border-radius: 999px; text-decoration: none; }
+.sp-text { margin: 0 0 22px; color: #5b5262; line-height: 1.5; white-space: pre-line; text-wrap: balance; font-size: 1rem; }
+@media (max-width: 760px) { .sp-text { font-size: .92rem; } .sp-title { font-size: 1.15rem; } .sp-card { padding: 28px 20px 20px; } }.sp-btn { display: inline-block; background: var(--pink); color: #fff; font-weight: 700; padding: 12px 30px; border-radius: 10px; text-decoration: none; }
 .sp-btn:hover { filter: brightness(1.08); }
 @keyframes spFade { from { opacity: 0; } to { opacity: 1; } }
