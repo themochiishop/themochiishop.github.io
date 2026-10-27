@@ -3,133 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title data-i18n-title="prof.pageTitle">Profile · The Mochii Shop</title>
-  <link rel="stylesheet" href="css/member.css">
-</head>
-<body class="loading">
-  <header id="topbar"></header>
-
-  <main class="page">
-    <h1 data-i18n="prof.title"></h1>
-    <p class="muted" data-i18n="prof.sub"></p>
-    <p id="pageError" class="msg err hidden"></p>
-
-    <div class="card">
-      <h2 data-i18n="prof.basic"></h2>
-      <form id="nameForm">
-        <label><span data-i18n="idx.email"></span>
-          <input id="email" readonly>
-        </label>
-        <label><span data-i18n="idx.name"></span>
-          <input id="name" required maxlength="40">
-        </label>
-        <label><span data-i18n="idx.phone"></span>
-          <input type="tel" id="phone" required inputmode="tel" autocomplete="tel" data-i18n-ph="idx.phonePh">
-          <small class="muted" data-i18n="idx.phoneHint"></small>
-        </label>
-        <label class="check">
-          <input type="checkbox" id="waOptIn">
-          <span data-i18n="idx.waOptIn"></span>
-        </label>
-        <button type="submit" class="btn btn-primary" id="nameSubmit" data-i18n="prof.save"></button>
-      </form>
-      <p id="nameMsg" class="msg"></p>
-    </div>
-
-    <div class="card">
-      <h2 data-i18n="prof.bday"></h2>
-      <div id="birthdayLocked" class="hidden">
-        <p style="font-size:1.2rem;font-weight:700" id="birthdayText"></p>
-        <p class="muted" style="font-size:.85rem;margin-top:6px" data-i18n="prof.bdayLocked"></p>
-      </div>
-      <form id="birthdayForm" class="hidden">
-        <label><span data-i18n="prof.setBday"></span>
-          <input type="date" id="birthday" required>
-          <small data-i18n="prof.bdayHint"></small>
-        </label>
-        <button type="submit" class="btn btn-primary" id="birthdaySubmit" data-i18n="prof.bdaySubmit"></button>
-      </form>
-      <p id="birthdayMsg" class="msg"></p>
-    </div>
-
-    <div class="card">
-      <p class="small-link" style="margin:0 0 14px">
-        <a href="terms.html" data-i18n="common.terms"></a> ·
-        <a href="privacy.html" data-i18n="common.privacy"></a>
-      </p>
-      <button id="logoutBtn" class="btn btn-ghost" type="button" data-i18n="prof.logout"></button>
-    </div>
-  </main>
-
-  <script type="module">
-    import { db } from "./js/firebase-config.js";
-    import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-    import { requireMember, renderNav, logout, t, normalizePhone, isValidPhone } from "./js/common.js";
-
-    const $ = id => document.getElementById(id);
-    renderNav("profile");
-    $("logoutBtn").addEventListener("click", logout);
-
-    function setMsg(el, text, type) {
-      el.textContent = text;
-      el.className = "msg" + (type ? " " + type : "");
-    }
-
-    function showBirthday(b) {
-      if (b) {
-        const [y, m, d] = b.split("-");
-        $("birthdayText").textContent = `${d}/${m}/${y}`;
-        $("birthdayLocked").classList.remove("hidden");
-        $("birthdayForm").classList.add("hidden");
-      } else {
-        $("birthdayLocked").classList.add("hidden");
-        $("birthdayForm").classList.remove("hidden");
-      }
-    }
-
-    requireMember((user, member) => {
-      const ref = doc(db, "members", user.uid);
-      $("email").value = member.email || user.email || "";
-      $("name").value = member.name || "";
-      $("phone").value = member.phone || "";
-      $("waOptIn").checked = !!member.waOptIn;
-      showBirthday(member.birthday);
-
-      // 从「补充手机号码」提示点进来时，直接聚焦手机栏
-      if (location.hash === "#phone") setTimeout(() => $("phone").focus(), 300);
-
-      $("nameForm").addEventListener("submit", async e => {
-        e.preventDefault();
-        const phone = normalizePhone($("phone").value);
-        if (!isValidPhone(phone)) { setMsg($("nameMsg"), t("idx.phoneBad"), "err"); $("phone").focus(); return; }
-        $("nameSubmit").disabled = true;
-        try {
-          await updateDoc(ref, { name: $("name").value.trim(), phone, waOptIn: $("waOptIn").checked });
-          $("phone").value = phone;
-          setMsg($("nameMsg"), t("prof.saved"), "ok");
-        } catch (err) {
-          setMsg($("nameMsg"), t("idx.saveFail") + err.message, "err");
-        } finally {
-          $("nameSubmit").disabled = false;
-        }
-      });
-
-      $("birthdayForm").addEventListener("submit", async e => {
-        e.preventDefault();
-        const b = $("birthday").value;
-        if (!b) return;
-        if (!confirm(t("idx.bdayConfirm", { b }))) return;
-        $("birthdaySubmit").disabled = true;
-        try {
-          await updateDoc(ref, { birthday: b });
-          showBirthday(b);
-          setMsg($("birthdayMsg"), t("prof.bdaySet"), "ok");
-        } catch (err) {
-          setMsg($("birthdayMsg"), t("prof.setFail") + err.message, "err");
-          $("birthdaySubmit").disabled = false;
-        }
-      });
-    });
+  <meta name="robots" content="noindex">
+  <meta http-equiv="refresh" content="0; url=/memberclub/">
+  <title>Mochii Member Club</title>
+  <script>
+    // 旧网址 /member-system/xxx → 新网址 /memberclub/xxx（保留同一页面）
+    location.replace(location.pathname.replace("/member-system/", "/memberclub/") + location.search + location.hash);
   </script>
+</head>
+<body>
+  <p>Mochii Member Club has moved: <a href="/memberclub/">www.themochiishop.com/memberclub/</a></p>
 </body>
 </html>
