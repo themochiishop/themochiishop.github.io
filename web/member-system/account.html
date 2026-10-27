@@ -29,8 +29,7 @@
     <!-- 会员等级 -->
     <div class="card tier-card" id="tierCard">
       <div class="tier-head">
-        <div class="tier-icon" id="tierIcon">🍡</div>
-        <div>
+        <div class="tier-icon" id="tierIcon"></div>        <div>
           <div class="tier-name" id="tierName">-</div>
           <div class="tier-perk" id="tierPerk"></div>
         </div>
@@ -80,8 +79,7 @@
     import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, toDate, fmtDate, fmtMoney, esc, platformTag,
-      TIERS, tierProgress, tierLabel, t, translateReason
-    } from "./js/common.js";
+      TIERS, tierProgress, tierLabel, tierIconHTML, t, translateReason    } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
     renderNav("account");
@@ -102,8 +100,7 @@
       // ---------- 会员等级 ----------
       const tp = tierProgress(member);
       $("tierCard").classList.add("tier-" + tp.tier.id);
-      $("tierIcon").textContent = tp.tier.icon;
-      $("tierName").textContent = tierLabel(tp.tier);
+      $("tierIcon").innerHTML = tierIconHTML(tp.tier);      $("tierName").textContent = tierLabel(tp.tier);
       $("tierPerk").textContent = t("tier.perk", { m: tp.tier.multiplier, b: tp.tier.birthday, s: fmtMoney(tp.spend) });
       $("tierBar").style.width = tp.pct + "%";
       $("tierNext").textContent = tp.next
@@ -113,8 +110,7 @@
         <tr><th>${t("tier.colTier")}</th><th>${t("tier.colSpend")}</th><th>${t("tier.colMult")}</th><th>${t("tier.colBday")}</th></tr>
         ${TIERS.map(x => `
           <tr class="${x.id === tp.tier.id ? "current" : ""}">
-            <td>${x.icon} ${tierLabel(x)}</td>
-            <td>${x.minSpend ? t("tier.minSpend", { n: x.minSpend }) : t("tier.free")}</td>
+            <td>${tierIconHTML(x)} ${tierLabel(x)}</td>            <td>${x.minSpend ? t("tier.minSpend", { n: x.minSpend }) : t("tier.free")}</td>
             <td>×${x.multiplier}</td>
             <td>${t("unit.pts", { n: x.birthday })}</td>
           </tr>`).join("")}`;
