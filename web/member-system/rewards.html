@@ -97,7 +97,9 @@
           else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
           return `
             <div class="reward">
-              <div class="reward-icon">${ty.icon}</div>
+              ${r.image
+  ? `<img class="reward-img" src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">`
+  : `<div class="reward-icon">${ty.icon}</div>`}
               <div class="reward-type muted">${t(ty.key)}${typeof r.stock === "number" ? " · " + t("rw.left", { n: Math.max(r.stock, 0) }) : ""}</div>
               <div class="reward-name">${esc(r.name)}</div>
               ${r.description ? `<div class="reward-desc muted">${esc(r.description)}</div>` : ""}
