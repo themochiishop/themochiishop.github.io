@@ -55,7 +55,7 @@ const DICT = {
 
         "idx.pageTitle": "Mochii Member Club · The Mochii Shop",
     "idx.title": "Mochii Member Club",
-    "idx.tagline": "Earn points · Redeem rewards · Birthday gifts",
+    "idx.tagline": "Earn points · Redeem rewards · Cash Back",
     "idx.google": "Sign in with Google",
     "idx.or": "or use email",
     "idx.email": "Email",
@@ -272,7 +272,8 @@ const DICT = {
 
        "idx.pageTitle": "Mochii Member Club · The Mochii Shop",
     "idx.title": "Mochii Member Club",
-    "idx.tagline": "Kumpul mata · Tebus ganjaran · Hadiah hari jadi",
+    "idx.tagline": "Kumpul mata · Tebus ganjaran · Pulangan tunai
+",
     "idx.google": "Log masuk dengan Google",
     "idx.or": "atau guna e-mel",
     "idx.email": "E-mel",
@@ -489,7 +490,7 @@ const DICT = {
 
        "idx.pageTitle": "会员俱乐部 · The Mochii Shop",
     "idx.title": "Mochii 会员俱乐部",
-    "idx.tagline": "累积积分 · 兑换奖品 · 生日礼物",
+    "idx.tagline": "累积积分 · 兑换奖品 · 现金回扣",
     "idx.google": "使用 Google 登录",
     "idx.or": "或使用电子邮件",
     "idx.email": "电子邮件",
