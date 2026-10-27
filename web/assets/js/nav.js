@@ -14,7 +14,7 @@ const CACHE_KEY = 'navCache';
 const MONTHLY_HREF = '/monthly-draw/';
 const MONTHLY_SUB = [
   { label: 'Monthly Draw', note: "This month's prizes & winners", href: '/monthly-draw/' },
-  { label: 'Live Draw', note: 'Watch the draw live, in real time', href: 'https://admin.themochiishop.com/draw_tournament/index.html', live: true }
+  { label: 'Live Draw', note: 'Watch the draw live, in real time', href: '/live/', live: true }
 ];
 const menu = document.getElementById('menu');
 const foot = document.querySelector('footer');
