@@ -1,7 +1,9 @@
 // member-system 共用功能
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import {
+  doc, getDoc, collection, query, where, getDocs
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 // ---------- 单号格式规则（必须和 Google 表格同步脚本的 MS_PLATFORMS 一致） ----------
 export const PLATFORMS = [
@@ -29,6 +31,25 @@ export function platformLabel(p) {
 
 export function platformTag(p) {
   return `<span class="tag tag-${esc(p)}">${esc(platformLabel(p))}</span>`;
+}
+
+// ---------- 会员等级（必须和 Google 表格同步脚本的 MS_TIERS 一致） ----------
+export const TIERS = [
+  { id: "mochii",  label: "Mochii 会员", icon: "🍡", minSpend: 0,    multiplier: 1,   birthday: 88  },
+  { id: "silver",  label: "银卡",        icon: "🥈", minSpend: 300,  multiplier: 1.2, birthday: 128 },
+  { id: "gold",    label: "金卡",        icon: "🥇", minSpend: 800,  multiplier: 1.5, birthday: 188 },
+  { id: "diamond", label: "钻石",        icon: "💎", minSpend: 2000, multiplier: 2,   birthday: 288 },
+];
+
+// 目前等级、下一级、还差多少
+export function tierProgress(member) {
+  const spend = Number(member.spend12m || 0);
+  const idx = Math.max(0, TIERS.findIndex(t => t.id === member.tier));
+  const tier = TIERS[idx];
+  const next = TIERS[idx + 1] || null;
+  const need = next ? Math.max(0, next.minSpend - spend) : 0;
+  const pct = next ? Math.min(100, Math.round(((spend - tier.minSpend) / (next.minSpend - tier.minSpend)) * 100)) : 100;
+  return { tier, next, spend, need, pct: Math.max(0, pct) };
 }
 
 // ---------- 工具 ----------
@@ -75,6 +96,35 @@ export function authErrorText(e) {
   return map[e && e.code] || ("发生错误：" + (e && e.message ? e.message : e));
 }
 
+// ---------- 积分余额 ----------
+// available：已生效的积分；pending：待确认；reserved：兑换审核中暂扣；spendable：现在能用来兑换的
+export async function loadBalance(uid) {
+  const mine = c => getDocs(query(collection(db, c), where("uid", "==", uid)));
+  const [lSnap, rSnap] = await Promise.all([mine("pointsLedger"), mine("redemptions")]);
+  const now = new Date();
+
+  const ledger = lSnap.docs.map(d => d.data())
+    .map(x => ({ ...x, availableAt: toDate(x.availableAt), createdAt: toDate(x.createdAt) }))
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+  const redemptions = rSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .map(r => ({ ...r, createdAt: toDate(r.createdAt), decidedAt: toDate(r.decidedAt) }))
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+  let available = 0, pending = 0, nextUnlock = null;
+  ledger.forEach(x => {
+    if (x.availableAt && x.availableAt > now) {
+      pending += x.delta;
+      if (x.delta > 0 && (!nextUnlock || x.availableAt < nextUnlock)) nextUnlock = x.availableAt;
+    } else {
+      available += x.delta;
+    }
+  });
+  const reserved = redemptions.filter(r => r.status === "pending").reduce((s, r) => s + (r.cost || 0), 0);
+
+  return { ledger, redemptions, available, pending, reserved, spendable: available - reserved, nextUnlock };
+}
+
 // ---------- 登录检查：未登录或未完成资料的人会被送回首页 ----------
 export function requireMember(onReady) {
   onAuthStateChanged(auth, async user => {
@@ -100,6 +150,7 @@ export function logout() {
 export function renderNav(active) {
   const links = [
     ["account", "account.html", "我的积分"],
+    ["rewards", "rewards.html", "积分兑换"],
     ["bind", "bind.html", "绑定账号"],
     ["profile", "profile.html", "个人资料"],
   ];

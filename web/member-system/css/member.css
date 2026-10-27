@@ -171,6 +171,48 @@ label.check input { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0
 
 .platform-hint { font-size: .8rem; margin-top: 6px; min-height: 1.2em; }
 
+/* ---------- 积分兑换 ---------- */
+.reward-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.reward {
+  background: var(--card2); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px; display: flex; flex-direction: column; gap: 4px;
+}
+.reward-icon { font-size: 2rem; }
+.reward-type { font-size: .75rem; }
+.reward-name { font-weight: 700; font-size: 1.02rem; }
+.reward-desc { font-size: .82rem; flex: 1; }
+.reward-cost {
+  font-weight: 800; font-size: 1.2rem; margin: 8px 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.code {
+  margin-top: 8px; padding: 8px 10px; border-radius: 8px;
+  background: var(--bg); border: 1px dashed var(--accent);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+  font-size: .88rem;
+}
+.code b { letter-spacing: .05em; color: var(--accent); }
+.tag:not([class*="tag-"]) { background: var(--card2); color: var(--muted); }
+
+/* ---------- 会员等级 ---------- */
+.tier-card { display: flex; flex-direction: column; gap: 10px; }
+.tier-head { display: flex; align-items: center; gap: 12px; }
+.tier-icon { font-size: 2.2rem; }
+.tier-name { font-size: 1.25rem; font-weight: 800; }
+.tier-perk { font-size: .82rem; color: var(--muted); }
+.tier-mochii .tier-name { color: var(--accent); }
+.tier-silver .tier-name { color: #cbd5e1; }
+.tier-gold .tier-name { color: #fbbf24; }
+.tier-diamond .tier-name { color: #67e8f9; }
+.bar { height: 10px; background: var(--bg); border-radius: 999px; overflow: hidden; border: 1px solid var(--line); }
+.bar > div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 999px; transition: width .6s; }
+.tier-table { width: 100%; border-collapse: collapse; font-size: .82rem; margin-top: 10px; }
+.tier-table th, .tier-table td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+.tier-table th { color: var(--muted); font-weight: 600; }
+.tier-table tr.current td { color: var(--accent); font-weight: 700; }
+details summary { cursor: pointer; color: var(--muted); font-size: .85rem; }
+
 @media (max-width: 480px) {
   .stat .value { font-size: 1.6rem; }
   .topbar .brand { display: none; }

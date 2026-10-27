@@ -20,12 +20,30 @@
       <a href="bind.html" class="btn btn-primary btn-inline">去绑定账号 ➔</a>
     </div>
 
+    <!-- 会员等级 -->
+    <div class="card tier-card" id="tierCard">
+      <div class="tier-head">
+        <div class="tier-icon" id="tierIcon">🍡</div>
+        <div>
+          <div class="tier-name" id="tierName">-</div>
+          <div class="tier-perk" id="tierPerk"></div>
+        </div>
+      </div>
+      <div class="bar"><div id="tierBar" style="width:0%"></div></div>
+      <div class="muted" style="font-size:.85rem" id="tierNext"></div>
+      <details>
+        <summary>查看等级说明</summary>
+        <table class="tier-table" id="tierTable"></table>
+        <p class="muted" style="font-size:.78rem;margin-top:8px">等级按最近 365 天的有效消费计算（退货不计），每小时更新。升级后，之后的新订单就享有新的积分加成。</p>
+      </details>
+    </div>
+
     <!-- 积分摘要 -->
     <div class="stats">
       <div class="stat main">
         <div class="label">可用积分</div>
-        <div class="value" id="available">-</div>
-        <div class="sub">可用于兑换奖品</div>
+        <div class="value" id="spendable">-</div>
+        <div class="sub" id="reservedNote"><a href="rewards.html">去兑换奖品 ➔</a></div>
       </div>
       <div class="stat">
         <div class="label">待确认积分</div>
@@ -55,7 +73,8 @@
     import { db } from "./js/firebase-config.js";
     import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
-      requireMember, renderNav, toDate, fmtDate, fmtMoney, esc, platformTag
+      requireMember, renderNav, loadBalance, toDate, fmtDate, fmtMoney, esc, platformTag,
+      TIERS, tierProgress
     } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
@@ -73,11 +92,32 @@
     requireMember(async (user, member) => {
       $("hello").textContent = `你好，${member.name || "会员"} 👋`;
 
+      // ---------- 会员等级 ----------
+      const tp = tierProgress(member);
+      $("tierCard").classList.add("tier-" + tp.tier.id);
+      $("tierIcon").textContent = tp.tier.icon;
+      $("tierName").textContent = tp.tier.label;
+      $("tierPerk").textContent =
+        `购物积分 ×${tp.tier.multiplier} · 生日礼物 ${tp.tier.birthday} 分 · 近一年消费 ${fmtMoney(tp.spend)}`;
+      $("tierBar").style.width = tp.pct + "%";
+      $("tierNext").textContent = tp.next
+        ? `再消费 ${fmtMoney(tp.need)} 升级为 ${tp.next.icon} ${tp.next.label}（积分 ×${tp.next.multiplier}）`
+        : "🎉 你已经是最高等级！";
+      $("tierTable").innerHTML = `
+        <tr><th>等级</th><th>近一年消费</th><th>积分加成</th><th>生日礼物</th></tr>
+        ${TIERS.map(t => `
+          <tr class="${t.id === tp.tier.id ? "current" : ""}">
+            <td>${t.icon} ${t.label}</td>
+            <td>${t.minSpend ? "RM " + t.minSpend + " 以上" : "注册即享"}</td>
+            <td>×${t.multiplier}</td>
+            <td>${t.birthday} 分</td>
+          </tr>`).join("")}`;
+
       const mine = c => getDocs(query(collection(db, c), where("uid", "==", user.uid)));
-      let ledgerSnap, ordersSnap, bindSnap;
+      let bal, ordersSnap, bindSnap;
       try {
-        [ledgerSnap, ordersSnap, bindSnap] = await Promise.all([
-          mine("pointsLedger"), mine("orders"), mine("bindings")
+        [bal, ordersSnap, bindSnap] = await Promise.all([
+          loadBalance(user.uid), mine("orders"), mine("bindings")
         ]);
       } catch (e) {
         $("pageError").textContent = "载入失败：" + e.message;
@@ -94,25 +134,16 @@
         ? bindings.map(b => `<span class="chip">${platformTag(b.platform)} ${esc(b.username)}</span>`).join("")
         : `<span class="muted">尚未绑定</span>`;
 
-      // ---------- 积分 ----------
-      const ledger = ledgerSnap.docs.map(d => d.data())
-        .map(x => ({ ...x, availableAt: toDate(x.availableAt), createdAt: toDate(x.createdAt) }))
-        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      // ---------- 积分摘要 ----------
+      $("spendable").textContent = bal.spendable.toLocaleString();
+      if (bal.reserved > 0) {
+        $("reservedNote").innerHTML = `另有 ${bal.reserved} 分兑换审核中 · <a href="rewards.html">查看</a>`;
+      }
+      $("pending").textContent = bal.pending.toLocaleString();
+      $("nextUnlock").textContent = bal.nextUnlock ? `下一笔于 ${fmtDate(bal.nextUnlock)} 可用` : " ";
 
-      let available = 0, pending = 0, nextUnlock = null;
-      ledger.forEach(x => {
-        if (x.availableAt && x.availableAt > now) {
-          pending += x.delta;
-          if (x.delta > 0 && (!nextUnlock || x.availableAt < nextUnlock)) nextUnlock = x.availableAt;
-        } else {
-          available += x.delta;
-        }
-      });
-      $("available").textContent = available.toLocaleString();
-      $("pending").textContent = pending.toLocaleString();
-      $("nextUnlock").textContent = nextUnlock ? `下一笔于 ${fmtDate(nextUnlock)} 可用` : " ";
-
-      $("ledgerList").innerHTML = ledger.length ? ledger.map(x => {
+      // ---------- 积分记录 ----------
+      $("ledgerList").innerHTML = bal.ledger.length ? bal.ledger.map(x => {
         const isPending = x.availableAt && x.availableAt > now;
         return `
           <li>
@@ -126,7 +157,7 @@
           </li>`;
       }).join("") : `<li class="empty">还没有积分记录</li>`;
 
-      // ---------- 订单 ----------
+      // ---------- 订单记录 ----------
       const orders = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }))
         .map(o => ({ ...o, orderTime: toDate(o.orderTime), availableAt: toDate(o.availableAt) }))
         .sort((a, b) => (b.orderTime || 0) - (a.orderTime || 0));
