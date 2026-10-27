@@ -205,3 +205,88 @@ export function renderNav(active) {
     </div>`;
   bindLangSwitch(el);
 }
+
+// ---------- 🔔 通知铃铛：积分进账、积分可用、兑换批准/拒绝 ----------
+const bell = { ledger: [], redemptions: [], seenAt: null, highlightSince: null };
+
+function buildEvents() {
+  const now = new Date();
+  const ev = [];
+  bell.ledger.forEach(x => {
+    if (x.redemptionId) return; // 兑换扣分不另外通知，「兑换已批准」已经说明了
+    const at = toDate(x.createdAt), avail = toDate(x.availableAt);
+    if (!at) return;
+    const stillPending = avail && avail > now;
+    ev.push({
+      time: at,
+      icon: x.delta >= 0 ? "🎉" : "↩️",
+      title: translateReason(x.reason),
+      detail: (x.delta >= 0 ? t("notif.plus", { n: x.delta }) : t("notif.minus", { n: x.delta }))
+        + (stillPending && x.delta > 0 ? " · " + t("notif.pendingUntil", { d: fmtDate(avail) }) : ""),
+    });
+    // 待确认积分到期转为可用
+    if (x.delta > 0 && avail && avail <= now && avail - at > 12 * 3600 * 1000) {
+      ev.push({ time: avail, icon: "✅", title: t("notif.nowAvailable", { n: x.delta }), detail: translateReason(x.reason) });
+    }
+  });
+  bell.redemptions.forEach(r => {
+    const at = toDate(r.decidedAt);
+    if (!at) return;
+    if (r.status === "approved") {
+      ev.push({ time: at, icon: "🎁", title: t("notif.approved", { name: r.rewardName }),
+        detail: r.couponCode ? t("notif.code", { code: r.couponCode }) : (r.note || "") });
+    } else if (r.status === "rejected") {
+      ev.push({ time: at, icon: "❌", title: t("notif.rejected", { name: r.rewardName }), detail: r.note || "" });
+    }
+  });
+  return ev.filter(e => e.time <= now).sort((a, b) => b.time - a.time).slice(0, 50);
+}
+
+function renderBell() {
+  const badge = document.getElementById("bellBadge");
+  const list = document.getElementById("bellList");
+  if (!badge || !list) return;
+  const events = buildEvents();
+  const unread = events.filter(e => !bell.seenAt || e.time > bell.seenAt).length;
+  badge.hidden = !unread;
+  badge.textContent = unread > 9 ? "9+" : unread;
+  document.getElementById("bellBtn").classList.toggle("has-new", !!unread);
+  const hl = bell.highlightSince;
+  list.innerHTML = events.length ? events.map(e => `
+    <li class="${!hl || e.time > hl ? "unread" : ""}">
+      <span class="bell-icon">${e.icon}</span>
+      <div>
+        <div class="bell-title">${esc(e.title)}</div>
+        ${e.detail ? `<div class="bell-detail">${esc(e.detail)}</div>` : ""}
+        <div class="bell-time">${fmtDate(e.time, true)}</div>
+      </div>
+    </li>`).join("") : `<li class="bell-empty">${t("notif.empty")}</li>`;
+}
+
+export function initBell(user, member) {
+  const btn = document.getElementById("bellBtn");
+  const panel = document.getElementById("bellPanel");
+  if (!btn || !panel) return;
+  bell.seenAt = toDate(member.notifSeenAt);
+  bell.highlightSince = bell.seenAt;
+
+  const mine = c => query(collection(db, c), where("uid", "==", user.uid));
+  onSnapshot(mine("pointsLedger"), s => { bell.ledger = s.docs.map(d => d.data()); renderBell(); });
+  onSnapshot(mine("redemptions"), s => { bell.redemptions = s.docs.map(d => ({ id: d.id, ...d.data() })); renderBell(); });
+
+  btn.addEventListener("click", async e => {
+    e.stopPropagation();
+    const opening = panel.classList.contains("hidden");
+    panel.classList.toggle("hidden");
+    if (!opening) return;
+    // 打开时：新通知保持高亮，同时把「已读时间」存起来（换手机也同步）
+    bell.highlightSince = bell.seenAt;
+    bell.seenAt = new Date();
+    renderBell();
+    try { await updateDoc(doc(db, "members", user.uid), { notifSeenAt: serverTimestamp() }); }
+    catch (err) { console.warn("notifSeenAt", err); }
+  });
+  document.addEventListener("click", e => {
+    if (!e.target.closest("#bellPanel, #bellBtn")) panel.classList.add("hidden");
+  });
+}
