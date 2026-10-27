@@ -158,7 +158,36 @@ function render(list) {
     renderCompanyTitle();
     renderDonate();
 }
-
+/* ---------- 弹窗公告(后台「📣 弹窗公告」设定) ---------- */
+function showPopup(p) {
+  const old = document.getElementById('sitePopup');
+  if (old) old.remove();
+  if (!p || p.on !== true || !(p.title || p.text)) return;
+  if (location.pathname.startsWith('/home-editor')) return;
+  const key = JSON.stringify([p.title || '', p.text || '', p.btn || '', p.link || '']);
+  try { if (sessionStorage.getItem('popupSeen') === key) return; } catch (e) {}
+  const seen = () => { try { sessionStorage.setItem('popupSeen', key); } catch (e) {} };
+  const box = document.createElement('div');
+  box.id = 'sitePopup'; box.className = 'sp-mask';
+  box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true');
+  const close = () => { seen(); box.remove(); };
+  const card = document.createElement('div'); card.className = 'sp-card';
+  const x = document.createElement('button');
+  x.type = 'button'; x.className = 'sp-x'; x.setAttribute('aria-label', 'Close'); x.textContent = '✕'; x.onclick = close;
+  card.appendChild(x);
+  if (p.title) { const h = document.createElement('h3'); h.className = 'sp-title'; h.textContent = p.title; card.appendChild(h); }
+  if (p.text) { const t = document.createElement('p'); t.className = 'sp-text'; t.textContent = p.text; card.appendChild(t); }
+  if (p.btn && /^(\/|https:\/\/)/i.test(p.link || '')) {
+    const a = document.createElement('a');
+    a.className = 'sp-btn'; a.href = p.link; a.textContent = p.btn; a.onclick = seen;
+    if (/^https:\/\//i.test(p.link)) { a.target = '_blank'; a.rel = 'noopener'; }
+    card.appendChild(a);
+  }
+  box.appendChild(card);
+  box.addEventListener('click', e => { if (e.target === box) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('sitePopup')) close(); });
+  document.body.appendChild(box);
+}
 /* 先用上次记住的菜单(没有就用默认),避免闪烁 */
 let cached = null;
 try { cached = clean(JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')); } catch (e) {}
@@ -176,6 +205,7 @@ try {
     appId: "1:377694458194:web:71a78ba5dbed4df1b1aa8b"
   };
   const app = getApps().length ? getApp() : initializeApp(cfg);
+    onValue(ref(getDatabase(app), 'homepage/popup'), snap => showPopup(snap.val()));
   onValue(ref(getDatabase(app), 'homepage/nav'), snap => {
     const list = clean(snap.val());
     if (list.length) {
