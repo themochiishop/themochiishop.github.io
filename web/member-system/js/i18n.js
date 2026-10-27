@@ -35,8 +35,8 @@ const DICT = {
     "auth.network": "Network error. Please check your connection.",
     "auth.domain": "This site is not authorised for sign-in yet",
 
-    "idx.pageTitle": "Member Centre · The Mochii Shop",
-    "idx.title": "Mochii Member Centre",
+        "idx.pageTitle": "Mochii Member Club · The Mochii Shop",
+    "idx.title": "Mochii Member Club",
     "idx.tagline": "Earn points · Redeem rewards · Birthday gifts",
     "idx.google": "Sign in with Google",
     "idx.or": "or use email",
@@ -234,8 +234,8 @@ const DICT = {
     "auth.network": "Ralat rangkaian. Sila semak sambungan anda.",
     "auth.domain": "Laman ini belum dibenarkan untuk log masuk",
 
-    "idx.pageTitle": "Pusat Ahli · The Mochii Shop",
-    "idx.title": "Pusat Ahli Mochii",
+       "idx.pageTitle": "Mochii Member Club · The Mochii Shop",
+    "idx.title": "Mochii Member Club",
     "idx.tagline": "Kumpul mata · Tebus ganjaran · Hadiah hari jadi",
     "idx.google": "Log masuk dengan Google",
     "idx.or": "atau guna e-mel",
@@ -433,8 +433,8 @@ const DICT = {
     "auth.network": "网络连接失败，请检查网络",
     "auth.domain": "这个网址还没加入 Firebase 授权网域",
 
-    "idx.pageTitle": "会员中心 · The Mochii Shop",
-    "idx.title": "Mochii 会员中心",
+       "idx.pageTitle": "会员俱乐部 · The Mochii Shop",
+    "idx.title": "Mochii 会员俱乐部",
     "idx.tagline": "累积积分 · 兑换奖品 · 生日礼物",
     "idx.google": "使用 Google 登录",
     "idx.or": "或使用电子邮件",
