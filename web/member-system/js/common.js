@@ -178,22 +178,25 @@ export function logout() {
   signOut(auth).then(() => location.replace("index.html"));
 }
 
-// ---------- 顶部导航（含语言切换），同时翻译页面文字 ----------
+// ---------- 顶部导航：会员俱乐部 logo、铃铛、语言、三大分类 + 子分页 ----------
+const NAV = [
+  { key: "shop",   icon: "🛍️", label: "nav.shop",   href: "shop.html",    pages: ["shop"] },
+  { key: "points", icon: "💎", label: "nav.points", href: "account.html", pages: ["account", "rewards"],
+    sub: [["account", "account.html", "nav.account"], ["rewards", "rewards.html", "nav.rewards"]] },
+  { key: "me",     icon: "👤", label: "nav.me",     href: "profile.html", pages: ["profile", "bind"],
+    sub: [["profile", "profile.html", "nav.profile"], ["bind", "bind.html", "nav.bind"]] },
+];
+
 export function renderNav(active) {
   applyI18n();
-  const links = [
-    ["account", "account.html", "nav.account"],
-    ["rewards", "rewards.html", "nav.rewards"],
-    ["bind", "bind.html", "nav.bind"],
-    ["profile", "profile.html", "nav.profile"],
-  ];
   const el = document.getElementById("topbar");
   if (!el) return;
+  const group = NAV.find(g => g.pages.includes(active));
   el.className = "topbar";
   el.innerHTML = `
     <div class="topbar-inner">
-      <a class="brand" href="https://www.themochiishop.com">The <span>Mochii</span> Shop</a>
-           <div class="topbar-tools">
+      <a class="brand" href="shop.html"><img class="brand-logo" src="img/member.jpg" alt=""><span>Mochii <b>Club</b></span></a>
+      <div class="topbar-tools">
         <button type="button" id="bellBtn" class="bell" aria-label="${t("notif.title")}">🔔<span id="bellBadge" class="bell-badge" hidden></span></button>
         ${langSwitchHTML()}
       </div>
@@ -203,11 +206,16 @@ export function renderNav(active) {
       </div>
     </div>
     <div class="topbar-inner topbar-nav">
-      <nav>
-        ${links.map(([k, href, key]) =>
-          `<a href="${href}" class="${k === active ? "active" : ""}">${t(key)}</a>`).join("")}
+      <nav class="main-nav">
+        ${NAV.map(g => `<a href="${g.href}" class="${g === group ? "active" : ""}"><span>${g.icon}</span>${t(g.label)}</a>`).join("")}
       </nav>
-    </div>`;
+    </div>
+    ${group && group.sub ? `
+    <div class="topbar-inner sub-nav-row">
+      <nav class="sub-nav">
+        ${group.sub.map(([k, href, key]) => `<a href="${href}" class="${k === active ? "active" : ""}">${t(key)}</a>`).join("")}
+      </nav>
+    </div>` : ""}`;
   bindLangSwitch(el);
 }
 

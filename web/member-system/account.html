@@ -110,7 +110,7 @@
         <tr><th>${t("tier.colTier")}</th><th>${t("tier.colSpend")}</th><th>${t("tier.colMult")}</th><th>${t("tier.colBday")}</th></tr>
         ${TIERS.map(x => `
           <tr class="${x.id === tp.tier.id ? "current" : ""}">
-            <td>${tierIconHTML(x)} ${tierLabel(x)}</td>            <td>${x.minSpend ? t("tier.minSpend", { n: x.minSpend }) : t("tier.free")}</td>
+            <td>${x.icon ? x.icon + " " : ""}${tierLabel(x)}</td>            <td>${x.minSpend ? t("tier.minSpend", { n: x.minSpend }) : t("tier.free")}</td>
             <td>×${x.multiplier}</td>
             <td>${t("unit.pts", { n: x.birthday })}</td>
           </tr>`).join("")}`;

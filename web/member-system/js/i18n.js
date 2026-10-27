@@ -12,6 +12,22 @@ const DICT = {
     "common.loadFail": "Failed to load: ",
     "common.privacy": "Privacy Policy",
     "common.terms": "Member Terms",
+    "nav.shop": "Mall",
+    "nav.points": "Points",
+    "nav.me": "Me",
+    "lang.choose": "Language",
+    "shop.pageTitle": "Rewards Mall · Mochii Club",
+    "shop.title": "Rewards Mall",
+    "shop.sub": "Redeem your points for goodies you'll love",
+    "shop.myPoints": "My points",
+    "shop.cat.all": "All",
+    "shop.cat.coupon": "Coupons",
+    "shop.cat.bracelet": "Bracelets",
+    "shop.cat.blindbox": "Blind boxes",
+    "shop.soon": "Coming soon",
+    "shop.soonNote": "New items are being prepared — stay tuned!",
+    "shop.nowAvailable": "Rewards you can redeem now",
+    "shop.goRewards": "Go to Rewards ➔",
         "notif.title": "Notifications",
     "notif.empty": "No notifications yet",
     "notif.plus": "+{n} pts",
@@ -211,6 +227,22 @@ const DICT = {
     "common.loadFail": "Gagal dimuatkan: ",
     "common.privacy": "Dasar Privasi",
     "common.terms": "Terma Ahli",
+    "nav.shop": "Pusat Ganjaran",
+    "nav.points": "Mata",
+    "nav.me": "Saya",
+    "lang.choose": "Bahasa",
+    "shop.pageTitle": "Pusat Ganjaran · Mochii Club",
+    "shop.title": "Pusat Ganjaran",
+    "shop.sub": "Tebus mata anda dengan barangan kegemaran",
+    "shop.myPoints": "Mata saya",
+    "shop.cat.all": "Semua",
+    "shop.cat.coupon": "Kupon",
+    "shop.cat.bracelet": "Gelang",
+    "shop.cat.blindbox": "Kotak misteri",
+    "shop.soon": "Akan datang",
+    "shop.soonNote": "Barangan baharu sedang disediakan — nantikan!",
+    "shop.nowAvailable": "Ganjaran yang boleh ditebus sekarang",
+    "shop.goRewards": "Ke Ganjaran ➔",
         "notif.title": "Pemberitahuan",
     "notif.empty": "Belum ada pemberitahuan",
     "notif.plus": "+{n} mata",
@@ -410,6 +442,22 @@ const DICT = {
     "common.loadFail": "载入失败：",
     "common.privacy": "隐私政策",
     "common.terms": "会员条款",
+    "nav.shop": "兑换商城",
+    "nav.points": "积分",
+    "nav.me": "我的",
+    "lang.choose": "语言",
+    "shop.pageTitle": "兑换商城 · Mochii Club",
+    "shop.title": "兑换商城",
+    "shop.sub": "用积分兑换心仪好物",
+    "shop.myPoints": "我的积分",
+    "shop.cat.all": "全部",
+    "shop.cat.coupon": "优惠券",
+    "shop.cat.bracelet": "手链",
+    "shop.cat.blindbox": "盲盒",
+    "shop.soon": "即将上架",
+    "shop.soonNote": "新商品准备中，敬请期待！",
+    "shop.nowAvailable": "目前可兑换的奖品",
+    "shop.goRewards": "前往积分兑换 ➔",
         "notif.title": "通知",
     "notif.empty": "还没有通知",
     "notif.plus": "+{n} 分",
@@ -642,13 +690,29 @@ export function applyI18n(root = document) {
 
 // 语言切换按钮
 export function langSwitchHTML() {
-  return `<div class="lang-switch">${LANGS.map(([code, label]) =>
-    `<button type="button" data-setlang="${code}" class="${code === lang ? "active" : ""}">${label}</button>`).join("")}</div>`;
+  const cur = LANGS.find(([c]) => c === lang) || LANGS[0];
+  return `<div class="lang-dd">
+    <button type="button" class="lang-btn" aria-haspopup="true" aria-label="${t("lang.choose")}">🌐 ${cur[1]} <span class="caret">▾</span></button>
+    <div class="lang-menu hidden" role="menu">
+      ${LANGS.map(([code, label]) =>
+        `<button type="button" role="menuitem" data-setlang="${code}" class="${code === lang ? "active" : ""}">${label === "BM" ? "Bahasa Melayu" : label === "EN" ? "English" : label}</button>`).join("")}
+    </div>
+  </div>`;
 }
 
+// 语言按钮：平常只显示目前语言，点了才展开选单
 export function bindLangSwitch(root = document) {
-  root.querySelectorAll("[data-setlang]").forEach(b => {
-    b.addEventListener("click", () => { if (b.dataset.setlang !== lang) setLang(b.dataset.setlang); });
+  root.querySelectorAll(".lang-dd").forEach(dd => {
+    const btn = dd.querySelector(".lang-btn");
+    const menu = dd.querySelector(".lang-menu");
+    btn.addEventListener("click", e => { e.stopPropagation(); menu.classList.toggle("hidden"); });
+    menu.querySelectorAll("[data-setlang]").forEach(b => {
+      b.addEventListener("click", () => {
+        menu.classList.add("hidden");
+        if (b.dataset.setlang !== lang) setLang(b.dataset.setlang);
+      });
+    });
+    document.addEventListener("click", e => { if (!dd.contains(e.target)) menu.classList.add("hidden"); });
   });
 }
 
