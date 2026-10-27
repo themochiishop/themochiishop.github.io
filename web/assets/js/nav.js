@@ -101,9 +101,7 @@ function renderSitemap(items, here) {
   }
   const title = document.createElement('div'); title.className = 'sm-title'; title.textContent = 'Site Map';
   const ul = document.createElement('ul');
-  const flat = [];
-  items.forEach(x => { if (norm(x.href) === MONTHLY_HREF) flat.push(...MONTHLY_SUB); else flat.push(x); });
-  flat.forEach(x => { const li = document.createElement('li'); li.appendChild(makeLink(x, here, 'cur')); ul.appendChild(li); });
+   items.forEach(x => { const li = document.createElement('li'); li.appendChild(makeLink(x, here, 'cur')); ul.appendChild(li); });
   box.replaceChildren(title, ul);
 }
 
