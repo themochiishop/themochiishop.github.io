@@ -48,6 +48,22 @@ header { background: var(--ink); position: sticky; top: 0; z-index: 50; border-b
 .nav ul a { color: #d9d2de; font-size: .92rem; font-weight: 500; letter-spacing: .6px; padding: 6px 0; border-bottom: 2px solid transparent; transition: all .2s; }
 .nav ul a:hover, .nav ul a.active { color: #fff; border-bottom-color: var(--gold); }
 .menu-btn { display: none; background: none; border: 1px solid rgba(255,255,255,.3); color: #fff; border-radius: 8px; padding: 6px 12px; font-size: 1.1rem; cursor: pointer; }
+/* Monthly 下拉 */
+.nav ul li.has-sub { position: relative; }
+.nav .sub-toggle { background: none; border: 0; border-bottom: 2px solid transparent; color: #d9d2de; font: inherit; font-size: .92rem; font-weight: 500; letter-spacing: .6px; padding: 6px 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .2s; }
+.nav .sub-toggle:hover, .nav .sub-toggle.active, .nav li.has-sub.open > .sub-toggle { color: #fff; border-bottom-color: var(--gold); }
+.nav .sub-toggle .caret { font-size: .7em; transition: transform .2s; }
+.nav li.has-sub.open > .sub-toggle .caret { transform: rotate(180deg); }
+.nav ul.sub { display: none; position: absolute; top: calc(100% + 12px); left: 50%; transform: translateX(-50%); min-width: 250px; flex-direction: column; gap: 2px;
+  background: var(--ink); border: 1px solid rgba(255,255,255,.14); border-top: 2px solid var(--gold); border-radius: 10px; padding: 6px; box-shadow: 0 14px 34px rgba(0,0,0,.35); z-index: 60; }
+.nav ul.sub::before { content: ''; position: absolute; left: 0; right: 0; top: -14px; height: 14px; }
+.nav li.has-sub.open > ul.sub { display: flex; }
+.nav ul.sub a { display: block; padding: 10px 12px; border: 0; border-radius: 8px; color: #f1ecf4; }
+.nav ul.sub a:hover, .nav ul.sub a.active { background: rgba(255,255,255,.08); border: 0; }
+.nav ul.sub .sub-t { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.nav ul.sub small { display: block; margin-top: 2px; font-size: .74rem; color: #a99fb3; letter-spacing: 0; font-weight: 400; }
+.nav .sub-live { width: 8px; height: 8px; border-radius: 50%; background: #e11d48; animation: livepulse-sm 1.6s infinite; flex-shrink: 0; }
+@media (hover: hover) and (min-width: 761px) { .nav li.has-sub:hover > ul.sub { display: flex; } }
 
 /* ---------- 按钮 ---------- */
 .btn { display: inline-block; padding: 12px 28px; border-radius: 4px; font-weight: 600; font-size: .92rem; letter-spacing: .5px; transition: all .2s; cursor: pointer; border: 1px solid transparent; }
@@ -279,6 +295,11 @@ footer a { color: var(--gold); }
   .nav ul { display: none; width: 100%; flex-direction: column; gap: 0; }
   .nav ul.open { display: flex; }
   .nav ul a { display: block; padding: 13px 0; border-top: 1px solid rgba(255,255,255,.12); border-bottom: none; }
+  .nav .sub-toggle { width: 100%; justify-content: space-between; padding: 13px 0; border-top: 1px solid rgba(255,255,255,.12); border-bottom: none; }
+  .nav .sub-toggle:hover, .nav .sub-toggle.active, .nav li.has-sub.open > .sub-toggle { border-bottom: none; }
+  .nav ul.sub { position: static; transform: none; min-width: 0; background: transparent; border: 0; border-radius: 0; box-shadow: none; padding: 0 0 8px 14px; }
+  .nav ul.sub::before { display: none; }
+  .nav ul.sub a { padding: 10px 8px; border-top: 1px solid rgba(255,255,255,.08); border-radius: 0; }
   .arrow { display: none; }
   .hero-content { padding: 0 20px; }
 
