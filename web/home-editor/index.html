@@ -173,6 +173,7 @@
           <button class="tab" data-tab="contact">✉️ Contact Us</button>
           <button class="tab" data-tab="social">🔗 社交链接</button>
           <button class="tab" data-tab="nav">🧭 导航菜单</button>
+                    <button class="tab" data-tab="popup">📣 弹窗公告</button>
         </div>
       </div>
     </div>
@@ -415,6 +416,17 @@
         </div>
       </div>
     </div>
+        <div class="panel" id="panel-popup">
+      <div class="panel-head"><h2>📣 弹窗公告</h2><a class="btn ghost small" href="/" target="_blank" rel="noopener">查看网站 ↗</a></div>
+      <div class="card">
+        <p class="hint">开启后，观众打开网站任何一页都会先看到这个弹窗。按钮链接以 / 开头是本站页面，以 https:// 开头会在新窗口打开。</p>
+        <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer;margin-top:0"><input type="checkbox" id="popupOn"> 开启弹窗</label>
+        <label for="popupTitle">标题</label><input type="text" id="popupTitle" placeholder="🔴 直播抽奖进行中！">
+        <label for="popupText">内容</label><textarea id="popupText" placeholder="可以换行"></textarea>
+        <label for="popupBtn">按钮文字</label><input type="text" id="popupBtn" placeholder="观看实时抽奖">
+        <label for="popupLink">按钮链接</label><input type="text" id="popupLink" placeholder="https://www.themochiishop.com/live/">
+      </div>
+    </div>
     <!-- 社交链接 -->
     <div class="panel" id="panel-social">
       <div class="panel-head"><h2>🔗 社交链接</h2></div>
@@ -548,6 +560,12 @@
 
             loadDraws(v);
             loadNav(v.nav);
+            const pp = v.popup || {};
+      $('#popupOn').checked = pp.on === true;
+      $('#popupTitle').value = pp.title || '';
+      $('#popupText').value = pp.text || '';
+      $('#popupBtn').value = pp.btn || '';
+      $('#popupLink').value = pp.link || '';
       const ab = v.about || {};
       about = { story: typeof ab.story === 'string' ? ab.story : '', dream: typeof ab.dream === 'string' ? ab.dream : '' };
       renderAbout();
@@ -1040,6 +1058,8 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
 
         const navErr = validateNav();
     if (navErr) { showSave(navErr, false); openTab('nav'); return; }
+        const popupLink = $('#popupLink').value.trim();
+    if (popupLink && !/^(\/|https:\/\/)/i.test(popupLink)) { showSave('弹窗按钮链接必须以 / 或 https:// 开头', false); openTab('popup'); return; }
     const b = $('#saveBtn'); b.disabled = true; showSave('保存中...', true);
     try {
       await set(ref(db, 'homepage/config'), cfg);
@@ -1049,6 +1069,7 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
       const abOut = {}; if (about.story) abOut.story = about.story; if (about.dream) abOut.dream = about.dream;
       await set(ref(db, 'homepage/about'), Object.keys(abOut).length ? abOut : null);
             await set(ref(db, 'homepage/nav'), navItems.map(x => ({ label: x.label.trim(), href: x.href.trim(), show: x.show !== false })));
+            await set(ref(db, 'homepage/popup'), { on: $('#popupOn').checked, title: $('#popupTitle').value.trim(), text: $('#popupText').value.trim(), btn: $('#popupBtn').value.trim(), link: popupLink });
                   const idsNow = new Set(draws.map(d => d.id));
       await set(ref(db, 'homepage/drawIndex'), draws.length ? draws.map(d => ({ id: d.id, month: d.month.trim() })) : null);
       for (const d of draws) {
