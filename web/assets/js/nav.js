@@ -156,9 +156,11 @@ function renderLegal() {
   const last = ps[ps.length - 1];            // 页脚最后一行(版权)
   if (!last) return;
   const sp = document.createElement('span'); sp.className = 'legal';
-  sp.appendChild(document.createTextNode(' · '));
-  const a = document.createElement('a'); a.href = '/member-system/privacy.html'; a.textContent = 'Privacy Policy';
-  sp.appendChild(a);
+  [['Member Terms', '/member-system/terms.html'], ['Privacy Policy', '/member-system/privacy.html']].forEach(([label, href]) => {
+    sp.appendChild(document.createTextNode(' · '));
+    const a = document.createElement('a'); a.href = href; a.textContent = label;
+    sp.appendChild(a);
+  });
   last.appendChild(sp);
 }
 function render(list) {
