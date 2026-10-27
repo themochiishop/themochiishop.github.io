@@ -2,9 +2,10 @@
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
-  doc, getDoc, collection, query, where, getDocs
+  doc, getDoc, collection, query, where, getDocs,
+  onSnapshot, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { t, applyI18n, langSwitchHTML, bindLangSwitch } from "./i18n.js";
+import { t, applyI18n, langSwitchHTML, bindLangSwitch, translateReason } from "./i18n.js";
 
 export { t, applyI18n, translateReason, lang } from "./i18n.js";
 
@@ -159,6 +160,7 @@ export function requireMember(onReady) {
       if (!snap.exists()) { location.replace("index.html"); return; }
       document.body.classList.remove("loading");
       onReady(user, snap.data());
+            initBell(user, snap.data());
     } catch (e) {
       console.error(e);
       const el = document.getElementById("pageError");
@@ -186,7 +188,14 @@ export function renderNav(active) {
   el.innerHTML = `
     <div class="topbar-inner">
       <a class="brand" href="https://www.themochiishop.com">The <span>Mochii</span> Shop</a>
-      ${langSwitchHTML()}
+           <div class="topbar-tools">
+        <button type="button" id="bellBtn" class="bell" aria-label="${t("notif.title")}">🔔<span id="bellBadge" class="bell-badge" hidden></span></button>
+        ${langSwitchHTML()}
+      </div>
+      <div id="bellPanel" class="bell-panel hidden">
+        <div class="bell-head">${t("notif.title")}</div>
+        <ul id="bellList" class="bell-list"></ul>
+      </div>
     </div>
     <div class="topbar-inner topbar-nav">
       <nav>
