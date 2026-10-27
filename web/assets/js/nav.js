@@ -39,7 +39,7 @@ function makeLink(x, here, activeClass) {
   return a;
 }
 
-function makeMonthlyDropdown(here) {
+function makeMonthlyDropdown(here, label) {
   const li = document.createElement('li');
   li.className = 'has-sub';
   const btn = document.createElement('button');
@@ -47,7 +47,11 @@ function makeMonthlyDropdown(here) {
   btn.className = 'sub-toggle' + (here === MONTHLY_HREF ? ' active' : '');
   btn.setAttribute('aria-haspopup', 'true');
   btn.setAttribute('aria-expanded', 'false');
-  btn.innerHTML = 'Monthly <span class="caret" aria-hidden="true">▾</span>';
+  // 下拉标题跟后台导航菜单设定的名字走（默认的 "Monthly Draw" 显示为 "Monthly"）
+  const name = (!label || label === 'Monthly Draw') ? 'Monthly' : label;
+  btn.textContent = name + ' ';
+  const caret = document.createElement('span'); caret.className = 'caret'; caret.setAttribute('aria-hidden', 'true'); caret.textContent = '▾';
+  btn.appendChild(caret);
   const sub = document.createElement('ul');
   sub.className = 'sub';
   MONTHLY_SUB.forEach(x => {
@@ -80,7 +84,7 @@ document.addEventListener('keydown', e => {
 function renderMenu(items, here) {
   if (!menu) return;
   const lis = items.map(x => {
-    if (norm(x.href) === MONTHLY_HREF) return makeMonthlyDropdown(here);
+    if (norm(x.href) === MONTHLY_HREF) return makeMonthlyDropdown(here, x.label);
     const li = document.createElement('li'); li.appendChild(makeLink(x, here, 'active')); return li;
   });
   if (lis.length) menu.replaceChildren(...lis);
