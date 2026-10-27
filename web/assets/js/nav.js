@@ -156,7 +156,7 @@ function renderLegal() {
   const last = ps[ps.length - 1];            // 页脚最后一行(版权)
   if (!last) return;
   const sp = document.createElement('span'); sp.className = 'legal';
-  [['Member Terms', '/member-system/terms.html'], ['Privacy Policy', '/member-system/privacy.html']].forEach(([label, href]) => {
+  [['Member Terms', '/memberclub/terms.html'], ['Privacy Policy', '/memberclub/privacy.html']].forEach(([label, href]) => {
     sp.appendChild(document.createTextNode(' · '));
     const a = document.createElement('a'); a.href = href; a.textContent = label;
     sp.appendChild(a);
