@@ -10,6 +10,12 @@ const DEFAULT_NAV = [
   { label: 'Contact Us', href: '/contact-us/', show: true }
 ];
 const CACHE_KEY = 'navCache';
+/* Monthly 下拉：1 每月抽奖结果页、2 实时抽奖大屏（直播时让观众用第二台手机看） */
+const MONTHLY_HREF = '/monthly-draw/';
+const MONTHLY_SUB = [
+  { label: 'Monthly Draw', note: "This month's prizes & winners", href: '/monthly-draw/' },
+  { label: 'Live Draw', note: 'Watch the draw live, in real time', href: 'https://admin.themochiishop.com/draw_tournament/index.html', live: true }
+];
 const menu = document.getElementById('menu');
 const foot = document.querySelector('footer');
 
@@ -33,9 +39,50 @@ function makeLink(x, here, activeClass) {
   return a;
 }
 
+function makeMonthlyDropdown(here) {
+  const li = document.createElement('li');
+  li.className = 'has-sub';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'sub-toggle' + (here === MONTHLY_HREF ? ' active' : '');
+  btn.setAttribute('aria-haspopup', 'true');
+  btn.setAttribute('aria-expanded', 'false');
+  btn.innerHTML = 'Monthly <span class="caret" aria-hidden="true">▾</span>';
+  const sub = document.createElement('ul');
+  sub.className = 'sub';
+  MONTHLY_SUB.forEach(x => {
+    const a = makeLink(x, here, 'active');
+    a.textContent = '';
+    const t = document.createElement('span'); t.className = 'sub-t';
+    if (x.live) { const d = document.createElement('i'); d.className = 'sub-live'; t.appendChild(d); }
+    t.appendChild(document.createTextNode(x.label));
+    const n = document.createElement('small'); n.textContent = x.note;
+    a.append(t, n);
+    const s = document.createElement('li'); s.appendChild(a); sub.appendChild(s);
+  });
+  btn.onclick = (e) => {
+    e.stopPropagation();
+    const open = !li.classList.contains('open');
+    li.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', String(open));
+  };
+  li.append(btn, sub);
+  return li;
+}
+// 点外面或按 Esc 收起下拉
+document.addEventListener('click', e => {
+  document.querySelectorAll('.nav li.has-sub.open').forEach(li => { if (!li.contains(e.target)) { li.classList.remove('open'); li.firstChild.setAttribute('aria-expanded', 'false'); } });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.nav li.has-sub.open').forEach(li => { li.classList.remove('open'); li.firstChild.setAttribute('aria-expanded', 'false'); });
+});
+
 function renderMenu(items, here) {
   if (!menu) return;
-  const lis = items.map(x => { const li = document.createElement('li'); li.appendChild(makeLink(x, here, 'active')); return li; });
+  const lis = items.map(x => {
+    if (norm(x.href) === MONTHLY_HREF) return makeMonthlyDropdown(here);
+    const li = document.createElement('li'); li.appendChild(makeLink(x, here, 'active')); return li;
+  });
   if (lis.length) menu.replaceChildren(...lis);
 }
 
@@ -50,7 +97,9 @@ function renderSitemap(items, here) {
   }
   const title = document.createElement('div'); title.className = 'sm-title'; title.textContent = 'Site Map';
   const ul = document.createElement('ul');
-  items.forEach(x => { const li = document.createElement('li'); li.appendChild(makeLink(x, here, 'cur')); ul.appendChild(li); });
+  const flat = [];
+  items.forEach(x => { if (norm(x.href) === MONTHLY_HREF) flat.push(...MONTHLY_SUB); else flat.push(x); });
+  flat.forEach(x => { const li = document.createElement('li'); li.appendChild(makeLink(x, here, 'cur')); ul.appendChild(li); });
   box.replaceChildren(title, ul);
 }
 
@@ -91,9 +140,17 @@ function renderDonate() {
   box.appendChild(a);
   foot.insertBefore(box, foot.firstChild);
 }
+// 菜单里完全没有 Monthly Draw 时，自动加在 About Us 前面（后台设为隐藏的则尊重设置）
+function withMonthly(list) {
+  if (list.some(x => norm(x.href) === MONTHLY_HREF)) return list;
+  const out = list.slice();
+  const i = out.findIndex(x => norm(x.href) === '/about-us/');
+  out.splice(i < 0 ? out.length : i, 0, { label: 'Monthly Draw', href: MONTHLY_HREF, show: true });
+  return out;
+}
 function render(list) {
   const here = norm(location.pathname);
-  const items = list.filter(x => x.show !== false);
+  const items = withMonthly(list).filter(x => x.show !== false);
   renderMenu(items, here);
   renderSitemap(items, here);
     renderCompanyTitle();
