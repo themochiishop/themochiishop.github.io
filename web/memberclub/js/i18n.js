@@ -649,6 +649,14 @@ const DICT = {
 };
 
 export const LANGS = [["en", "EN"], ["ms", "BM"], ["zh", "中文"]];
+
+// 各语言的国旗图片与名称
+const FLAGS = {
+  en: { img: "https://flagcdn.com/gb.svg", name: "English" },
+  ms: { img: "https://flagcdn.com/my.svg", name: "Bahasa Melayu" },
+  zh: { img: "https://flagcdn.com/cn.svg", name: "中文" },
+};
+const flagImg = code => `<img class="flag" src="${FLAGS[code].img}" alt="" width="24" height="18">`;
 const STORE_KEY = "mochii_lang";
 
 function detectLang() {
@@ -692,10 +700,9 @@ export function applyI18n(root = document) {
 export function langSwitchHTML() {
   const cur = LANGS.find(([c]) => c === lang) || LANGS[0];
   return `<div class="lang-dd">
-    <button type="button" class="lang-btn" aria-haspopup="true" aria-label="${t("lang.choose")}">🌐 ${cur[1]} <span class="caret">▾</span></button>
-    <div class="lang-menu hidden" role="menu">
+    <button type="button" class="lang-btn" aria-haspopup="true" aria-label="${t("lang.choose")}" title="${FLAGS[cur[0]].name}">${flagImg(cur[0])}</button>    <div class="lang-menu hidden" role="menu">
       ${LANGS.map(([code, label]) =>
-        `<button type="button" role="menuitem" data-setlang="${code}" class="${code === lang ? "active" : ""}">${label === "BM" ? "Bahasa Melayu" : label === "EN" ? "English" : label}</button>`).join("")}
+                `<button type="button" role="menuitem" data-setlang="${code}" class="${code === lang ? "active" : ""}">${flagImg(code)} ${FLAGS[code].name}</button>`).join("")}
     </div>
   </div>`;
 }
