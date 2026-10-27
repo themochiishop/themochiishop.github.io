@@ -1,23 +1,23 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>我的积分 · The Mochii Shop</title>
+  <title data-i18n-title="acc.pageTitle">My Points · The Mochii Shop</title>
   <link rel="stylesheet" href="css/member.css">
 </head>
 <body class="loading">
   <header id="topbar"></header>
 
   <main class="page">
-    <h1 id="hello">你好！</h1>
-    <p class="muted">积分在下单 14 天后转为可用，期间如退货将自动取消</p>
+    <h1 id="hello"></h1>
+    <p class="muted" data-i18n="acc.sub"></p>
     <p id="pageError" class="msg err hidden"></p>
 
     <!-- 尚未绑定时的提示 -->
     <div id="bindCallout" class="callout hidden">
-      <p>👋 你还没有绑定 Shopee / TikTok 账号。绑定后，过去和以后的订单都会自动累积积分！</p>
-      <a href="bind.html" class="btn btn-primary btn-inline">去绑定账号 ➔</a>
+      <p data-i18n="acc.bindCallout"></p>
+      <a href="bind.html" class="btn btn-primary btn-inline" data-i18n="acc.goBind"></a>
     </div>
 
     <!-- 会员等级 -->
@@ -32,21 +32,21 @@
       <div class="bar"><div id="tierBar" style="width:0%"></div></div>
       <div class="muted" style="font-size:.85rem" id="tierNext"></div>
       <details>
-        <summary>查看等级说明</summary>
+        <summary data-i18n="tier.explain"></summary>
         <table class="tier-table" id="tierTable"></table>
-        <p class="muted" style="font-size:.78rem;margin-top:8px">等级按最近 365 天的有效消费计算（退货不计），每小时更新。升级后，之后的新订单就享有新的积分加成。</p>
+        <p class="muted" style="font-size:.78rem;margin-top:8px" data-i18n="tier.note"></p>
       </details>
     </div>
 
     <!-- 积分摘要 -->
     <div class="stats">
       <div class="stat main">
-        <div class="label">可用积分</div>
+        <div class="label" data-i18n="acc.available"></div>
         <div class="value" id="spendable">-</div>
-        <div class="sub" id="reservedNote"><a href="rewards.html">去兑换奖品 ➔</a></div>
+        <div class="sub" id="reservedNote"><a href="rewards.html" data-i18n="acc.goRedeem"></a></div>
       </div>
       <div class="stat">
-        <div class="label">待确认积分</div>
+        <div class="label" data-i18n="acc.pending"></div>
         <div class="value" id="pending">-</div>
         <div class="sub" id="nextUnlock">&nbsp;</div>
       </div>
@@ -54,17 +54,17 @@
 
     <!-- 已绑定账号 -->
     <div class="card">
-      <h2>已绑定账号</h2>
-      <div id="bindings" class="chips"><span class="muted">载入中…</span></div>
+      <h2 data-i18n="acc.bound"></h2>
+      <div id="bindings" class="chips"><span class="muted" data-i18n="common.loading"></span></div>
     </div>
 
     <!-- 记录 -->
     <div class="tabs">
-      <button data-tab="ledger" class="active">积分记录</button>
-      <button data-tab="orders">订单记录</button>
+      <button data-tab="ledger" class="active" data-i18n="acc.tabLedger"></button>
+      <button data-tab="orders" data-i18n="acc.tabOrders"></button>
     </div>
     <div class="card">
-      <ul id="ledgerList" class="list"><li class="empty">载入中…</li></ul>
+      <ul id="ledgerList" class="list"><li class="empty" data-i18n="common.loading"></li></ul>
       <ul id="ordersList" class="list hidden"></ul>
     </div>
   </main>
@@ -74,7 +74,7 @@
     import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, toDate, fmtDate, fmtMoney, esc, platformTag,
-      TIERS, tierProgress
+      TIERS, tierProgress, tierLabel, t, translateReason
     } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
@@ -90,27 +90,26 @@
     });
 
     requireMember(async (user, member) => {
-      $("hello").textContent = `你好，${member.name || "会员"} 👋`;
+      $("hello").textContent = t("acc.hello", { name: member.name || t("acc.member") });
 
       // ---------- 会员等级 ----------
       const tp = tierProgress(member);
       $("tierCard").classList.add("tier-" + tp.tier.id);
       $("tierIcon").textContent = tp.tier.icon;
-      $("tierName").textContent = tp.tier.label;
-      $("tierPerk").textContent =
-        `购物积分 ×${tp.tier.multiplier} · 生日礼物 ${tp.tier.birthday} 分 · 近一年消费 ${fmtMoney(tp.spend)}`;
+      $("tierName").textContent = tierLabel(tp.tier);
+      $("tierPerk").textContent = t("tier.perk", { m: tp.tier.multiplier, b: tp.tier.birthday, s: fmtMoney(tp.spend) });
       $("tierBar").style.width = tp.pct + "%";
       $("tierNext").textContent = tp.next
-        ? `再消费 ${fmtMoney(tp.need)} 升级为 ${tp.next.icon} ${tp.next.label}（积分 ×${tp.next.multiplier}）`
-        : "🎉 你已经是最高等级！";
+        ? t("tier.next", { need: fmtMoney(tp.need), icon: tp.next.icon, label: tierLabel(tp.next), m: tp.next.multiplier })
+        : t("tier.max");
       $("tierTable").innerHTML = `
-        <tr><th>等级</th><th>近一年消费</th><th>积分加成</th><th>生日礼物</th></tr>
-        ${TIERS.map(t => `
-          <tr class="${t.id === tp.tier.id ? "current" : ""}">
-            <td>${t.icon} ${t.label}</td>
-            <td>${t.minSpend ? "RM " + t.minSpend + " 以上" : "注册即享"}</td>
-            <td>×${t.multiplier}</td>
-            <td>${t.birthday} 分</td>
+        <tr><th>${t("tier.colTier")}</th><th>${t("tier.colSpend")}</th><th>${t("tier.colMult")}</th><th>${t("tier.colBday")}</th></tr>
+        ${TIERS.map(x => `
+          <tr class="${x.id === tp.tier.id ? "current" : ""}">
+            <td>${x.icon} ${tierLabel(x)}</td>
+            <td>${x.minSpend ? t("tier.minSpend", { n: x.minSpend }) : t("tier.free")}</td>
+            <td>×${x.multiplier}</td>
+            <td>${t("unit.pts", { n: x.birthday })}</td>
           </tr>`).join("")}`;
 
       const mine = c => getDocs(query(collection(db, c), where("uid", "==", user.uid)));
@@ -120,7 +119,7 @@
           loadBalance(user.uid), mine("orders"), mine("bindings")
         ]);
       } catch (e) {
-        $("pageError").textContent = "载入失败：" + e.message;
+        $("pageError").textContent = t("common.loadFail") + e.message;
         $("pageError").classList.remove("hidden");
         return;
       }
@@ -132,15 +131,15 @@
       $("bindCallout").classList.toggle("hidden", bindings.length > 0);
       $("bindings").innerHTML = bindings.length
         ? bindings.map(b => `<span class="chip">${platformTag(b.platform)} ${esc(b.username)}</span>`).join("")
-        : `<span class="muted">尚未绑定</span>`;
+        : `<span class="muted">${t("acc.notBound")}</span>`;
 
       // ---------- 积分摘要 ----------
       $("spendable").textContent = bal.spendable.toLocaleString();
       if (bal.reserved > 0) {
-        $("reservedNote").innerHTML = `另有 ${bal.reserved} 分兑换审核中 · <a href="rewards.html">查看</a>`;
+        $("reservedNote").innerHTML = `${esc(t("acc.reserved", { n: bal.reserved }))} · <a href="rewards.html">${t("acc.view")}</a>`;
       }
       $("pending").textContent = bal.pending.toLocaleString();
-      $("nextUnlock").textContent = bal.nextUnlock ? `下一笔于 ${fmtDate(bal.nextUnlock)} 可用` : " ";
+      $("nextUnlock").textContent = bal.nextUnlock ? t("acc.nextUnlock", { d: fmtDate(bal.nextUnlock) }) : " ";
 
       // ---------- 积分记录 ----------
       $("ledgerList").innerHTML = bal.ledger.length ? bal.ledger.map(x => {
@@ -148,14 +147,14 @@
         return `
           <li>
             <div class="main">
-              <div class="title">${esc(x.reason)} ${isPending ? '<span class="tag tag-pending">待确认</span>' : ""}</div>
-              <div class="meta">${x.orderNo ? "单号 " + esc(x.orderNo) + " · " : ""}${fmtDate(x.createdAt)}</div>
+              <div class="title">${esc(translateReason(x.reason))} ${isPending ? `<span class="tag tag-pending">${t("tag.pending")}</span>` : ""}</div>
+              <div class="meta">${x.orderNo ? t("acc.orderNo") + " " + esc(x.orderNo) + " · " : ""}${fmtDate(x.createdAt)}</div>
             </div>
             <div class="right">
               <div class="pts ${x.delta >= 0 ? "plus" : "minus"}">${x.delta >= 0 ? "+" : ""}${x.delta}</div>
             </div>
           </li>`;
-      }).join("") : `<li class="empty">还没有积分记录</li>`;
+      }).join("") : `<li class="empty">${t("acc.noLedger")}</li>`;
 
       // ---------- 订单记录 ----------
       const orders = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }))
@@ -164,9 +163,9 @@
 
       $("ordersList").innerHTML = orders.length ? orders.map(o => {
         let state;
-        if (o.status === "refunded") state = '<span class="tag tag-bad">已退货</span>';
-        else if (o.availableAt && o.availableAt > now) state = '<span class="tag tag-pending">待确认</span>';
-        else state = '<span class="tag tag-ok">已入账</span>';
+        if (o.status === "refunded") state = `<span class="tag tag-bad">${t("tag.refunded")}</span>`;
+        else if (o.availableAt && o.availableAt > now) state = `<span class="tag tag-pending">${t("tag.pending")}</span>`;
+        else state = `<span class="tag tag-ok">${t("tag.credited")}</span>`;
         return `
           <li>
             <div class="main">
@@ -174,11 +173,11 @@
               <div class="meta">${esc(o.id)} · ${fmtDate(o.orderTime, true)}</div>
             </div>
             <div class="right">
-              <div class="pts">${o.points || 0} 分</div>
+              <div class="pts">${t("unit.pts", { n: o.points || 0 })}</div>
               ${state}
             </div>
           </li>`;
-      }).join("") : `<li class="empty">还没有订单记录</li>`;
+      }).join("") : `<li class="empty">${t("acc.noOrders")}</li>`;
     });
   </script>
 </body>

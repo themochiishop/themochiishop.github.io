@@ -4,6 +4,9 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 import {
   doc, getDoc, collection, query, where, getDocs
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { t, applyI18n, langSwitchHTML, bindLangSwitch } from "./i18n.js";
+
+export { t, applyI18n, translateReason, lang } from "./i18n.js";
 
 // ---------- 单号格式规则（必须和 Google 表格同步脚本的 MS_PLATFORMS 一致） ----------
 export const PLATFORMS = [
@@ -33,18 +36,22 @@ export function platformTag(p) {
   return `<span class="tag tag-${esc(p)}">${esc(platformLabel(p))}</span>`;
 }
 
-// ---------- 会员等级（必须和 Google 表格同步脚本的 MS_TIERS 一致） ----------
+// ---------- 会员等级（必须和 Google 表格同步脚本的 MS_TIERS 一致；名称在 i18n.js） ----------
 export const TIERS = [
-  { id: "mochii",  label: "Mochii 会员", icon: "🍡", minSpend: 0,    multiplier: 1,   birthday: 88  },
-  { id: "silver",  label: "银卡",        icon: "🥈", minSpend: 300,  multiplier: 1.2, birthday: 128 },
-  { id: "gold",    label: "金卡",        icon: "🥇", minSpend: 800,  multiplier: 1.5, birthday: 188 },
-  { id: "diamond", label: "钻石",        icon: "💎", minSpend: 2000, multiplier: 2,   birthday: 288 },
+  { id: "mochii",  icon: "🍡", minSpend: 0,    multiplier: 1,   birthday: 88  },
+  { id: "silver",  icon: "🥈", minSpend: 300,  multiplier: 1.2, birthday: 128 },
+  { id: "gold",    icon: "🥇", minSpend: 800,  multiplier: 1.5, birthday: 188 },
+  { id: "diamond", icon: "💎", minSpend: 2000, multiplier: 2,   birthday: 288 },
 ];
+
+export function tierLabel(tier) {
+  return t("tier." + tier.id);
+}
 
 // 目前等级、下一级、还差多少
 export function tierProgress(member) {
   const spend = Number(member.spend12m || 0);
-  const idx = Math.max(0, TIERS.findIndex(t => t.id === member.tier));
+  const idx = Math.max(0, TIERS.findIndex(x => x.id === member.tier));
   const tier = TIERS[idx];
   const next = TIERS[idx + 1] || null;
   const need = next ? Math.max(0, next.minSpend - spend) : 0;
@@ -80,20 +87,21 @@ export function fmtMoney(n) {
 
 export function authErrorText(e) {
   const map = {
-    "auth/invalid-credential": "电子邮件或密码不正确",
-    "auth/wrong-password": "电子邮件或密码不正确",
-    "auth/user-not-found": "找不到这个账号",
-    "auth/email-already-in-use": "这个电子邮件已经注册过，请直接登录",
-    "auth/weak-password": "密码至少要 6 个字",
-    "auth/invalid-email": "电子邮件格式不正确",
-    "auth/popup-closed-by-user": "登录视窗被关闭了，请再试一次",
-    "auth/popup-blocked": "浏览器挡住了登录视窗，请允许弹出视窗后再试",
-    "auth/cancelled-popup-request": "请再按一次登录",
-    "auth/too-many-requests": "尝试次数太多，请稍后再试",
-    "auth/network-request-failed": "网络连接失败，请检查网络",
-    "auth/unauthorized-domain": "这个网址还没加入 Firebase 授权网域",
+    "auth/invalid-credential": "auth.invalid",
+    "auth/wrong-password": "auth.invalid",
+    "auth/user-not-found": "auth.notFound",
+    "auth/email-already-in-use": "auth.inUse",
+    "auth/weak-password": "auth.weak",
+    "auth/invalid-email": "auth.badEmail",
+    "auth/popup-closed-by-user": "auth.popupClosed",
+    "auth/popup-blocked": "auth.popupBlocked",
+    "auth/cancelled-popup-request": "auth.cancelled",
+    "auth/too-many-requests": "auth.tooMany",
+    "auth/network-request-failed": "auth.network",
+    "auth/unauthorized-domain": "auth.domain",
   };
-  return map[e && e.code] || ("发生错误：" + (e && e.message ? e.message : e));
+  const key = map[e && e.code];
+  return key ? t(key) : t("common.error") + (e && e.message ? e.message : e);
 }
 
 // ---------- 积分余额 ----------
@@ -137,7 +145,7 @@ export function requireMember(onReady) {
     } catch (e) {
       console.error(e);
       const el = document.getElementById("pageError");
-      if (el) { el.textContent = "载入失败：" + e.message; el.classList.remove("hidden"); }
+      if (el) { el.textContent = t("common.loadFail") + e.message; el.classList.remove("hidden"); }
     }
   });
 }
@@ -146,13 +154,14 @@ export function logout() {
   signOut(auth).then(() => location.replace("index.html"));
 }
 
-// ---------- 顶部导航 ----------
+// ---------- 顶部导航（含语言切换），同时翻译页面文字 ----------
 export function renderNav(active) {
+  applyI18n();
   const links = [
-    ["account", "account.html", "我的积分"],
-    ["rewards", "rewards.html", "积分兑换"],
-    ["bind", "bind.html", "绑定账号"],
-    ["profile", "profile.html", "个人资料"],
+    ["account", "account.html", "nav.account"],
+    ["rewards", "rewards.html", "nav.rewards"],
+    ["bind", "bind.html", "nav.bind"],
+    ["profile", "profile.html", "nav.profile"],
   ];
   const el = document.getElementById("topbar");
   if (!el) return;
@@ -160,9 +169,13 @@ export function renderNav(active) {
   el.innerHTML = `
     <div class="topbar-inner">
       <a class="brand" href="https://www.themochiishop.com">The <span>Mochii</span> Shop</a>
+      ${langSwitchHTML()}
+    </div>
+    <div class="topbar-inner topbar-nav">
       <nav>
-        ${links.map(([k, href, text]) =>
-          `<a href="${href}" class="${k === active ? "active" : ""}">${text}</a>`).join("")}
+        ${links.map(([k, href, key]) =>
+          `<a href="${href}" class="${k === active ? "active" : ""}">${t(key)}</a>`).join("")}
       </nav>
     </div>`;
+  bindLangSwitch(el);
 }
