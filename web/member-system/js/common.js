@@ -56,12 +56,17 @@ export function isValidPhone(p) {
 
 // ---------- 会员等级（必须和 Google 表格同步脚本的 MS_TIERS 一致；名称在 i18n.js） ----------
 export const TIERS = [
-  { id: "mochii",  icon: "🍡", minSpend: 0,    multiplier: 1,   birthday: 88  },
-  { id: "silver",  icon: "🥈", minSpend: 300,  multiplier: 1.2, birthday: 128 },
+  { id: "mochii",  icon: "",   minSpend: 0,    multiplier: 1,   birthday: 88  },  // 图标用 member.jpg，见 tierIconHTML  { id: "silver",  icon: "🥈", minSpend: 300,  multiplier: 1.2, birthday: 128 },
   { id: "gold",    icon: "🥇", minSpend: 800,  multiplier: 1.5, birthday: 188 },
   { id: "diamond", icon: "💎", minSpend: 2000, multiplier: 2,   birthday: 288 },
 ];
 
+// 等级图标：Mochii 会员用会员俱乐部 logo，其他等级用 emoji
+export function tierIconHTML(tier) {
+  return tier.id === "mochii"
+    ? `<img class="tier-logo" src="img/member.jpg" alt="">`
+    : tier.icon;
+}
 export function tierLabel(tier) {
   return t("tier." + tier.id);
 }
