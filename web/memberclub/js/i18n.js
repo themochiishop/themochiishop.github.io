@@ -272,8 +272,7 @@ const DICT = {
 
        "idx.pageTitle": "Mochii Member Club · The Mochii Shop",
     "idx.title": "Mochii Member Club",
-    "idx.tagline": "Kumpul mata · Tebus ganjaran · Pulangan tunai
-",
+    "idx.tagline": "Kumpul mata · Tebus ganjaran · Pulangan tunai",
     "idx.google": "Log masuk dengan Google",
     "idx.or": "atau guna e-mel",
     "idx.email": "E-mel",
