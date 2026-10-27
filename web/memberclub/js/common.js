@@ -163,6 +163,12 @@ export function requireMember(onReady) {
     try {
       const snap = await getDoc(doc(db, "members", user.uid));
       if (!snap.exists()) { location.replace("index.html"); return; }
+            // 俱乐部维修中：非管理员送回首页
+      const club = await getDoc(doc(db, "settings", "club"));
+      if (!(club.exists() && club.data().open === true)) {
+        const adm = await getDoc(doc(db, "admins", user.uid)).catch(() => null);
+        if (!adm || !adm.exists()) { location.replace("index.html"); return; }
+      }
       document.body.classList.remove("loading");
       onReady(user, snap.data());
             initBell(user, snap.data());
