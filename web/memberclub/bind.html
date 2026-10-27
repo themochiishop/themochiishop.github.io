@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n-title="bind.pageTitle">Link Accounts · The Mochii Shop</title>
+  <link rel="stylesheet" href="css/member.css">
+</head>
+<body class="loading">
+  <header id="topbar"></header>
+
+  <main class="page">
+    <h1 data-i18n="bind.title"></h1>
+    <p class="muted" data-i18n="bind.sub"></p>
+    <p id="pageError" class="msg err hidden"></p>
+
+    <div class="card">
+      <h2 data-i18n="bind.new"></h2>
+      <form id="bindForm">
+        <label><span data-i18n="bind.orderLabel"></span>
+          <input id="orderNo" required autocomplete="off" data-i18n-ph="bind.orderPh">
+          <div id="platformHint" class="platform-hint muted"></div>
+        </label>
+        <label><span data-i18n="bind.userLabel"></span>
+          <input id="username" required autocomplete="off" data-i18n-ph="bind.userPh">
+          <small class="muted" data-i18n="bind.userHint"></small>
+        </label>
+        <button type="submit" class="btn btn-primary" id="bindSubmit" data-i18n="bind.submit"></button>
+      </form>
+      <p id="bindMsg" class="msg"></p>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="acc.bound"></h2>
+      <ul id="bindList" class="list"><li class="empty" data-i18n="common.loading"></li></ul>
+    </div>
+
+    <div class="card">
+      <h2 data-i18n="bind.faq"></h2>
+      <ul class="list">
+        <li><div class="main"><div class="title" data-i18n="bind.q1"></div><div class="meta" data-i18n="bind.a1"></div></div></li>
+        <li><div class="main"><div class="title" data-i18n="bind.q2"></div><div class="meta" data-i18n="bind.a2"></div></div></li>
+        <li><div class="main"><div class="title" data-i18n="bind.q3"></div><div class="meta" data-i18n="bind.a3"></div></div></li>
+        <li><div class="main"><div class="title" data-i18n="bind.q4"></div><div class="meta" data-i18n="bind.a4"></div></div></li>
+      </ul>
+    </div>
+  </main>
+
+  <script type="module">
+    import { db } from "./js/firebase-config.js";
+    import {
+      collection, query, where, getDocs, doc, setDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import {
+      requireMember, renderNav, esc, toDate, fmtDate, platformTag, platformLabel,
+      detectPlatform, normalizeOrderNo, normalizeUsername, t
+    } from "./js/common.js";
+
+    const $ = id => document.getElementById(id);
+    renderNav("bind");
+
+    function setMsg(text, type) {
+      $("bindMsg").textContent = text;
+      $("bindMsg").className = "msg" + (type ? " " + type : "");
+    }
+
+    // 输入单号时自动判断平台
+    $("orderNo").addEventListener("input", () => {
+      const no = normalizeOrderNo($("orderNo").value);
+      const p = detectPlatform(no);
+      $("platformHint").innerHTML = !no ? "" :
+        p ? t("bind.detected", { tag: platformTag(p) }) : esc(t("bind.badFormat"));
+    });
+
+    requireMember(async user => {
+      async function loadBindings() {
+        const snap = await getDocs(query(collection(db, "bindings"), where("uid", "==", user.uid)));
+        const rows = snap.docs.map(d => d.data())
+          .sort((a, b) => (toDate(a.createdAt) || 0) - (toDate(b.createdAt) || 0));
+        $("bindList").innerHTML = rows.length ? rows.map(b => `
+          <li>
+            <div class="main">
+              <div class="title">${platformTag(b.platform)} ${esc(b.username)}</div>
+              <div class="meta">${t("bind.linkedOn", { d: fmtDate(toDate(b.createdAt)) })}</div>
+            </div>
+            <div class="right"><span class="tag tag-ok">${t("bind.verified")}</span></div>
+          </li>`).join("") : `<li class="empty">${t("bind.none")}</li>`;
+      }
+
+      try { await loadBindings(); }
+      catch (e) { $("bindList").innerHTML = `<li class="empty">${esc(t("common.loadFail") + e.message)}</li>`; }
+
+      $("bindForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const orderNo = normalizeOrderNo($("orderNo").value);
+        const username = normalizeUsername($("username").value);
+        const platform = detectPlatform(orderNo);
+
+        if (!platform) { setMsg(t("bind.badFormat"), "err"); return; }
+        if (!username) { setMsg(t("bind.needUser"), "err"); return; }
+        if (username.includes("/")) { setMsg(t("bind.badUser"), "err"); return; }
+
+        $("bindSubmit").disabled = true;
+        setMsg(t("bind.verifying"));
+        try {
+          await setDoc(doc(db, "bindings", platform + "_" + username), {
+            uid: user.uid,
+            platform,
+            username,
+            verifyOrder: orderNo,
+            createdAt: serverTimestamp()
+          });
+          setMsg(t("bind.success", { platform: platformLabel(platform), user: username }), "ok");
+          $("bindForm").reset();
+          $("platformHint").textContent = "";
+          await loadBindings();
+        } catch (err) {
+          if (err.code === "permission-denied") setMsg(t("bind.denied"), "err");
+          else setMsg(t("bind.fail") + err.message, "err");
+        } finally {
+          $("bindSubmit").disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
