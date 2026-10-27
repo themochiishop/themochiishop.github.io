@@ -223,7 +223,10 @@ label.check input { margin-top: 3px; accent-color: var(--accent); flex-shrink: 0
 .tier-table th { color: var(--muted); font-weight: 600; }
 .tier-table tr.current td { color: var(--accent); font-weight: 700; }
 details summary { cursor: pointer; color: var(--muted); font-size: .85rem; }
-
+.reward-img {
+  width: 100%; aspect-ratio: 1 / 1; object-fit: cover;
+  border-radius: 10px; margin-bottom: 6px; background: var(--bg);
+}
 @media (max-width: 480px) {
   .stat .value { font-size: 1.6rem; }
   .topbar nav a { padding: 6px 8px; font-size: .84rem; }
