@@ -53,9 +53,17 @@
         <label><span data-i18n="idx.name"></span>
           <input id="name" required maxlength="40" data-i18n-ph="idx.namePh">
         </label>
+        <label><span data-i18n="idx.phone"></span>
+          <input type="tel" id="phone" required inputmode="tel" autocomplete="tel" data-i18n-ph="idx.phonePh">
+          <small class="muted" data-i18n="idx.phoneHint"></small>
+        </label>
         <label><span data-i18n="idx.birthday"></span>
           <input type="date" id="birthday">
           <small data-i18n="idx.bdayWarn"></small>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="waOptIn">
+          <span data-i18n="idx.waOptIn"></span>
         </label>
         <label class="check">
           <input type="checkbox" id="consent" required>
@@ -78,7 +86,7 @@
       sendPasswordResetEmail, onAuthStateChanged, signOut
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
     import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-    import { authErrorText } from "./js/common.js";
+    import { authErrorText, normalizePhone, isValidPhone } from "./js/common.js";
     import { t, applyI18n, langSwitchHTML, bindLangSwitch } from "./js/i18n.js";
 
     const $ = id => document.getElementById(id);
@@ -166,10 +174,14 @@
       if (!user) return;
       const name = $("name").value.trim();
       const birthday = $("birthday").value; // YYYY-MM-DD 或空白
+      const phone = normalizePhone($("phone").value);
 
+      if (!isValidPhone(phone)) { setMsg($("setupMsg"), t("idx.phoneBad"), "err"); $("phone").focus(); return; }
       if (birthday && !confirm(t("idx.bdayConfirm", { b: birthday }))) return;
 
-      const data = { name, email: user.email || "", createdAt: serverTimestamp() };
+      const data = {
+        name, email: user.email || "", phone, waOptIn: $("waOptIn").checked, createdAt: serverTimestamp()
+      };
       if (birthday) data.birthday = birthday;
 
       $("setupSubmit").disabled = true;

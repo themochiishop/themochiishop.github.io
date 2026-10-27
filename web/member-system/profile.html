@@ -23,6 +23,14 @@
         <label><span data-i18n="idx.name"></span>
           <input id="name" required maxlength="40">
         </label>
+        <label><span data-i18n="idx.phone"></span>
+          <input type="tel" id="phone" required inputmode="tel" autocomplete="tel" data-i18n-ph="idx.phonePh">
+          <small class="muted" data-i18n="idx.phoneHint"></small>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="waOptIn">
+          <span data-i18n="idx.waOptIn"></span>
+        </label>
         <button type="submit" class="btn btn-primary" id="nameSubmit" data-i18n="prof.save"></button>
       </form>
       <p id="nameMsg" class="msg"></p>
@@ -53,7 +61,7 @@
   <script type="module">
     import { db } from "./js/firebase-config.js";
     import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-    import { requireMember, renderNav, logout, t } from "./js/common.js";
+    import { requireMember, renderNav, logout, t, normalizePhone, isValidPhone } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
     renderNav("profile");
@@ -80,13 +88,21 @@
       const ref = doc(db, "members", user.uid);
       $("email").value = member.email || user.email || "";
       $("name").value = member.name || "";
+      $("phone").value = member.phone || "";
+      $("waOptIn").checked = !!member.waOptIn;
       showBirthday(member.birthday);
+
+      // 从「补充手机号码」提示点进来时，直接聚焦手机栏
+      if (location.hash === "#phone") setTimeout(() => $("phone").focus(), 300);
 
       $("nameForm").addEventListener("submit", async e => {
         e.preventDefault();
+        const phone = normalizePhone($("phone").value);
+        if (!isValidPhone(phone)) { setMsg($("nameMsg"), t("idx.phoneBad"), "err"); $("phone").focus(); return; }
         $("nameSubmit").disabled = true;
         try {
-          await updateDoc(ref, { name: $("name").value.trim() });
+          await updateDoc(ref, { name: $("name").value.trim(), phone, waOptIn: $("waOptIn").checked });
+          $("phone").value = phone;
           setMsg($("nameMsg"), t("prof.saved"), "ok");
         } catch (err) {
           setMsg($("nameMsg"), t("idx.saveFail") + err.message, "err");

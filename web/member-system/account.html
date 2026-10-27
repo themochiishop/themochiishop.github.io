@@ -14,6 +14,12 @@
     <p class="muted" data-i18n="acc.sub"></p>
     <p id="pageError" class="msg err hidden"></p>
 
+    <!-- 还没填手机号码的提示（早期注册的会员） -->
+    <div id="phoneCallout" class="callout hidden">
+      <p data-i18n="acc.phoneCallout"></p>
+      <a href="profile.html#phone" class="btn btn-primary btn-inline" data-i18n="acc.addPhone"></a>
+    </div>
+
     <!-- 尚未绑定时的提示 -->
     <div id="bindCallout" class="callout hidden">
       <p data-i18n="acc.bindCallout"></p>
@@ -91,6 +97,7 @@
 
     requireMember(async (user, member) => {
       $("hello").textContent = t("acc.hello", { name: member.name || t("acc.member") });
+      $("phoneCallout").classList.toggle("hidden", !!member.phone);
 
       // ---------- 会员等级 ----------
       const tp = tierProgress(member);

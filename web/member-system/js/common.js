@@ -36,6 +36,23 @@ export function platformTag(p) {
   return `<span class="tag tag-${esc(p)}">${esc(platformLabel(p))}</span>`;
 }
 
+// ---------- 手机号码：统一存成国际格式 +60123456789 ----------
+export function normalizePhone(s) {
+  let d = String(s || "").trim();
+  if (d.startsWith("+")) return "+" + d.slice(1).replace(/\D/g, "");
+  d = d.replace(/\D/g, "");
+  if (!d) return "";
+  if (d.startsWith("60")) return "+" + d;     // 60123456789
+  if (d.startsWith("0")) return "+60" + d.slice(1); // 0123456789
+  if (d.startsWith("1")) return "+60" + d;    // 123456789
+  return "+" + d;
+}
+
+export function isValidPhone(p) {
+  if (p.startsWith("+60")) return /^\+601\d{8,9}$/.test(p); // 马来西亚手机
+  return /^\+[1-9]\d{7,14}$/.test(p);                        // 其他国家
+}
+
 // ---------- 会员等级（必须和 Google 表格同步脚本的 MS_TIERS 一致；名称在 i18n.js） ----------
 export const TIERS = [
   { id: "mochii",  icon: "🍡", minSpend: 0,    multiplier: 1,   birthday: 88  },
