@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>会员中心 · The Mochii Shop</title>
+  <link rel="stylesheet" href="css/member.css">
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="brand-hero">
+      <div class="logo">🍡</div>
+      <h1>Mochii 会员中心</h1>
+      <p>累积积分 · 兑换奖品 · 生日礼物</p>
+    </div>
+
+    <!-- 载入中 -->
+    <div id="loading" class="card center muted">载入中…</div>
+
+    <!-- 登录 / 注册 -->
+    <div id="loginBox" class="card hidden">
+      <button id="googleBtn" class="btn btn-google" type="button">
+        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.8c4.3-4 6.9-9.9 6.9-17.2z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.8c-2.1 1.4-4.8 2.3-8.5 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>
+        使用 Google 登录
+      </button>
+
+      <div class="divider">或使用电子邮件</div>
+
+      <form id="emailForm">
+        <label>电子邮件
+          <input type="email" id="email" required autocomplete="email">
+        </label>
+        <label>密码
+          <input type="password" id="password" required minlength="6" autocomplete="current-password">
+        </label>
+        <button type="submit" class="btn btn-primary" id="emailSubmit">登录</button>
+      </form>
+
+      <div class="row-links">
+        <a href="#" id="toggleMode">还没有账号？注册</a>
+        <a href="#" id="forgot">忘记密码</a>
+      </div>
+      <p id="loginMsg" class="msg"></p>
+    </div>
+
+    <!-- 首次登录：填写会员资料 -->
+    <div id="setupBox" class="card hidden">
+      <h2>完成会员资料</h2>
+      <p class="muted" style="margin-bottom:16px">只需要填写一次</p>
+      <form id="setupForm">
+        <label>称呼
+          <input id="name" required maxlength="40" placeholder="我们该怎么称呼你？">
+        </label>
+        <label>生日（选填）
+          <input type="date" id="birthday">
+          <small>⚠️ 生日设定后不能修改，用于发放生日礼物</small>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="consent" required>
+          <span>我同意 The Mochii Shop 收集及使用我的个人资料（称呼、电子邮件、生日、购物记录），用于会员积分、奖励发放及相关通知，并依据马来西亚《2010 年个人资料保护法令》(PDPA) 妥善保管。</span>
+        </label>
+        <button class="btn btn-primary" type="submit" id="setupSubmit">成为会员 🎉</button>
+      </form>
+      <a href="#" id="setupLogout" class="small-link">使用其他账号登录</a>
+      <p id="setupMsg" class="msg"></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./js/firebase-config.js";
+    import {
+      GoogleAuthProvider, signInWithPopup,
+      signInWithEmailAndPassword, createUserWithEmailAndPassword,
+      sendPasswordResetEmail, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import { authErrorText } from "./js/common.js";
+
+    const $ = id => document.getElementById(id);
+    let registerMode = false;
+
+    function show(id) {
+      ["loading", "loginBox", "setupBox"].forEach(x => $(x).classList.toggle("hidden", x !== id));
+    }
+    function setMsg(el, text, type) {
+      el.textContent = text;
+      el.className = "msg" + (type ? " " + type : "");
+    }
+
+    // ---------- 登录状态 ----------
+    onAuthStateChanged(auth, async user => {
+      if (!user) { show("loginBox"); return; }
+      show("loading");
+      try {
+        const snap = await getDoc(doc(db, "members", user.uid));
+        if (snap.exists()) { location.replace("account.html"); return; }
+        $("name").value = user.displayName || "";
+        show("setupBox");
+      } catch (e) {
+        show("loginBox");
+        setMsg($("loginMsg"), "载入失败：" + e.message, "err");
+      }
+    });
+
+    // ---------- Google 登录 ----------
+    $("googleBtn").addEventListener("click", async () => {
+      setMsg($("loginMsg"), "");
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch (e) {
+        setMsg($("loginMsg"), authErrorText(e), "err");
+      }
+    });
+
+    // ---------- 电子邮件登录 / 注册 ----------
+    $("emailForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const email = $("email").value.trim();
+      const pw = $("password").value;
+      $("emailSubmit").disabled = true;
+      setMsg($("loginMsg"), "");
+      try {
+        if (registerMode) await createUserWithEmailAndPassword(auth, email, pw);
+        else await signInWithEmailAndPassword(auth, email, pw);
+      } catch (err) {
+        setMsg($("loginMsg"), authErrorText(err), "err");
+      } finally {
+        $("emailSubmit").disabled = false;
+      }
+    });
+
+    $("toggleMode").addEventListener("click", e => {
+      e.preventDefault();
+      registerMode = !registerMode;
+      $("emailSubmit").textContent = registerMode ? "注册" : "登录";
+      $("toggleMode").textContent = registerMode ? "已经有账号？登录" : "还没有账号？注册";
+      $("password").autocomplete = registerMode ? "new-password" : "current-password";
+      setMsg($("loginMsg"), registerMode ? "密码至少 6 个字" : "");
+    });
+
+    $("forgot").addEventListener("click", async e => {
+      e.preventDefault();
+      const email = $("email").value.trim();
+      if (!email) { setMsg($("loginMsg"), "请先在上面填写你的电子邮件", "err"); return; }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        setMsg($("loginMsg"), "重设密码的邮件已寄出，请检查信箱（包括垃圾邮件）", "ok");
+      } catch (err) {
+        setMsg($("loginMsg"), authErrorText(err), "err");
+      }
+    });
+
+    // ---------- 完成会员资料 ----------
+    $("setupForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const user = auth.currentUser;
+      if (!user) return;
+      const name = $("name").value.trim();
+      const birthday = $("birthday").value; // YYYY-MM-DD 或空白
+
+      if (birthday && !confirm(`生日设为 ${birthday}，设定后不能修改，确定吗？`)) return;
+
+      const data = { name, email: user.email || "", createdAt: serverTimestamp() };
+      if (birthday) data.birthday = birthday;
+
+      $("setupSubmit").disabled = true;
+      try {
+        await setDoc(doc(db, "members", user.uid), data);
+        location.replace("account.html");
+      } catch (err) {
+        setMsg($("setupMsg"), "保存失败：" + err.message, "err");
+        $("setupSubmit").disabled = false;
+      }
+    });
+
+    $("setupLogout").addEventListener("click", e => {
+      e.preventDefault();
+      signOut(auth);
+    });
+  </script>
+</body>
+</html>
