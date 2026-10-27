@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>绑定账号 · The Mochii Shop</title>
+  <link rel="stylesheet" href="css/member.css">
+</head>
+<body class="loading">
+  <header id="topbar"></header>
+
+  <main class="page">
+    <h1>绑定购物账号</h1>
+    <p class="muted">绑定 Shopee / TikTok 账号后，订单会自动累积积分</p>
+    <p id="pageError" class="msg err hidden"></p>
+
+    <div class="card">
+      <h2>新增绑定</h2>
+      <form id="bindForm">
+        <label>任意一张你在本店的订单编号
+          <input id="orderNo" required autocomplete="off" placeholder="例如 586805949034497373 或 261023BAYRAYEB">
+          <div id="platformHint" class="platform-hint muted"></div>
+        </label>
+        <label>这张订单的买家用户名
+          <input id="username" required autocomplete="off" placeholder="Shopee / TikTok 用户名，不是昵称">
+          <small class="muted">在 Shopee「我」页面，或 TikTok 个人页 @ 后面的名称</small>
+        </label>
+        <button type="submit" class="btn btn-primary" id="bindSubmit">验证并绑定</button>
+      </form>
+      <p id="bindMsg" class="msg"></p>
+    </div>
+
+    <div class="card">
+      <h2>已绑定账号</h2>
+      <ul id="bindList" class="list"><li class="empty">载入中…</li></ul>
+    </div>
+
+    <div class="card">
+      <h2>常见问题</h2>
+      <ul class="list">
+        <li><div class="main"><div class="title">为什么要填订单编号？</div><div class="meta">用来确认这个账号真的是你的，防止别人冒用你的用户名领积分。</div></div></li>
+        <li><div class="main"><div class="title">刚下单马上绑定失败？</div><div class="meta">新订单需要 1–2 天录入系统，请用较早的订单验证，或稍后再试。</div></div></li>
+        <li><div class="main"><div class="title">可以绑定多个账号吗？</div><div class="meta">可以，Shopee 和 TikTok 都可以绑定，积分会合并计算。</div></div></li>
+        <li><div class="main"><div class="title">显示账号已被绑定？</div><div class="meta">一个用户名只能绑定一位会员。如果不是你绑定的，请联系我们处理。</div></div></li>
+      </ul>
+    </div>
+  </main>
+
+  <script type="module">
+    import { db } from "./js/firebase-config.js";
+    import {
+      collection, query, where, getDocs, doc, setDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import {
+      requireMember, renderNav, esc, toDate, fmtDate, platformTag, platformLabel,
+      detectPlatform, normalizeOrderNo, normalizeUsername
+    } from "./js/common.js";
+
+    const $ = id => document.getElementById(id);
+    renderNav("bind");
+
+    function setMsg(text, type) {
+      $("bindMsg").textContent = text;
+      $("bindMsg").className = "msg" + (type ? " " + type : "");
+    }
+
+    // 输入单号时自动判断平台
+    $("orderNo").addEventListener("input", () => {
+      const no = normalizeOrderNo($("orderNo").value);
+      const p = detectPlatform(no);
+      $("platformHint").innerHTML = !no ? "" :
+        p ? `✅ 识别为 ${platformTag(p)} 订单` : "⚠️ 单号格式不正确，请检查是否完整";
+    });
+
+    requireMember(async user => {
+      async function loadBindings() {
+        const snap = await getDocs(query(collection(db, "bindings"), where("uid", "==", user.uid)));
+        const rows = snap.docs.map(d => d.data())
+          .sort((a, b) => (toDate(a.createdAt) || 0) - (toDate(b.createdAt) || 0));
+        $("bindList").innerHTML = rows.length ? rows.map(b => `
+          <li>
+            <div class="main">
+              <div class="title">${platformTag(b.platform)} ${esc(b.username)}</div>
+              <div class="meta">绑定于 ${fmtDate(toDate(b.createdAt))}</div>
+            </div>
+            <div class="right"><span class="tag tag-ok">已验证</span></div>
+          </li>`).join("") : `<li class="empty">还没有绑定任何账号</li>`;
+      }
+
+      try { await loadBindings(); }
+      catch (e) { $("bindList").innerHTML = `<li class="empty">载入失败：${esc(e.message)}</li>`; }
+
+      $("bindForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const orderNo = normalizeOrderNo($("orderNo").value);
+        const username = normalizeUsername($("username").value);
+        const platform = detectPlatform(orderNo);
+
+        if (!platform) { setMsg("单号格式不正确，请检查是否完整", "err"); return; }
+        if (!username) { setMsg("请填写用户名", "err"); return; }
+        if (username.includes("/")) { setMsg("用户名格式不正确", "err"); return; }
+
+        $("bindSubmit").disabled = true;
+        setMsg("验证中…");
+        try {
+          await setDoc(doc(db, "bindings", platform + "_" + username), {
+            uid: user.uid,
+            platform,
+            username,
+            verifyOrder: orderNo,
+            createdAt: serverTimestamp()
+          });
+          setMsg(`🎉 绑定成功！${platformLabel(platform)} 账号「${username}」的订单积分会在 1 小时内入账。`, "ok");
+          $("bindForm").reset();
+          $("platformHint").textContent = "";
+          await loadBindings();
+        } catch (err) {
+          if (err.code === "permission-denied") {
+            setMsg("绑定失败：订单编号与用户名不符、这张订单还没录入系统，或这个账号已被其他会员绑定。请检查后再试，如有疑问请联系我们。", "err");
+          } else {
+            setMsg("绑定失败：" + err.message, "err");
+          }
+        } finally {
+          $("bindSubmit").disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
