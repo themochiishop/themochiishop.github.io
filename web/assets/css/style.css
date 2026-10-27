@@ -600,3 +600,6 @@ footer strong { font-weight: 400; }
 @media (max-width: 760px) { .sp-text { font-size: .92rem; } .sp-title { font-size: 1.15rem; } .sp-card { padding: 28px 20px 20px; } }.sp-btn { display: inline-block; background: var(--pink); color: #fff; font-weight: 700; padding: 12px 30px; border-radius: 10px; text-decoration: none; }
 .sp-btn:hover { filter: brightness(1.08); }
 @keyframes spFade { from { opacity: 0; } to { opacity: 1; } }
+/* ===== 页脚 Privacy Policy:与版权文字同色 ===== */
+footer .legal a { color: inherit; }
+footer .legal a:hover { color: #fff; text-decoration: underline; }
