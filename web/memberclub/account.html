@@ -69,7 +69,10 @@
 
     <!-- 已绑定账号 -->
     <div class="card">
-      <h2 data-i18n="acc.bound"></h2>
+      <div class="card-head">
+        <h2 data-i18n="acc.bound"></h2>
+        <a href="bind.html" class="small" id="boundMore"></a>
+      </div>
       <div id="bindings" class="chips"><span class="muted" data-i18n="common.loading"></span></div>
     </div>
 
@@ -144,6 +147,7 @@
       // ---------- 已绑定账号 ----------
       const bindings = bindSnap.docs.map(d => d.data());
       $("bindCallout").classList.toggle("hidden", bindings.length > 0);
+      $("boundMore").textContent = bindings.length ? t("acc.boundMore", { n: bindings.length }) : "";
       $("bindings").innerHTML = bindings.length
         ? bindings.map(b => `<span class="chip">${platformTag(b.platform)} ${esc(b.username)}</span>`).join("")
         : `<span class="muted">${t("acc.notBound")}</span>`;

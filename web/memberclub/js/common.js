@@ -82,6 +82,30 @@ export function tierProgress(member) {
   return { tier, next, spend, need, pct: Math.max(0, pct) };
 }
 
+// ---------- 绑定账号：每个账号的订单统计 ----------
+// 回传 { "shopee_alai": { orders, spend, points, last } }；退货的订单不算
+export function accountStats(orders) {
+  const out = {};
+  orders.forEach(o => {
+    if (!o.platform || !o.username) return;
+    const k = o.platform + "_" + o.username;
+    const a = out[k] = out[k] || { orders: 0, spend: 0, points: 0, last: null };
+    if (o.status === "refunded") return;
+    a.orders++;
+    a.spend += Number(o.amount || 0);
+    a.points += Number(o.points || 0);
+    const at = toDate(o.orderTime);
+    if (at && (!a.last || at > a.last)) a.last = at;
+  });
+  return out;
+}
+
+// 单号只显示最后 4 码
+export function maskOrderNo(no) {
+  const s = String(no || "");
+  return s.length > 4 ? "••••" + s.slice(-4) : s;
+}
+
 // ---------- 工具 ----------
 export function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({
@@ -375,7 +399,7 @@ export function renderNav(active) {
 }
 
 // ---------- 🔔 通知铃铛：积分进账、积分可用、兑换批准/拒绝 ----------
-const bell = { ledger: [], redemptions: [], announcements: [], seenAt: null, highlightSince: null };
+const bell = { ledger: [], redemptions: [], announcements: [], bindLogs: [], seenAt: null, highlightSince: null };
 const ANNOUNCE_DAYS = 60; // 公告在铃铛里显示多少天
 
 function buildEvents() {
@@ -418,6 +442,14 @@ function buildEvents() {
       detail: t("notif.expiringDetail"),
       link: "shop.html",
     });
+  });
+  // 🔗 客服代为绑定 / 解除绑定
+  bell.bindLogs.forEach(l => {
+    const at = toDate(l.at);
+    if (!at) return;
+    const v = { platform: platformLabel(l.platform), user: l.username };
+    if (l.action === "bind") ev.push({ time: at, icon: "🔗", title: t("notif.linkedByAdmin", v), detail: "", link: "bind.html" });
+    if (l.action === "unbind") ev.push({ time: at, icon: "✂️", title: t("notif.unlinked", v), detail: t("notif.unlinkedDetail"), link: "bind.html" });
   });
   // 📢 管理员公告（有当前语言的版本就用那个）
   bell.announcements.forEach(a => {
@@ -477,6 +509,8 @@ export function initBell(user, member) {
   const mine = c => query(collection(db, c), where("uid", "==", user.uid));
   onSnapshot(mine("pointsLedger"), s => { bell.ledger = s.docs.map(d => d.data()); renderBell(); });
   onSnapshot(mine("redemptions"), s => { bell.redemptions = s.docs.map(d => ({ id: d.id, ...d.data() })); renderBell(); });
+  onSnapshot(mine("bindingLogs"), s => { bell.bindLogs = s.docs.map(d => d.data()); renderBell(); },
+    err => console.warn("bindingLogs", err));
   const since = new Date(Date.now() - ANNOUNCE_DAYS * 86400000);
   onSnapshot(
     query(collection(db, "announcements"), where("createdAt", ">=", since), orderBy("createdAt", "desc"), limit(20)),

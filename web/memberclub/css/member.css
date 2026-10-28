@@ -408,3 +408,12 @@ details summary { cursor: pointer; color: var(--muted); font-size: .85rem; }
   transition: opacity .25s, transform .25s;
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- 🔗 绑定账号明细 ---------- */
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.card-head h2 { margin-bottom: 12px; }
+.card-head .small { font-size: .82rem; font-weight: 700; white-space: nowrap; }
+.bind-summary { font-size: .85rem; margin: -6px 0 6px; }
+.acct-stats { font-size: .8rem; color: var(--text); opacity: .85; margin-top: 3px; }
+.removed-title { font-size: .9rem; color: var(--muted); margin: 16px 0 4px; }
+.acct-list.removed .title { opacity: .6; }

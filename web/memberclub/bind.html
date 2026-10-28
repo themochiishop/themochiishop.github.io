@@ -32,7 +32,12 @@
 
     <div class="card">
       <h2 data-i18n="acc.bound"></h2>
-      <ul id="bindList" class="list"><li class="empty" data-i18n="common.loading"></li></ul>
+      <p class="muted bind-summary" id="bindSummary"></p>
+      <ul id="bindList" class="list acct-list"><li class="empty" data-i18n="common.loading"></li></ul>
+      <div id="removedBox" class="hidden">
+        <h3 class="removed-title" data-i18n="bind.removedTitle"></h3>
+        <ul id="removedList" class="list acct-list removed"></ul>
+      </div>
     </div>
 
     <div class="card">
@@ -53,7 +58,8 @@
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, esc, toDate, fmtDate, platformTag, platformLabel,
-      detectPlatform, normalizeOrderNo, normalizeUsername, t, claimBonuses, toastBonuses
+      detectPlatform, normalizeOrderNo, normalizeUsername, t, claimBonuses, toastBonuses,
+      accountStats, maskOrderNo, fmtMoney
     } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
@@ -74,17 +80,53 @@
 
     requireMember(async user => {
       async function loadBindings() {
-        const snap = await getDocs(query(collection(db, "bindings"), where("uid", "==", user.uid)));
-        const rows = snap.docs.map(d => d.data())
+        const mine = c => getDocs(query(collection(db, c), where("uid", "==", user.uid)));
+        const [bSnap, oSnap, logs] = await Promise.all([
+          mine("bindings"), mine("orders"),
+          mine("bindingLogs").then(s => s.docs.map(d => d.data())).catch(() => [])
+        ]);
+        const rows = bSnap.docs.map(d => ({ id: d.id, ...d.data() }))
           .sort((a, b) => (toDate(a.createdAt) || 0) - (toDate(b.createdAt) || 0));
-        $("bindList").innerHTML = rows.length ? rows.map(b => `
+        const stats = accountStats(oSnap.docs.map(d => d.data()));
+        const empty = { orders: 0, spend: 0, points: 0, last: null };
+
+        const tot = rows.reduce((s, b) => {
+          const st = stats[b.id] || empty;
+          return { o: s.o + st.orders, p: s.p + st.points };
+        }, { o: 0, p: 0 });
+        $("bindSummary").textContent = rows.length
+          ? t("bind.summary", { n: rows.length, o: tot.o, p: tot.p.toLocaleString() }) : "";
+
+        $("bindList").innerHTML = rows.length ? rows.map(b => {
+          const st = stats[b.id] || empty;
+          const how = b.verifyOrder === "admin" ? t("bind.viaAdmin") : t("bind.viaOrder", { no: maskOrderNo(b.verifyOrder) });
+          return `
           <li>
             <div class="main">
               <div class="title">${platformTag(b.platform)} ${esc(b.username)}</div>
-              <div class="meta">${t("bind.linkedOn", { d: fmtDate(toDate(b.createdAt)) })}</div>
+              <div class="meta">${t("bind.linkedOn", { d: fmtDate(toDate(b.createdAt), true) })} · ${esc(how)}</div>
+              <div class="acct-stats">${st.orders
+                ? esc(t("bind.stats", { o: st.orders, s: fmtMoney(st.spend), p: st.points.toLocaleString() }))
+                  + (st.last ? " · " + esc(t("bind.lastOrder", { d: fmtDate(st.last) })) : "")
+                : esc(t("bind.noOrders"))}</div>
             </div>
             <div class="right"><span class="tag tag-ok">${t("bind.verified")}</span></div>
-          </li>`).join("") : `<li class="empty">${t("bind.none")}</li>`;
+          </li>`;
+        }).join("") : `<li class="empty">${t("bind.none")}</li>`;
+
+        // 已解除的账号（客服解除时留下的记录）
+        const active = new Set(rows.map(b => b.id));
+        const removed = logs.filter(l => l.action === "unbind" && !active.has(l.bindingId))
+          .sort((a, b) => (toDate(b.at) || 0) - (toDate(a.at) || 0));
+        $("removedBox").classList.toggle("hidden", !removed.length);
+        $("removedList").innerHTML = removed.map(l => `
+          <li>
+            <div class="main">
+              <div class="title">${platformTag(l.platform)} ${esc(l.username)}</div>
+              <div class="meta">${t("bind.linkedOn", { d: fmtDate(toDate(l.boundAt)) })} · ${t("bind.removedOn", { d: fmtDate(toDate(l.at)) })}</div>
+            </div>
+            <div class="right"><span class="tag tag-bad">${t("bind.removed")}</span></div>
+          </li>`).join("");
       }
 
       try { await loadBindings(); }
