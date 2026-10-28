@@ -827,7 +827,7 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
   function validateDraws() {
     for (const d of draws) {
       if (!(d.month || '').trim()) return '每月抽奖:有一期没有填写期数 / 月份';
-            if ((d.items || []).some(x => x.i && !x.n.trim())) return '每月抽奖:有奖品只有缩略图、没有名称(' + d.month + ')';      if ((d.items || []).some(x => x.i && !x.n.trim())) return '每月抽奖:有奖品只有缩略图、没有名称(' + d.month + ')';
+                  if ((d.items || []).some(x => x.i && !x.n.trim())) return '每月抽奖:有奖品只有缩略图、没有名称(' + d.month + ')';
     }
     const names = draws.map(d => d.month.trim().toLowerCase());
     if (new Set(names).size !== names.length) return '每月抽奖:有两期的名称重复了';
@@ -1135,7 +1135,7 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
             await set(ref(db, 'homepage/figuresBanner'), banner || null);
       const abOut = {}; if (about.story) abOut.story = about.story; if (about.dream) abOut.dream = about.dream;
       await set(ref(db, 'homepage/about'), Object.keys(abOut).length ? abOut : null);
-                  await set(ref(db, 'homepage/nav'), navOut());, navItems.map(x => ({ label: x.label.trim(), href: x.href.trim(), show: x.show !== false })));
+                        await set(ref(db, 'homepage/nav'), navOut());, navItems.map(x => ({ label: x.label.trim(), href: x.href.trim(), show: x.show !== false })));
             await set(ref(db, 'homepage/popup'), { on: $('#popupOn').checked, title: $('#popupTitle').value.trim(), text: $('#popupText').value.trim(), btn: $('#popupBtn').value.trim(), link: popupLink });
                   const idsNow = new Set(draws.map(d => d.id));
       await set(ref(db, 'homepage/drawIndex'), draws.length ? draws.map(d => ({ id: d.id, month: d.month.trim() })) : null);
