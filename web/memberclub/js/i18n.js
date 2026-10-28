@@ -4,17 +4,19 @@
 const DICT = {
   // ======================= English =======================
   en: {
+    "help.waClub": "Club tech support",
+    "help.waStore": "Customer service",
     "nav.help": "Help",
     "help.pageTitle": "Help Centre · Mochii Club",
     "help.title": "❓ Help Centre",
     "help.sub": "Answers about the Member Club and our Shopee / TikTok stores.",
     "help.searchPh": "🔍 Search questions…",
     "help.tabClub": "Member Club",
-    "help.tabStore": "Store Help",
+    "help.tabStore": "Shop Help",
     "help.contactTitle": "💬 Still need help?",
     "help.contactSub": "Message us and we'll get back to you as soon as we can.",
     "help.noResult": "No matching questions.",
-    "help.storeEmpty": "No store questions yet.",
+    "help.storeEmpty": "No shop questions yet.",
     "help.linkMore": "Have a question? Visit the Help Centre",
     "help.club.points": "Points",
     "help.club.tier": "Tiers",
@@ -398,6 +400,8 @@ const DICT = {
 
   // ======================= Bahasa Melayu =======================
   ms: {
+    "help.waClub": "Sokongan teknikal kelab",
+    "help.waStore": "Khidmat pelanggan",
     "nav.help": "Bantuan",
     "help.pageTitle": "Pusat Bantuan · Mochii Club",
     "help.title": "❓ Pusat Bantuan",
@@ -792,6 +796,8 @@ const DICT = {
 
   // ======================= 中文 =======================
   zh: {
+    "help.waClub": "俱乐部技术支援",
+    "help.waStore": "联系客服",
     "nav.help": "帮助中心",
     "help.pageTitle": "帮助中心 · Mochii Club",
     "help.title": "❓ 帮助中心",

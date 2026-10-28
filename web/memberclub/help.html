@@ -49,7 +49,7 @@
     const STORE_CATS = ["order", "shipping", "payment", "return", "product", "live", "contact"];
 
     let tab = "club", cat = "all";
-    let club = [], store = [];
+    let club = [], store = [], contacts = {};
 
     // 网址带 #club-redeem、#store 之类，直接打开对应分类
     const hash = location.hash.slice(1);
@@ -65,9 +65,30 @@
       return store.map(x => ({ q: x.q, a: x.a, cat: x.cat, html: false }));
     }
 
+    // 💬 联系按钮：俱乐部分页显示「俱乐部技术支援」，商店分页显示「客服 + Shopee + TikTok」
+    function renderContacts(both) {
+      const c = contacts;
+      const safe = u => /^https:\/\//i.test(u || "") ? u : "";
+      const label = (obj, key) => (obj && (obj[lang] || obj.zh)) || t(key);
+      const wa = (num, obj, key) => {
+        num = String(num || "").replace(/\D/g, "");
+        return num ? `<a class="btn contact-wa" href="https://wa.me/${num}" target="_blank" rel="noopener">💬 ${esc(label(obj, key))}</a>` : "";
+      };
+      const clubBtns = [wa(c.waClub, c.waClubLabel, "help.waClub")];
+      const storeBtns = [
+        wa(c.waStore ?? c.whatsapp, c.waStoreLabel, "help.waStore"),
+        safe(c.shopee) ? `<a class="btn contact-shopee" href="${esc(c.shopee)}" target="_blank" rel="noopener">🛍️ Shopee</a>` : "",
+        safe(c.tiktok) ? `<a class="btn contact-tiktok" href="${esc(c.tiktok)}" target="_blank" rel="noopener">🎵 TikTok Shop</a>` : "",
+      ];
+      const btns = (both ? [...clubBtns, ...storeBtns] : tab === "club" ? clubBtns : storeBtns).filter(Boolean);
+      $("contactBtns").innerHTML = btns.join("");
+      $("contactCard").classList.toggle("hidden", !btns.length);
+    }
+
     function render() {
       document.querySelectorAll("#helpTabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
       const q = norm($("helpSearch").value.trim());
+      renderContacts(!!q);
 
       // 搜索：两边一起找
       if (q) {
@@ -126,19 +147,8 @@
             const loc = (x.i18n && x.i18n[lang]) || {};
             return { q: loc.q || x.q || "", a: loc.a || x.a || "", cat: x.cat || "order" };
           });
+        contacts = hs.exists() ? hs.data() : {};
         render();
-
-        // 联系我们
-        const c = hs.exists() ? hs.data() : {};
-        const wa = String(c.whatsapp || "").replace(/\D/g, "");
-        const safe = u => /^https:\/\//i.test(u || "") ? u : "";
-        const btns = [
-          wa ? `<a class="btn contact-wa" href="https://wa.me/${wa}" target="_blank" rel="noopener">💬 WhatsApp</a>` : "",
-          safe(c.shopee) ? `<a class="btn contact-shopee" href="${esc(c.shopee)}" target="_blank" rel="noopener">🛍️ Shopee</a>` : "",
-          safe(c.tiktok) ? `<a class="btn contact-tiktok" href="${esc(c.tiktok)}" target="_blank" rel="noopener">🎵 TikTok Shop</a>` : "",
-        ].filter(Boolean);
-        $("contactBtns").innerHTML = btns.join("");
-        $("contactCard").classList.toggle("hidden", !btns.length);
       } catch (e) {
         console.warn("store help", e);
       }
