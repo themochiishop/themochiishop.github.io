@@ -83,11 +83,43 @@ export function tierProgress(member) {
   return { tier, next, spend, need, pct: Math.max(0, pct) };
 }
 
-// ---------- 商城分类（后台 admin-common.js 的 SHOP_CATS 也要一致；名称在 i18n.js 的 shop.cat.*） ----------
-export const SHOP_CATS = ["coupon", "bracelet", "blindbox", "figure", "other"];
-export function catOf(r) {
-  if (r.category && SHOP_CATS.includes(r.category)) return r.category;
-  return r.type === "coupon" ? "coupon" : "other";
+// ---------- 商城分类：后台「奖品管理 › 商城分类」可自订（settings/shop），没设定过就用预设 ----------
+export const DEFAULT_SHOP_CATS = [
+  { id: "coupon",   icon: "🎫", zh: "优惠券",   en: "Coupons",        ms: "Kupon" },
+  { id: "bracelet", icon: "📿", zh: "手链",     en: "Bracelets",      ms: "Gelang" },
+  { id: "blindbox", icon: "🎁", zh: "盲盒",     en: "Blind boxes",    ms: "Kotak misteri" },
+  { id: "figure",   icon: "🧸", zh: "公仔玩具", en: "Figures & toys", ms: "Figura & mainan" },
+  { id: "other",    icon: "✨", zh: "其他",     en: "Others",         ms: "Lain-lain" },
+];
+export async function loadShopCats() {
+  try {
+    const snap = await getDoc(doc(db, "settings", "shop"));
+    const list = snap.exists() && snap.data().categories;
+    if (Array.isArray(list) && list.length) return list;
+  } catch (e) { console.warn("shop cats", e); }
+  return DEFAULT_SHOP_CATS;
+}
+export function catOf(r, cats = DEFAULT_SHOP_CATS) {
+  if (r.category && cats.some(c => c.id === r.category)) return r.category;
+  if (r.type === "coupon" && cats.some(c => c.id === "coupon")) return "coupon";
+  if (cats.some(c => c.id === "other")) return "other";
+  return cats[0] ? cats[0].id : "";
+}
+export function catName(c) {
+  return (c && (c[lang] || c.zh || c.en)) || "";
+}
+
+// ---------- ⏰ 即将下架 ----------
+// 回传 null（没设定）、{ ended: true }（已过时间，前台隐藏）或 { end, label }（倒数文字）
+export function endState(r, now = new Date()) {
+  const end = toDate(r.endAt);
+  if (!end) return null;
+  if (end <= now) return { ended: true, end };
+  const hours = (end - now) / 3600000;
+  const label = hours < 24
+    ? t("shop.leftHours", { n: Math.max(1, Math.ceil(hours)) })
+    : t("shop.leftDays", { n: Math.ceil(hours / 24) });
+  return { ended: false, end, label };
 }
 
 // ---------- 绑定账号：每个账号的订单统计 ----------

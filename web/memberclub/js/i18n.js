@@ -4,6 +4,10 @@
 const DICT = {
   // ======================= English =======================
   en: {
+    "shop.endingSoon": "Ending soon",
+    "shop.endsOn": "Ends {d}",
+    "shop.leftDays": "{n} days left",
+    "shop.leftHours": "{n} hours left",
     "home.feedTitle": "Mochii Feed",
     "home.feedText": "See what's new",
     "nav.home": "Home",
@@ -295,6 +299,10 @@ const DICT = {
 
   // ======================= Bahasa Melayu =======================
   ms: {
+    "shop.endingSoon": "Hampir tamat",
+    "shop.endsOn": "Tamat {d}",
+    "shop.leftDays": "{n} hari lagi",
+    "shop.leftHours": "{n} jam lagi",
     "home.feedTitle": "Mochii Feed",
     "home.feedText": "Lihat yang terkini",
     "nav.home": "Utama",
@@ -586,6 +594,10 @@ const DICT = {
 
   // ======================= 中文 =======================
   zh: {
+    "shop.endingSoon": "即将下架",
+    "shop.endsOn": "{d} 下架",
+    "shop.leftDays": "剩 {n} 天",
+    "shop.leftHours": "剩 {n} 小时",
     "home.feedTitle": "Mochii Feed",
     "home.feedText": "看看最新动态",
     "nav.home": "首页",

@@ -31,7 +31,7 @@
       collection, query, where, getDocs, addDoc, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
-      requireMember, renderNav, loadBalance, esc, t, SHOP_CATS, catOf
+      requireMember, renderNav, loadBalance, esc, t, loadShopCats, catOf, catName, endState, fmtDate
     } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
@@ -51,17 +51,21 @@
 
     requireMember((user, member) => {
       let rewards = [];
+      let shopCats = [];
       let bal = null;
 
 
       async function load() {
         try {
-          const [b, rSnap] = await Promise.all([
+          const [b, rSnap, cs] = await Promise.all([
             loadBalance(user.uid),
-            getDocs(query(collection(db, "rewards"), where("active", "==", true)))
+            getDocs(query(collection(db, "rewards"), where("active", "==", true))),
+            loadShopCats()
           ]);
           bal = b;
+          shopCats = cs;
           rewards = rSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+            .filter(r => !(endState(r) || {}).ended)   // 已过下架时间的不显示
             .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || a.cost - b.cost);
           render();
         } catch (e) {
@@ -74,16 +78,18 @@
         $("myPts").textContent = bal.spendable.toLocaleString();
 
         // 分类：只显示有奖品的分类
-        const used = new Set(rewards.map(catOf));
-        const cats = ["all", ...SHOP_CATS.filter(c => used.has(c))];
-        if (!cats.includes(currentCat)) currentCat = "all";
-        $("cats").classList.toggle("hidden", cats.length < 3);
-        $("cats").innerHTML = cats.map(k =>
-          `<button type="button" data-cat="${k}" class="${k === currentCat ? "active" : ""}">${t("shop.cat." + k)}</button>`).join("");
+        const used = new Set(rewards.map(r => catOf(r, shopCats)));
+        const cats = shopCats.filter(c => used.has(c.id));
+        if (currentCat !== "all" && !cats.some(c => c.id === currentCat)) currentCat = "all";
+        $("cats").classList.toggle("hidden", cats.length < 2);
+        $("cats").innerHTML =
+          `<button type="button" data-cat="all" class="${currentCat === "all" ? "active" : ""}">${t("shop.cat.all")}</button>` +
+          cats.map(c => `<button type="button" data-cat="${esc(c.id)}" class="${c.id === currentCat ? "active" : ""}">${esc((c.icon ? c.icon + " " : "") + catName(c))}</button>`).join("");
 
-        const list = rewards.filter(r => currentCat === "all" || catOf(r) === currentCat);
+        const list = rewards.filter(r => currentCat === "all" || catOf(r, shopCats) === currentCat);
         $("rewardGrid").innerHTML = list.length ? list.map(r => {
           const ty = TYPE[r.type] || TYPE.gift;
+          const es = endState(r);
           const soldOut = typeof r.stock === "number" && r.stock <= 0;
           const short = r.cost - bal.spendable;
           let btn;
@@ -92,11 +98,13 @@
           else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
           return `
             <div class="shop-item mall-item${soldOut ? " sold-out" : ""}">
-              <div class="ph">${r.image ? `<img src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">` : ty.icon}</div>
+              <div class="ph">${r.image ? `<img src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">` : ty.icon}
+                ${es ? `<span class="ending-badge">⏰ ${esc(es.label)}</span>` : ""}</div>
               <div class="info">
                 <div class="name">${esc(r.name)}</div>
                 ${r.description ? `<div class="desc">${esc(r.description)}</div>` : ""}
                 <div class="sub">${t(ty.key)}${typeof r.stock === "number" ? " · " + t("rw.left", { n: Math.max(r.stock, 0) }) : ""}</div>
+                ${es ? `<div class="ending-line">${esc(t("shop.endingSoon"))} · ${esc(t("shop.endsOn", { d: fmtDate(es.end, true) }))}</div>` : ""}
                 <div class="cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
                 ${btn}
               </div>

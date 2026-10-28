@@ -684,3 +684,18 @@ a.home-feed:hover { text-decoration: none; border-color: var(--accent); }
   /* 会员等级的常见问题：答案文字小一号（和积分明细一样） */
   #faqTier .faq-a { font-size: .78rem; }
 }
+
+/* ---------- ⏰ 即将下架 ---------- */
+.shop-item .ph { position: relative; }
+.ending-badge {
+  position: absolute; top: 6px; left: 6px; padding: 3px 8px; border-radius: 999px;
+  background: rgba(245,158,11,.92); color: #1f1300; font-size: .7rem; font-weight: 800; white-space: nowrap;
+}
+.ending-line { font-size: .72rem; color: var(--warn); font-weight: 700; }
+
+/* 首页你好框：手机上也往右缩进（和电脑端一样） */
+@media (max-width: 480px) {
+  .home-top .home-hero > div { padding-left: 10px; }
+  .ending-badge { font-size: .62rem; padding: 2px 6px; top: 4px; left: 4px; }
+  .ending-line { font-size: .66rem; }
+}

@@ -22,7 +22,7 @@
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, tierProgress, tierLabel, tierIconHTML,
-      toDate, fmtDate, fmtMoney, esc, platformTag, t, lang
+      toDate, fmtDate, fmtMoney, esc, platformTag, t, lang, endState
     } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
@@ -64,7 +64,8 @@
       }
 
       const sections = (cfg.sections && cfg.sections.length ? cfg.sections : DEFAULT_SECTIONS);
-      const rewards = rSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const rewards = rSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .filter(r => !(endState(r) || {}).ended);
       const rewardById = Object.fromEntries(rewards.map(r => [r.id, r]));
       const now = new Date();
 
