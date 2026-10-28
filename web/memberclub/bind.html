@@ -40,15 +40,7 @@
       </div>
     </div>
 
-    <div class="card">
-      <h2 data-i18n="bind.faq"></h2>
-      <ul class="list">
-        <li><div class="main"><div class="title" data-i18n="bind.q1"></div><div class="meta" data-i18n="bind.a1"></div></div></li>
-        <li><div class="main"><div class="title" data-i18n="bind.q2"></div><div class="meta" data-i18n="bind.a2"></div></div></li>
-        <li><div class="main"><div class="title" data-i18n="bind.q3"></div><div class="meta" data-i18n="bind.a3"></div></div></li>
-        <li><div class="main"><div class="title" data-i18n="bind.q4"></div><div class="meta" data-i18n="bind.a4"></div></div></li>
-      </ul>
-    </div>
+    <div class="card faq-card hidden" id="faqBind"></div>
   </main>
 
   <script type="module">
@@ -61,6 +53,7 @@
       detectPlatform, normalizeOrderNo, normalizeUsername, t, claimBonuses, toastBonuses,
       accountStats, maskOrderNo, fmtMoney
     } from "./js/common.js";
+    import { renderFaq } from "./js/faq.js";
 
     const $ = id => document.getElementById(id);
     renderNav("bind");
@@ -79,6 +72,7 @@
     });
 
     requireMember(async user => {
+      renderFaq($("faqBind"), "bind");
       async function loadBindings() {
         const mine = c => getDocs(query(collection(db, c), where("uid", "==", user.uid)));
         const [bSnap, oSnap, logs] = await Promise.all([

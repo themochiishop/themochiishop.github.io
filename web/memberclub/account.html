@@ -78,13 +78,15 @@
     import {
       requireMember, renderNav, loadBalance, toDate, fmtDate, fmtMoney, esc, platformTag,
       TIERS, tierProgress, tierLabel, tierIconHTML, t, translateReason,
-      BONUSES, bonusPoints, EXPIRY_MONTHS
+      BONUSES, bonusPoints, bonusActive, activeBonuses, customPerks, EXPIRY_MONTHS
     } from "./js/common.js";
+    import { renderFaq } from "./js/faq.js";
 
     const $ = id => document.getElementById(id);
     renderNav("account");
 
     requireMember(async (user, member) => {
+      renderFaq($("faqTier"), "tier");
       $("hello").textContent = t("acc.hello", { name: member.name || t("acc.member") });
       $("phoneCallout").classList.toggle("hidden", !!member.phone);
 
@@ -101,7 +103,7 @@
         <tr><th>${t("tier.colTier")}</th><th>${t("tier.colSpend")}</th><th>${t("tier.colMult")}</th><th>${t("tier.colBday")}</th></tr>
         ${TIERS.map(x => `
           <tr class="${x.id === tp.tier.id ? "current" : ""}">
-            <td>${x.icon ? x.icon + " " : ""}${tierLabel(x)}</td>            <td>${x.minSpend ? t("tier.minSpend", { n: x.minSpend }) : t("tier.free")}</td>
+            <td><span class="tier-cell"><span class="ti">${tierIconHTML(x)}</span><span>${tierLabel(x)}</span></span></td>            <td>${x.minSpend ? t("tier.minSpend", { n: x.minSpend }) : t("tier.free")}</td>
             <td>×${x.multiplier}</td>
             <td>${t("unit.pts", { n: x.birthday })}</td>
           </tr>`).join("")}`;
@@ -139,16 +141,14 @@
         $("expiryNote").textContent = t("acc.expiryRule", { m: EXPIRY_MONTHS });
       }
 
-      // ---------- 🎁 赚更多积分 ----------
+      // ---------- 🎁 额外福利（后台可设定） ----------
       const got = new Set(bal.ledger.map(x => (BONUSES.find(b => b.reason === x.reason) || {}).key).filter(Boolean));
-      const tasks = [
-        { key: "welcome",   href: "bind.html" },
-        { key: "birthday",  href: "profile.html" },
-        { key: "whatsapp",  href: "profile.html#phone" },
-        { key: "platform2", href: "bind.html" },
-      ].map(x => ({ ...x, ok: got.has(x.key) }));
-      $("welcomeLine").textContent = t("acc.welcomeBonus", { n: bonusPoints("welcome") });
-      {
+      const HREF = { welcome: "bind.html", birthday: "profile.html", whatsapp: "profile.html#phone", platform2: "bind.html" };
+      const tasks = activeBonuses().map(b => ({ key: b.key, href: HREF[b.key], ok: got.has(b.key) }));
+      $("welcomeLine").textContent = bonusActive("welcome") ? t("acc.welcomeBonus", { n: bonusPoints("welcome") }) : "";
+      const custom = customPerks();
+      const perkLink = u => /^https:\/\//i.test(u || "") || /^[a-z0-9_-]+\.html(#[\w-]*)?$/i.test(u || "") ? u : "";
+      if (tasks.length || custom.length) {
         $("taskCard").classList.remove("hidden");
         $("taskList").innerHTML = tasks.map(x => `
           <li class="${x.ok ? "done" : ""}">
@@ -157,9 +157,17 @@
             ${x.ok
               ? `<span class="task-pts muted">${t("notif.plus", { n: bonusPoints(x.key) })}</span>`
               : `<a class="task-pts" href="${x.href}">${t("notif.plus", { n: bonusPoints(x.key) })} ➔</a>`}
+          </li>`).join("") + custom.map(p => `
+          <li class="custom-perk">
+            <span class="task-check star">★</span>
+            <span class="task-text">${esc(p.title)}
+              ${p.desc ? `<small class="perk-desc">${esc(p.desc)}</small>` : ""}
+              <small class="muted">${t("task.manual")}</small></span>
+            ${perkLink(p.link)
+              ? `<a class="task-pts" href="${esc(perkLink(p.link))}">${p.points ? t("notif.plus", { n: p.points }) : t("notif.open")} ➔</a>`
+              : `<span class="task-pts">${p.points ? t("notif.plus", { n: p.points }) : ""}</span>`}
           </li>`).join("");
       }
-
     });
   </script>
 </body>

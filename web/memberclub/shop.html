@@ -12,19 +12,13 @@
   <main class="page">
     <p id="pageError" class="msg err hidden"></p>
 
-    <!-- 会员卡：积分与等级 -->
-    <div class="shop-hero">
-      <img src="img/member.jpg" alt="">
-      <div style="flex:1;min-width:0">
-        <div class="sub" id="heroHello"></div>
-        <div class="pts-big" id="heroPoints">-</div>
-        <div class="sub" id="heroTier">&nbsp;</div>
+    <div class="shop-head">
+      <div>
+        <h1 data-i18n="shop.title"></h1>
+        <p class="muted" data-i18n="rw.sub"></p>
       </div>
-      <a href="rewards.html" data-i18n="shop.toHistory"></a>
+      <div class="shop-mypts"><span data-i18n="acc.available"></span><b id="myPts">-</b></div>
     </div>
-
-    <h1 data-i18n="shop.title"></h1>
-    <p class="muted" data-i18n="rw.sub"></p>
 
     <div class="cat-chips" id="cats"></div>
     <div id="rewardGrid" class="reward-grid"><p class="empty" data-i18n="common.loading"></p></div>
@@ -37,7 +31,7 @@
       collection, query, where, getDocs, addDoc, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
-      requireMember, renderNav, loadBalance, tierProgress, tierLabel, esc, t
+      requireMember, renderNav, loadBalance, esc, t, SHOP_CATS, catOf
     } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
@@ -48,7 +42,6 @@
       coupon: { icon: "🎫", key: "rw.coupon" },
       gift: { icon: "🎁", key: "rw.gift" },
     };
-    const CATS = [["all", "shop.cat.all"], ["coupon", "shop.cat.coupon"], ["gift", "shop.cat.gift"]];
     let currentCat = "all";
 
     function setMsg(text, type) {
@@ -60,9 +53,6 @@
       let rewards = [];
       let bal = null;
 
-      $("heroHello").textContent = t("acc.hello", { name: member.name || t("acc.member") });
-      const tp = tierProgress(member);
-      $("heroTier").textContent = `${tp.tier.icon ? tp.tier.icon + " " : ""}${tierLabel(tp.tier)}`;
 
       async function load() {
         try {
@@ -81,16 +71,17 @@
       }
 
       function render() {
-        $("heroPoints").textContent = t("unit.pts", { n: bal.spendable.toLocaleString() });
+        $("myPts").textContent = bal.spendable.toLocaleString();
 
-        // 分类：只显示有奖品的类型
-        const types = new Set(rewards.map(r => TYPE[r.type] ? r.type : "gift"));
-        const cats = CATS.filter(([k]) => k === "all" || types.has(k));
+        // 分类：只显示有奖品的分类
+        const used = new Set(rewards.map(catOf));
+        const cats = ["all", ...SHOP_CATS.filter(c => used.has(c))];
+        if (!cats.includes(currentCat)) currentCat = "all";
         $("cats").classList.toggle("hidden", cats.length < 3);
-        $("cats").innerHTML = cats.map(([k, key]) =>
-          `<button type="button" data-cat="${k}" class="${k === currentCat ? "active" : ""}">${t(key)}</button>`).join("");
+        $("cats").innerHTML = cats.map(k =>
+          `<button type="button" data-cat="${k}" class="${k === currentCat ? "active" : ""}">${t("shop.cat." + k)}</button>`).join("");
 
-        const list = rewards.filter(r => currentCat === "all" || (TYPE[r.type] ? r.type : "gift") === currentCat);
+        const list = rewards.filter(r => currentCat === "all" || catOf(r) === currentCat);
         $("rewardGrid").innerHTML = list.length ? list.map(r => {
           const ty = TYPE[r.type] || TYPE.gift;
           const soldOut = typeof r.stock === "number" && r.stock <= 0;

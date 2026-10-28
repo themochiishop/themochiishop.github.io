@@ -46,6 +46,7 @@
       requireMember, renderNav, loadBalance, toDate, fmtDate, fmtMoney, esc, platformTag, platformLabel,
       t, translateReason, BONUSES, lang
     } from "./js/common.js";
+    import { renderFaq } from "./js/faq.js";
 
     const $ = id => document.getElementById(id);
     renderNav("points");
@@ -81,6 +82,7 @@
     }
 
     requireMember(async user => {
+      renderFaq($("faqPoints"), "points");
       let bal, ordersSnap;
       try {
         [bal, ordersSnap] = await Promise.all([

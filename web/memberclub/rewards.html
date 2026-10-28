@@ -38,7 +38,7 @@
   <script type="module">
     import { db } from "./js/firebase-config.js";
     import {
-      doc, updateDoc
+      doc, updateDoc, collection, getDocs
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import { requireMember, renderNav, loadBalance, esc, fmtDate, t } from "./js/common.js";
 
@@ -51,15 +51,26 @@
 
     requireMember(user => {
       let bal = null;
+      const rewardInfo = {};   // 奖品 ID → 图片 / 类型（下架的也读得到）
 
       async function load() {
         try {
-          bal = await loadBalance(user.uid);
+          const [b, rSnap] = await Promise.all([loadBalance(user.uid), getDocs(collection(db, "rewards"))]);
+          bal = b;
+          rSnap.docs.forEach(d => { rewardInfo[d.id] = d.data(); });
           render();
         } catch (e) {
           $("pageError").textContent = t("common.loadFail") + e.message;
           $("pageError").classList.remove("hidden");
         }
+      }
+
+      // 商品图片：没有图片就显示类型图标
+      function thumb(r) {
+        const info = rewardInfo[r.rewardId] || {};
+        return info.image
+          ? `<img class="redeem-thumb" src="${esc(info.image)}" alt="" loading="lazy">`
+          : `<span class="redeem-thumb">${info.type === "coupon" ? "🎫" : "🎁"}</span>`;
       }
 
       function render() {
@@ -70,11 +81,14 @@
         // 我的兑换
         $("myList").innerHTML = bal.redemptions.length ? bal.redemptions.map(r => `
           <li>
-            <div class="main">
+            <div class="main redeem-row">
+              ${thumb(r)}
+              <div style="min-width:0;flex:1">
               <div class="title">${esc(r.rewardName)} ${statusTag(r.status)}</div>
               <div class="meta">${t("unit.pts", { n: r.cost })} · ${t("rw.appliedOn", { d: fmtDate(r.createdAt) })}${r.decidedAt ? " · " + t("rw.decidedOn", { d: fmtDate(r.decidedAt) }) : ""}</div>
               ${r.couponCode ? `<div class="code">${t("rw.code")} <b>${esc(r.couponCode)}</b> <button class="btn btn-ghost btn-inline" data-copy="${esc(r.couponCode)}">${t("rw.copy")}</button></div>` : ""}
               ${r.note ? `<div class="meta">${t("rw.note")}${esc(r.note)}</div>` : ""}
+              </div>
             </div>
             <div class="right">
               ${r.status === "pending" ? `<button class="btn btn-ghost btn-inline" data-cancel="${esc(r.id)}">${t("rw.cancel")}</button>` : ""}

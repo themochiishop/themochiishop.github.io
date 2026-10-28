@@ -83,6 +83,13 @@ export function tierProgress(member) {
   return { tier, next, spend, need, pct: Math.max(0, pct) };
 }
 
+// ---------- 商城分类（后台 admin-common.js 的 SHOP_CATS 也要一致；名称在 i18n.js 的 shop.cat.*） ----------
+export const SHOP_CATS = ["coupon", "bracelet", "blindbox", "figure", "other"];
+export function catOf(r) {
+  if (r.category && SHOP_CATS.includes(r.category)) return r.category;
+  return r.type === "coupon" ? "coupon" : "other";
+}
+
 // ---------- 绑定账号：每个账号的订单统计 ----------
 // 回传 { "shopee_alai": { orders, spend, points, last } }；退货的订单不算
 export function accountStats(orders) {
@@ -242,21 +249,48 @@ export function expiringSoon(lots, now = new Date()) {
   return Object.values(map).sort((a, b) => a.date - b.date);
 }
 
-// ---------- 🎁 新会员欢迎礼 / 📝 完善资料奖励（必须和 Firestore 规则里的 bonusOk 一致） ----------
-// 都要先绑定至少一个购物账号；每种每人只能领一次（积分记录用固定 ID）
+// ---------- 🎁 额外福利：新会员欢迎礼 / 完善资料奖励 ----------
+// 分数、开关由后台「额外福利」设定（settings/perks）；还没设定过就用这里的预设分数
+// Firestore 规则的 bonusOk 也会读同一份设定
 export const BONUSES = [
   { key: "welcome",   id: "welcome",          points: 50, reason: "新会员欢迎礼" },
   { key: "birthday",  id: "profile_birthday",  points: 10, reason: "完善资料：生日" },
   { key: "whatsapp",  id: "profile_whatsapp",  points: 10, reason: "完善资料：WhatsApp 通知" },
   { key: "platform2", id: "profile_platform2", points: 20, reason: "完善资料：绑定第二个平台" },
 ];
+
+let perkCfg = null;
+export async function loadPerks() {
+  if (perkCfg) return perkCfg;
+  try {
+    const snap = await getDoc(doc(db, "settings", "perks"));
+    perkCfg = snap.exists() ? snap.data() : {};
+  } catch (e) { perkCfg = {}; }
+  return perkCfg;
+}
 export function bonusPoints(key) {
   const b = BONUSES.find(x => x.key === key);
-  return b ? b.points : 0;
+  const c = perkCfg && perkCfg[key];
+  return c && typeof c.points === "number" ? c.points : (b ? b.points : 0);
+}
+export function bonusActive(key) {
+  const c = perkCfg && perkCfg[key];
+  return !c || c.active !== false;
+}
+export function activeBonuses() {
+  return BONUSES.filter(b => bonusActive(b.key));
+}
+// 后台自订的福利（只显示说明，由客服手动发放）
+export function customPerks() {
+  return ((perkCfg && perkCfg.custom) || []).filter(p => p.active !== false).map(p => {
+    const loc = (p.i18n && p.i18n[lang]) || {};
+    return { ...p, title: loc.title || p.title || "", desc: loc.desc || p.desc || "" };
+  });
 }
 
 // 检查并领取所有符合条件的奖励；回传 { done: 已领过的 key, claimed: 这次新领的 [{key, points}] }
 export async function claimBonuses(uid) {
+  await loadPerks();
   const mine = c => getDocs(query(collection(db, c), where("uid", "==", uid)));
   const [mSnap, bSnap, lSnap] = await Promise.all([getDoc(doc(db, "members", uid)), mine("bindings"), mine("pointsLedger")]);
   const member = mSnap.exists() ? mSnap.data() : {};
@@ -278,19 +312,20 @@ export async function claimBonuses(uid) {
     platform2: other ? [first.id, other.id] : null,
   };
 
-  for (const b of BONUSES) {
-    if (have.has(docId(b)) || !eligible[b.key]) continue;
+  for (const b of activeBonuses()) {
+    const pts = bonusPoints(b.key);
+    if (have.has(docId(b)) || !eligible[b.key] || !(pts > 0)) continue;
     try {
       await setDoc(doc(db, "pointsLedger", docId(b)), {
         uid,
-        delta: b.points,
+        delta: pts,
         reason: b.reason,
         orderNo: null,
         bindingIds: eligible[b.key],
         availableAt: serverTimestamp(),
         createdAt: serverTimestamp()
       });
-      claimed.push({ key: b.key, points: b.points });
+      claimed.push({ key: b.key, points: pts });
       done.push(b.key);
     } catch (e) {
       console.warn("bonus " + b.key, e);
@@ -331,15 +366,17 @@ export function requireMember(onReady) {
         const adm = await getDoc(doc(db, "admins", user.uid)).catch(() => null);
         if (!adm || !adm.exists()) { location.replace("index.html"); return; }
       }
-      // 自动领取符合条件的欢迎礼 / 完善资料奖励（全部领完后就不再检查）
+      // 自动领取符合条件的额外福利（开放中的都领过了就不再检查）
       let member = snap.data();
+      await loadPerks();
       const doneKey = "mochiiBonusDone_" + user.uid;
-      let allDone = false;
-      try { allDone = localStorage.getItem(doneKey) === "1"; } catch (e) {}
-      if (!allDone) {
+      let doneList = [];
+      try { doneList = JSON.parse(localStorage.getItem(doneKey) || "[]"); } catch (e) {}
+      if (!Array.isArray(doneList)) doneList = [];
+      if (!activeBonuses().every(b => doneList.includes(b.key))) {
         try {
           const r = await claimBonuses(user.uid);
-          if (r.done.length === BONUSES.length) { try { localStorage.setItem(doneKey, "1"); } catch (e) {} }
+          try { localStorage.setItem(doneKey, JSON.stringify(r.done)); } catch (e) {}
           toastBonuses(r.claimed);
         } catch (e) { console.warn("claimBonuses", e); }
       }
@@ -360,6 +397,7 @@ export function logout() {
 
 // ---------- 顶部导航：会员俱乐部 logo、铃铛、语言、三大分类 + 子分页 ----------
 const NAV = [
+  { key: "home",   icon: "🏠", label: "nav.home",   href: "home.html",    pages: ["home"] },
   { key: "shop",   icon: "🛍️", label: "nav.shop",   href: "shop.html",    pages: ["shop", "rewards"],
     sub: [["shop", "shop.html", "nav.mall"], ["rewards", "rewards.html", "nav.rewards"]] },
   { key: "member", icon: "💎", label: "nav.points", href: "account.html", pages: ["account", "points"],
@@ -376,13 +414,16 @@ export function renderNav(active) {
   el.className = "topbar";
   el.innerHTML = `
     <div class="topbar-inner">
-      <a class="brand" href="shop.html"><img class="brand-logo" src="img/member.jpg" alt=""><span>Mochii <b>Club</b></span></a>
+      <a class="brand" href="home.html"><img class="brand-logo" src="img/member.jpg" alt=""><span>Mochii <b>Club</b></span></a>
       <div class="topbar-tools">
         <button type="button" id="bellBtn" class="bell" aria-label="${t("notif.title")}">🔔<span id="bellBadge" class="bell-badge" hidden></span></button>
         ${langSwitchHTML()}
       </div>
       <div id="bellPanel" class="bell-panel hidden">
-        <div class="bell-head">${t("notif.title")}</div>
+        <div class="bell-head">
+          <span>🔔 ${t("notif.title")}</span>
+          <button type="button" id="bellReadAll" class="bell-readall">${t("notif.readAll")}</button>
+        </div>
         <ul id="bellList" class="bell-list"></ul>
       </div>
     </div>
@@ -479,6 +520,10 @@ function safeLink(u) {
   return "";
 }
 
+// 每种通知的颜色
+const BELL_TONE = { "🎉": "green", "✅": "green", "↩️": "red", "⌛": "orange", "⏳": "orange",
+  "🎁": "pink", "❌": "red", "🔗": "blue", "✂️": "red", "📢": "purple" };
+
 function renderBell() {
   const badge = document.getElementById("bellBadge");
   const list = document.getElementById("bellList");
@@ -489,16 +534,32 @@ function renderBell() {
   badge.textContent = unread > 9 ? "9+" : unread;
   document.getElementById("bellBtn").classList.toggle("has-new", !!unread);
   const hl = bell.highlightSince;
-  list.innerHTML = events.length ? events.map(e => `
-    <li class="${!hl || e.time > hl ? "unread" : ""}${e.announce ? " announce" : ""}">
-      <span class="bell-icon">${e.icon}</span>
-      <div>
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  let group = "";
+  list.innerHTML = events.length ? events.map(e => {
+    const g = e.time >= todayStart ? "today" : "earlier";
+    const head = g !== group ? `<li class="bell-group">${t("notif." + g)}</li>` : "";
+    group = g;
+    const isNew = !hl || e.time > hl;
+    return head + `
+    <li class="bell-item${isNew ? " unread" : ""}${e.announce ? " announce" : ""}">
+      <span class="bell-icon tone-${BELL_TONE[e.icon] || "pink"}">${e.icon}</span>
+      <div class="bell-body">
         <div class="bell-title">${esc(e.title)}</div>
         ${e.detail ? `<div class="bell-detail">${esc(e.detail)}</div>` : ""}
-        ${safeLink(e.link) ? `<a class="bell-link" href="${esc(safeLink(e.link))}">${t("notif.open")}</a>` : ""}
-        <div class="bell-time">${fmtDate(e.time, true)}</div>
+        <div class="bell-foot">
+          <span class="bell-time">${g === "today" ? fmtTime(e.time) : fmtDate(e.time, true)}</span>
+          ${safeLink(e.link) ? `<a class="bell-link" href="${esc(safeLink(e.link))}">${t("notif.open")}</a>` : ""}
+        </div>
       </div>
-    </li>`).join("") : `<li class="bell-empty">${t("notif.empty")}</li>`;
+      ${isNew ? '<span class="bell-dot" aria-hidden="true"></span>' : ""}
+    </li>`;
+  }).join("") : `<li class="bell-empty">🔕<br>${t("notif.empty")}</li>`;
+}
+
+function fmtTime(d) {
+  const p = n => String(n).padStart(2, "0");
+  return `${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
 export function initBell(user, member) {
@@ -528,6 +589,15 @@ export function initBell(user, member) {
     // 打开时：新通知保持高亮，同时把「已读时间」存起来（换手机也同步）
     bell.highlightSince = bell.seenAt;
     bell.seenAt = new Date();
+    renderBell();
+    try { await updateDoc(doc(db, "members", user.uid), { notifSeenAt: serverTimestamp() }); }
+    catch (err) { console.warn("notifSeenAt", err); }
+  });
+  // 全部已读：清除高亮
+  const readAll = document.getElementById("bellReadAll");
+  if (readAll) readAll.addEventListener("click", async e => {
+    e.stopPropagation();
+    bell.seenAt = bell.highlightSince = new Date();
     renderBell();
     try { await updateDoc(doc(db, "members", user.uid), { notifSeenAt: serverTimestamp() }); }
     catch (err) { console.warn("notifSeenAt", err); }

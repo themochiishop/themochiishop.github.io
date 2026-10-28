@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n-title="home.pageTitle">Home · Mochii Club</title>
+  <link rel="stylesheet" href="css/member.css">
+</head>
+<body class="loading">
+  <header id="topbar"></header>
+
+  <main class="page">
+    <p id="pageError" class="msg err hidden"></p>
+    <!-- 各区块的顺序、开关、数量由后台「首页设定」决定 -->
+    <div id="homeSections"></div>
+  </main>
+
+  <script type="module">
+    import { db } from "./js/firebase-config.js";
+    import {
+      collection, query, where, getDocs, getDoc, doc, orderBy, limit
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import {
+      requireMember, renderNav, loadBalance, tierProgress, tierLabel, tierIconHTML,
+      toDate, fmtDate, fmtMoney, esc, platformTag, t, lang
+    } from "./js/common.js";
+
+    const $ = id => document.getElementById(id);
+    renderNav("home");
+
+    // 和后台 admin-common.js 的 HOME_SECTIONS 一致
+    const DEFAULT_SECTIONS = [
+      { key: "hero", on: true },
+      { key: "banners", on: true },
+      { key: "order", on: true },
+      { key: "news", on: true, count: 3 },
+      { key: "rewards", on: true, count: 4 },
+    ];
+
+    const safeLink = u => {
+      u = String(u || "").trim();
+      if (/^https:\/\//i.test(u) || /^[a-z0-9_-]+\.html(#[\w-]*)?$/i.test(u)) return u;
+      return "";
+    };
+    const loc = x => ((x.i18n && x.i18n[lang]) || {});
+
+    requireMember(async (user, member) => {
+      const mine = c => getDocs(query(collection(db, c), where("uid", "==", user.uid)));
+      let cfg = {}, bal, oSnap, rSnap, bnSnap, nSnap;
+      try {
+        const sSnap = await getDoc(doc(db, "settings", "home")).catch(() => null);
+        cfg = sSnap && sSnap.exists() ? sSnap.data() : {};
+        [bal, oSnap, rSnap, bnSnap, nSnap] = await Promise.all([
+          loadBalance(user.uid),
+          mine("orders"),
+          getDocs(query(collection(db, "rewards"), where("active", "==", true))),
+          getDocs(collection(db, "homeBanners")).catch(() => ({ docs: [] })),
+          getDocs(query(collection(db, "homeNews"), orderBy("createdAt", "desc"), limit(30))).catch(() => ({ docs: [] })),
+        ]);
+      } catch (e) {
+        $("pageError").textContent = t("common.loadFail") + e.message;
+        $("pageError").classList.remove("hidden");
+        return;
+      }
+
+      const sections = (cfg.sections && cfg.sections.length ? cfg.sections : DEFAULT_SECTIONS);
+      const rewards = rSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const rewardById = Object.fromEntries(rewards.map(r => [r.id, r]));
+      const now = new Date();
+
+      const R = {
+        // ---------- 你好 + 积分 + 等级 ----------
+        hero() {
+          const tp = tierProgress(member);
+          return `
+            <a class="shop-hero home-hero" href="account.html">
+              <img src="img/member.jpg" alt="">
+              <div style="flex:1;min-width:0">
+                <div class="sub">${esc(t("acc.hello", { name: member.name || t("acc.member") }))}</div>
+                <div class="pts-big">${esc(t("unit.pts", { n: bal.spendable.toLocaleString() }))}</div>
+                <div class="sub">${tp.tier.icon ? tp.tier.icon + " " : ""}${esc(tierLabel(tp.tier))}${bal.pending ? " · " + esc(t("home.pending", { n: bal.pending.toLocaleString() })) : ""}</div>
+              </div>
+              <span class="home-hero-go">➔</span>
+            </a>`;
+        },
+
+        // ---------- 横幅 ----------
+        banners() {
+          const list = bnSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+            .filter(b => b.active !== false && b.image)
+            .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999));
+          if (!list.length) return "";
+          return `
+            <div class="home-banners">
+              ${list.map(b => {
+                const href = safeLink(b.link);
+                const img = `<img src="${esc(b.image)}" alt="${esc(loc(b).title || b.title || "")}" loading="lazy">`;
+                return href ? `<a class="home-banner" href="${esc(href)}">${img}</a>` : `<div class="home-banner">${img}</div>`;
+              }).join("")}
+            </div>`;
+        },
+
+        // ---------- 最新一张订单 ----------
+        order() {
+          const orders = oSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+            .map(o => ({ ...o, orderTime: toDate(o.orderTime), availableAt: toDate(o.availableAt) }))
+            .sort((a, b) => (b.orderTime || 0) - (a.orderTime || 0));
+          const o = orders[0];
+          let body;
+          if (!o) {
+            body = `<p class="muted" style="font-size:.88rem">${t("home.noOrder")}</p>
+                    <a href="bind.html" class="btn btn-primary btn-inline" style="margin-top:10px">${t("acc.goBind")}</a>`;
+          } else {
+            let state;
+            if (o.status === "refunded") state = `<span class="tag tag-bad">${t("tag.refunded")}</span>`;
+            else if (o.availableAt && o.availableAt > now) state = `<span class="tag tag-pending">${t("tag.pending")}</span>`;
+            else state = `<span class="tag tag-ok">${t("tag.credited")}</span>`;
+            body = `
+              <div class="home-order">
+                <div style="min-width:0">
+                  <div class="title">${platformTag(o.platform)} ${fmtMoney(o.amount)} ${state}</div>
+                  <div class="meta">${esc(o.username)} · ${fmtDate(o.orderTime, true)}</div>
+                  ${o.status !== "refunded" && o.availableAt && o.availableAt > now
+                    ? `<div class="meta">${esc(t("notif.pendingUntil", { d: fmtDate(o.availableAt) }))}</div>` : ""}
+                </div>
+                <div class="home-order-pts">${o.status === "refunded" ? "0" : "+" + (o.points || 0)}<small>${t("home.ptsEarned")}</small></div>
+              </div>`;
+          }
+          return `
+            <div class="card">
+              <div class="card-head"><h2>🧾 ${t("home.latestOrder")}</h2><a class="small" href="points.html#orders">${t("home.viewAll")}</a></div>
+              ${body}
+            </div>`;
+        },
+
+        // ---------- 俱乐部消息（首页专用） ----------
+        news(sec) {
+          const list = nSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+            .filter(n => n.active !== false)
+            .slice(0, sec.count || 3);
+          if (!list.length) return "";
+          return `
+            <div class="card">
+              <div class="card-head"><h2>📣 ${t("home.news")}</h2></div>
+              <ul class="home-news">
+                ${list.map(n => {
+                  const rw = n.rewardId ? rewardById[n.rewardId] : null;
+                  const img = n.image || (rw && rw.image) || "";
+                  const href = safeLink(n.link) || (n.rewardId ? "shop.html" : "");
+                  const title = loc(n).title || n.title || (rw ? rw.name : "");
+                  const body = loc(n).body || n.body || "";
+                  const inner = `
+                    ${img ? `<img class="news-img" src="${esc(img)}" alt="" loading="lazy">`
+                          : rw ? `<span class="news-img news-icon">${rw.type === "coupon" ? "🎫" : "🎁"}</span>` : ""}
+                    <div class="news-body">
+                      <div class="title">${esc(title)}</div>
+                      ${body ? `<div class="news-text">${esc(body)}</div>` : ""}
+                      ${rw ? `<div class="news-reward">${esc(rw.name)} · <b>${esc(t("unit.pts", { n: Number(rw.cost).toLocaleString() }))}</b></div>` : ""}
+                      <div class="meta">${fmtDate(toDate(n.createdAt))}${href ? ` · <span class="news-more">${t("notif.open")}</span>` : ""}</div>
+                    </div>`;
+                  return `<li>${href ? `<a class="news-item" href="${esc(href)}">${inner}</a>` : `<div class="news-item">${inner}</div>`}</li>`;
+                }).join("")}
+              </ul>
+            </div>`;
+        },
+
+        // ---------- 最新上架的兑换商品 ----------
+        rewards(sec) {
+          const list = rewards.slice()
+            .sort((a, b) => (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0))
+            .slice(0, sec.count || 4);
+          if (!list.length) return "";
+          return `
+            <div class="card">
+              <div class="card-head"><h2>✨ ${t("home.newRewards")}</h2><a class="small" href="shop.html">${t("home.viewAll")}</a></div>
+              <div class="shop-grid">
+                ${list.map(r => `
+                  <a class="shop-item" href="shop.html" style="color:inherit;text-decoration:none">
+                    <div class="ph">${r.image ? `<img src="${esc(r.image)}" alt="" loading="lazy">` : (r.type === "coupon" ? "🎫" : "🎁")}</div>
+                    <div class="info">
+                      <div class="name">${esc(r.name)}</div>
+                      <div class="cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
+                    </div>
+                  </a>`).join("")}
+              </div>
+            </div>`;
+        },
+      };
+
+      $("homeSections").innerHTML = sections
+        .filter(s => s.on !== false && R[s.key])
+        .map(s => R[s.key](s))
+        .join("");
+    });
+  </script>
+</body>
+</html>

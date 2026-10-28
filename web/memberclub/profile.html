@@ -68,7 +68,7 @@
     import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, logout, t, normalizePhone, isValidPhone,
-      claimBonuses, toastBonuses, bonusPoints
+      claimBonuses, toastBonuses, bonusPoints, bonusActive
     } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
@@ -99,8 +99,8 @@
       $("phone").value = member.phone || "";
       $("waOptIn").checked = !!member.waOptIn;
       showBirthday(member.birthday);
-      $("waBonusHint").textContent = t("prof.waBonus", { n: bonusPoints("whatsapp") });
-      $("bdayBonusHint").textContent = t("prof.bdayBonus", { n: bonusPoints("birthday") });
+      $("waBonusHint").textContent = bonusActive("whatsapp") ? t("prof.waBonus", { n: bonusPoints("whatsapp") }) : "";
+      $("bdayBonusHint").textContent = bonusActive("birthday") ? t("prof.bdayBonus", { n: bonusPoints("birthday") }) : "";
 
       // 从「补充手机号码」提示点进来时，直接聚焦手机栏
       if (location.hash === "#phone") setTimeout(() => $("phone").focus(), 300);
