@@ -631,3 +631,27 @@ footer .legal a:hover { color: #fff; text-decoration: underline; }
   border-bottom-color: var(--gold);
 }
 .nav ul > li > button.sub-toggle .caret { font-size: .7em; margin-left: 2px; }
+/* ===== 手机端:子菜单上下排列、缩进、紧凑 ===== */
+@media (max-width: 760px) {
+  .nav ul > li { display: block; width: 100%; }
+  .nav ul > li > a,
+  .nav ul > li > button.sub-toggle { display: block; width: 100%; text-align: left; padding: 13px 0; border-top: 1px solid rgba(255,255,255,.12); border-bottom: 0; }
+  .nav ul > li:first-child > a { border-top: 0; }
+  .nav ul > li > a.active, .nav ul > li > button.sub-toggle.active { color: #fff; border-bottom: 0; box-shadow: inset 3px 0 0 var(--gold); padding-left: 10px; }
+
+  /* 有子菜单的按钮:文字靠左,箭头靠右 */
+  .nav ul > li > button.sub-toggle { display: flex; justify-content: space-between; align-items: center; }
+  .nav ul > li > button.sub-toggle .caret { margin-left: auto; font-size: .8em; transition: transform .2s; }
+  .nav li.has-sub.open > button.sub-toggle .caret { transform: rotate(180deg); }
+
+  /* 子菜单:默认收起,展开后在下面缩进显示 */
+  .nav ul > li > ul.sub { display: none; position: static; width: 100%; min-width: 0; margin: 0; padding: 0 0 8px 14px; background: transparent; border: 0; box-shadow: none; }
+  .nav li.has-sub.open > ul.sub { display: block; }
+  .nav ul.sub li { display: block; width: 100%; }
+  .nav ul.sub a { display: block; padding: 10px 0; border-top: 1px solid rgba(255,255,255,.07); font-size: .88rem; letter-spacing: .3px; white-space: normal; color: #d9d2de; }
+  .nav ul.sub li:first-child a { border-top: 0; }
+  .nav ul.sub a.active { color: var(--gold); }
+  .nav ul.sub a .sub-t { display: flex; align-items: center; gap: 8px; font-size: .9rem; color: inherit; }
+  .nav ul.sub a small { display: block; margin-top: 2px; font-size: .74rem; line-height: 1.4; color: #9d93a4; letter-spacing: 0; }
+  .nav ul.sub .sub-live { flex: 0 0 8px; width: 8px; height: 8px; border-radius: 50%; background: #e11d48; display: inline-block; }
+}
