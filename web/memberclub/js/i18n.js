@@ -4,6 +4,10 @@
 const DICT = {
   // ======================= English =======================
   en: {
+    "prof.nameRule": "Your name can be changed once every {n} days",
+    "prof.nameLocked": "Name recently changed — you can change it again after {d}",
+    "prof.nameEmpty": "Please enter your name",
+    "prof.nameConfirm": "Change your name to “{name}”? You won't be able to change it again for {n} days.",
     "tag.internal": "🏷️ Internal member",
     "home.noOrderInternal": "You're an internal member — no account linking needed. Points are added by the shop owner.",
     "addr.pickStateFirst": "Choose a state first",
@@ -367,6 +371,10 @@ const DICT = {
 
   // ======================= Bahasa Melayu =======================
   ms: {
+    "prof.nameRule": "Nama boleh ditukar sekali setiap {n} hari",
+    "prof.nameLocked": "Nama baru ditukar — boleh ditukar semula selepas {d}",
+    "prof.nameEmpty": "Sila masukkan nama",
+    "prof.nameConfirm": "Tukar nama kepada “{name}”? Anda tidak boleh menukarnya lagi selama {n} hari.",
     "tag.internal": "🏷️ Ahli dalaman",
     "home.noOrderInternal": "Anda ahli dalaman — tidak perlu memautkan akaun. Mata ditambah oleh pemilik kedai.",
     "addr.pickStateFirst": "Pilih negeri dahulu",
@@ -730,6 +738,10 @@ const DICT = {
 
   // ======================= 中文 =======================
   zh: {
+    "prof.nameRule": "昵称每 {n} 天只能修改一次",
+    "prof.nameLocked": "昵称刚改过，{d} 之后才能再修改",
+    "prof.nameEmpty": "请填写昵称",
+    "prof.nameConfirm": "把昵称改成「{name}」？改了之后 {n} 天内不能再改。",
     "tag.internal": "🏷️ 内部会员",
     "home.noOrderInternal": "你是内部会员，不需要绑定账号。积分由店主在后台发放。",
     "addr.pickStateFirst": "请先选州属",

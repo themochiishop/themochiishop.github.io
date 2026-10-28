@@ -22,6 +22,7 @@
         </label>
         <label><span data-i18n="idx.name"></span>
           <input id="name" required maxlength="40">
+          <small class="muted" id="nameHint"></small>
         </label>
         <label><span data-i18n="idx.phone"></span>
           <input type="tel" id="phone" required inputmode="tel" autocomplete="tel" data-i18n-ph="idx.phonePh">
@@ -81,10 +82,11 @@
 
   <script type="module">
     import { db } from "./js/firebase-config.js";
-    import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import { doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, logout, t, normalizePhone, isValidPhone,
-      claimBonuses, toastBonuses, bonusPoints, bonusActive, isInternalMember
+      claimBonuses, toastBonuses, bonusPoints, bonusActive, isInternalMember,
+      toDate, fmtDate, invalidateMemberCache
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
     import { MAX_ADDRESSES } from "./js/common.js";
@@ -115,6 +117,18 @@
       $("internalTag").classList.toggle("hidden", !isInternalMember(member));
       $("email").value = member.email || user.email || "";
       $("name").value = member.name || "";
+      // 昵称 30 天内只能改一次
+      let nameChangedAt = toDate(member.nameChangedAt);
+      const NAME_DAYS = 30;
+      function nameLock() {
+        const until = nameChangedAt ? new Date(nameChangedAt.getTime() + NAME_DAYS * 86400000) : null;
+        const locked = !!until && until > new Date();
+        $("name").readOnly = locked;
+        $("name").classList.toggle("locked", locked);
+        $("nameHint").textContent = locked ? t("prof.nameLocked", { d: fmtDate(until) }) : t("prof.nameRule", { n: NAME_DAYS });
+        return locked;
+      }
+      nameLock();
       $("phone").value = member.phone || "";
       $("waOptIn").checked = !!member.waOptIn;
       showBirthday(member.birthday);
@@ -188,7 +202,18 @@
         if (!isValidPhone(phone)) { setMsg($("nameMsg"), t("idx.phoneBad"), "err"); $("phone").focus(); return; }
         $("nameSubmit").disabled = true;
         try {
-          await updateDoc(ref, { name: $("name").value.trim(), phone, waOptIn: $("waOptIn").checked });
+          const newName = $("name").value.trim();
+          const data = { phone, waOptIn: $("waOptIn").checked };
+          if (newName !== (member.name || "")) {
+            if (nameLock()) { $("name").value = member.name || ""; setMsg($("nameMsg"), $("nameHint").textContent, "err"); return; }
+            if (!newName) { setMsg($("nameMsg"), t("prof.nameEmpty"), "err"); return; }
+            if (!confirm(t("prof.nameConfirm", { name: newName, n: NAME_DAYS }))) return;
+            data.name = newName;
+            data.nameChangedAt = serverTimestamp();
+          }
+          await updateDoc(ref, data);
+          if (data.name) { member.name = data.name; nameChangedAt = new Date(); nameLock(); }
+          invalidateMemberCache();
           $("phone").value = phone;
           setMsg($("nameMsg"), t("prof.saved"), "ok");
           try { toastBonuses((await claimBonuses(user.uid)).claimed); } catch (e2) { console.warn(e2); }
@@ -207,6 +232,7 @@
         $("birthdaySubmit").disabled = true;
         try {
           await updateDoc(ref, { birthday: b });
+          invalidateMemberCache();
           showBirthday(b);
           setMsg($("birthdayMsg"), t("prof.bdaySet"), "ok");
           try { toastBonuses((await claimBonuses(user.uid)).claimed); } catch (e2) { console.warn(e2); }

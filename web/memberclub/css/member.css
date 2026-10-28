@@ -809,3 +809,25 @@ select {
 
 /* 🏷️ 内部会员标签 */
 .tag-internal { background: rgba(124,92,255,.22); color: #c4b5fd; font-size: .72rem; vertical-align: middle; }
+
+/* ---------- ⚡ 换页更顺 ---------- */
+@view-transition { navigation: auto; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .15s; }
+body.navigating::before {
+  content: ""; position: fixed; top: 0; left: 0; height: 3px; width: 100%; z-index: 300;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transform-origin: left; animation: navBar 1.2s ease-out forwards;
+}
+@keyframes navBar { from { transform: scaleX(.05); } to { transform: scaleX(.85); } }
+body.navigating main { opacity: .55; transition: opacity .15s; }
+.main-nav a, .sub-nav a, .btn { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+
+/* ---------- 横向滑动：隐藏滚动条（照样可以左右滑） ---------- */
+.cat-chips, .filter-chips, .home-banners, .main-nav, .sub-nav {
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.cat-chips::-webkit-scrollbar, .filter-chips::-webkit-scrollbar, .home-banners::-webkit-scrollbar,
+.main-nav::-webkit-scrollbar, .sub-nav::-webkit-scrollbar { display: none; }
+
+/* 昵称锁定中 */
+input.locked { opacity: .6; cursor: not-allowed; }

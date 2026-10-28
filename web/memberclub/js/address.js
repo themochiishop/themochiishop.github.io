@@ -1,7 +1,7 @@
 // 📦 收货地址：个人资料的地址簿、兑换实体奖品时选地址，共用这里
 import { db } from "./firebase-config.js";
 import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { t, esc, MY_STATES, MY_CITIES, MAX_ADDRESSES, addressError, cleanAddress, addressHTML, stateFromPostcode } from "./common.js";
+import { t, esc, MY_STATES, MY_CITIES, MAX_ADDRESSES, addressError, cleanAddress, addressHTML, stateFromPostcode, invalidateMemberCache } from "./common.js";
 
 // 地址表单（root 里放这些栏位）。顺序：邮编 → 州属（按邮编自动选）→ 城市（按州属列出，找不到选「其他」）
 export function addressFormHTML() {
@@ -91,6 +91,7 @@ export function validateAddressForm(root) {
 
 export async function saveAddresses(uid, list) {
   await updateDoc(doc(db, "members", uid), { addresses: list.slice(0, MAX_ADDRESSES) });
+  invalidateMemberCache();
 }
 
 export function addressCardHTML(a, i, opts = {}) {

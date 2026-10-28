@@ -274,6 +274,7 @@ export function toDate(v) {
   if (!v) return null;
   if (typeof v.toDate === "function") return v.toDate();
   if (v instanceof Date) return v;
+  if (typeof v.seconds === "number") return new Date(v.seconds * 1000);   // 从暂存读回来的时间
   return null;
 }
 
@@ -409,12 +410,12 @@ export const BONUSES = [
 ];
 
 let perkCfg = null;
-export async function loadPerks() {
-  if (perkCfg) return perkCfg;
+export async function loadPerks(force = false) {
+  if (perkCfg && !force) return perkCfg;
   try {
     const snap = await getDoc(doc(db, "settings", "perks"));
     perkCfg = snap.exists() ? snap.data() : {};
-  } catch (e) { perkCfg = {}; }
+  } catch (e) { perkCfg = perkCfg || {}; }
   return perkCfg;
 }
 export function bonusPoints(key) {
@@ -520,35 +521,75 @@ export function toast(text) {
 }
 
 // ---------- 登录检查：未登录或未完成资料的人会被送回首页 ----------
-export function requireMember(onReady) {
+// ⚡ 加快换页：同一次浏览里，会员资料、俱乐部开关、福利设定先用上一页暂存的马上显示，
+// 同时在背景重新读取最新的（只要一来一回），有变化下一页就会用新的
+const BOOT_KEY = "mcBoot_";
+// 更新暂存里的会员资料（例如铃铛已读时间），下一页不用等重新读取
+export function patchMemberCache(uid, patch) {
+  try {
+    const key = BOOT_KEY + uid;
+    const c = JSON.parse(sessionStorage.getItem(key) || "null");
+    if (!c || !c.member) return;
+    c.member = { ...c.member, ...patch };
+    sessionStorage.setItem(key, JSON.stringify(c));
+  } catch (e) {}
+}
+export function invalidateMemberCache() {
+  try { Object.keys(sessionStorage).filter(k => k.startsWith(BOOT_KEY)).forEach(k => sessionStorage.removeItem(k)); } catch (e) {}
+}
+
+export function requireMember(onReady, opts = {}) {
   onAuthStateChanged(auth, async user => {
     if (!user) { location.replace("index.html"); return; }
-    try {
-      const snap = await getDoc(doc(db, "members", user.uid));
-      if (!snap.exists()) { location.replace("index.html"); return; }
-            // 俱乐部维修中：非管理员送回首页
-      const club = await getDoc(doc(db, "settings", "club"));
+    const key = BOOT_KEY + user.uid;
+    let cached = null;
+    if (!opts.fresh) { try { cached = JSON.parse(sessionStorage.getItem(key) || "null"); } catch (e) {} }
+
+    // 背景读取最新资料（会员资料、俱乐部开关、福利设定一起读）
+    const fresh = (async () => {
+      const [snap, club] = await Promise.all([
+        getDoc(doc(db, "members", user.uid)),
+        getDoc(doc(db, "settings", "club")),
+        loadPerks(true),
+      ]);
+      if (!snap.exists()) { invalidateMemberCache(); location.replace("index.html"); return null; }
+      // 俱乐部维修中：非管理员送回首页
       if (!(club.exists() && club.data().open === true)) {
         const adm = await getDoc(doc(db, "admins", user.uid)).catch(() => null);
-        if (!adm || !adm.exists()) { location.replace("index.html"); return; }
+        if (!adm || !adm.exists()) { invalidateMemberCache(); location.replace("index.html"); return null; }
       }
-      // 自动领取符合条件的额外福利（开放中的都领过了就不再检查）
-      let member = snap.data();
-      await loadPerks();
+      const member = snap.data();
+      try { sessionStorage.setItem(key, JSON.stringify({ member, perks: perkCfg })); } catch (e) {}
+      return member;
+    })();
+
+    const start = member => {
+      document.body.classList.remove("loading");
+      onReady(user, member);
+      initBell(user, member);
+      // 额外福利：在背景检查（开放中的都领过了就不再检查）
       const doneKey = "mochiiBonusDone_" + user.uid;
       let doneList = [];
       try { doneList = JSON.parse(localStorage.getItem(doneKey) || "[]"); } catch (e) {}
       if (!Array.isArray(doneList)) doneList = [];
       if (!activeBonuses().every(b => doneList.includes(b.key))) {
-        try {
-          const r = await claimBonuses(user.uid);
+        claimBonuses(user.uid).then(r => {
           try { localStorage.setItem(doneKey, JSON.stringify(r.done)); } catch (e) {}
+          if (r.claimed.length) invalidateMemberCache();
           toastBonuses(r.claimed);
-        } catch (e) { console.warn("claimBonuses", e); }
+        }).catch(e => console.warn("claimBonuses", e));
       }
-      document.body.classList.remove("loading");
-      onReady(user, member);
-      initBell(user, member);
+    };
+
+    try {
+      if (cached && cached.member) {
+        perkCfg = cached.perks || {};
+        start(cached.member);
+        fresh.catch(e => console.warn("refresh", e));
+      } else {
+        const member = await fresh;
+        if (member) start(member);
+      }
     } catch (e) {
       console.error(e);
       const el = document.getElementById("pageError");
@@ -605,7 +646,44 @@ export function renderNav(active) {
       </nav>
     </div>` : ""}`;
   bindLangSwitch(el);
+  speedUpNav(el);
 }
+
+// ---------- ⚡ 换页更顺：预先下载、按下马上有反应 ----------
+let navSpeedInit = false;
+function speedUpNav(el) {
+  // 按下时马上显示「换页中」，不用等网络
+  el.querySelectorAll("a[href$='.html']").forEach(a => {
+    a.addEventListener("click", e => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || a.target) return;
+      el.querySelectorAll(".main-nav a, .sub-nav a").forEach(x => x.classList.remove("active"));
+      a.classList.add("active");
+      document.body.classList.add("navigating");
+    });
+  });
+  if (navSpeedInit) return;
+  navSpeedInit = true;
+  // 浏览器支持的话：用 Speculation Rules 预先下载会员页（手指按住或滑鼠移过去时）
+  try {
+    if (HTMLScriptElement.supports && HTMLScriptElement.supports("speculationrules")) {
+      const sr = document.createElement("script");
+      sr.type = "speculationrules";
+      sr.textContent = JSON.stringify({ prefetch: [{ source: "document", where: { href_matches: "*.html" }, eagerness: "moderate" }] });
+      document.head.appendChild(sr);
+      return;
+    }
+  } catch (e) {}
+  // 不支持的话：闲下来时预先下载主要页面
+  const pages = ["home.html", "shop.html", "rewards.html", "account.html", "points.html", "profile.html", "bind.html"];
+  const idle = window.requestIdleCallback || (f => setTimeout(f, 1200));
+  idle(() => pages.filter(p => !location.pathname.endsWith(p)).forEach(p => {
+    const l = document.createElement("link");
+    l.rel = "prefetch"; l.href = p;
+    document.head.appendChild(l);
+  }));
+}
+// 从别页按「上一页」回来时，取消换页中的状态
+window.addEventListener("pageshow", () => document.body.classList.remove("navigating"));
 
 // ---------- 🔔 通知铃铛：积分进账、积分可用、兑换批准/拒绝 ----------
 const bell = { ledger: [], redemptions: [], announcements: [], bindLogs: [], seenAt: null, highlightSince: null };
@@ -770,6 +848,7 @@ export function initBell(user, member) {
     bell.highlightSince = bell.seenAt;
     bell.seenAt = new Date();
     renderBell();
+    patchMemberCache(user.uid, { notifSeenAt: { seconds: Math.floor(Date.now() / 1000) } });
     try { await updateDoc(doc(db, "members", user.uid), { notifSeenAt: serverTimestamp() }); }
     catch (err) { console.warn("notifSeenAt", err); }
   });
@@ -779,6 +858,7 @@ export function initBell(user, member) {
     e.stopPropagation();
     bell.seenAt = bell.highlightSince = new Date();
     renderBell();
+    patchMemberCache(user.uid, { notifSeenAt: { seconds: Math.floor(Date.now() / 1000) } });
     try { await updateDoc(doc(db, "members", user.uid), { notifSeenAt: serverTimestamp() }); }
     catch (err) { console.warn("notifSeenAt", err); }
   });
