@@ -23,6 +23,7 @@
     <!-- 尚未绑定时的提示 -->
     <div id="bindCallout" class="callout hidden">
       <p data-i18n="acc.bindCallout"></p>
+      <p class="welcome-line" id="welcomeLine"></p>
       <a href="bind.html" class="btn btn-primary btn-inline" data-i18n="acc.goBind"></a>
     </div>
 
@@ -57,6 +58,15 @@
       </div>
     </div>
 
+    <p class="expiry-note" id="expiryNote"></p>
+
+    <!-- 赚更多积分：欢迎礼 + 完善资料任务（全部完成后自动隐藏） -->
+    <div class="card task-card hidden" id="taskCard">
+      <h2 data-i18n="task.title"></h2>
+      <p class="muted task-sub" data-i18n="task.sub"></p>
+      <ul class="task-list" id="taskList"></ul>
+    </div>
+
     <!-- 已绑定账号 -->
     <div class="card">
       <h2 data-i18n="acc.bound"></h2>
@@ -79,7 +89,9 @@
     import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, toDate, fmtDate, fmtMoney, esc, platformTag,
-      TIERS, tierProgress, tierLabel, tierIconHTML, t, translateReason    } from "./js/common.js";
+      TIERS, tierProgress, tierLabel, tierIconHTML, t, translateReason,
+      BONUSES, bonusPoints, EXPIRY_MONTHS
+    } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
     renderNav("account");
@@ -143,6 +155,36 @@
       }
       $("pending").textContent = bal.pending.toLocaleString();
       $("nextUnlock").textContent = bal.nextUnlock ? t("acc.nextUnlock", { d: fmtDate(bal.nextUnlock) }) : " ";
+
+      // ---------- ⏳ 积分有效期 ----------
+      if (bal.expiring.length) {
+        $("expiryNote").innerHTML = bal.expiring.map(x =>
+          `<span class="expiry-soon">⏳ ${esc(t("acc.expiring", { n: x.amount.toLocaleString(), d: fmtDate(x.date) }))}</span>`
+        ).join("") + ` <a href="shop.html">${t("acc.useNow")}</a>`;
+      } else {
+        $("expiryNote").textContent = t("acc.expiryRule", { m: EXPIRY_MONTHS });
+      }
+
+      // ---------- 🎁 赚更多积分 ----------
+      const got = new Set(bal.ledger.map(x => (BONUSES.find(b => b.reason === x.reason) || {}).key).filter(Boolean));
+      const tasks = [
+        { key: "welcome",   href: "bind.html" },
+        { key: "birthday",  href: "profile.html" },
+        { key: "whatsapp",  href: "profile.html#phone" },
+        { key: "platform2", href: "bind.html" },
+      ].map(x => ({ ...x, ok: got.has(x.key) }));
+      $("welcomeLine").textContent = t("acc.welcomeBonus", { n: bonusPoints("welcome") });
+      if (tasks.some(x => !x.ok)) {
+        $("taskCard").classList.remove("hidden");
+        $("taskList").innerHTML = tasks.map(x => `
+          <li class="${x.ok ? "done" : ""}">
+            <span class="task-check">${x.ok ? "✓" : ""}</span>
+            <span class="task-text">${t("task." + x.key)}${!x.ok && !bindings.length && x.key !== "welcome" ? ` <small class="muted">${t("task.needBind")}</small>` : ""}</span>
+            ${x.ok
+              ? `<span class="task-pts muted">${t("notif.plus", { n: bonusPoints(x.key) })}</span>`
+              : `<a class="task-pts" href="${x.href}">${t("notif.plus", { n: bonusPoints(x.key) })} ➔</a>`}
+          </li>`).join("");
+      }
 
       // ---------- 积分记录 ----------
       $("ledgerList").innerHTML = bal.ledger.length ? bal.ledger.map(x => {

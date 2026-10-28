@@ -53,7 +53,7 @@
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, esc, toDate, fmtDate, platformTag, platformLabel,
-      detectPlatform, normalizeOrderNo, normalizeUsername, t
+      detectPlatform, normalizeOrderNo, normalizeUsername, t, claimBonuses, toastBonuses
     } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
@@ -114,6 +114,8 @@
           $("bindForm").reset();
           $("platformHint").textContent = "";
           await loadBindings();
+          // 绑定后马上领欢迎礼 / 第二平台奖励
+          try { toastBonuses((await claimBonuses(user.uid)).claimed); } catch (e2) { console.warn(e2); }
         } catch (err) {
           if (err.code === "permission-denied") setMsg(t("bind.denied"), "err");
           else setMsg(t("bind.fail") + err.message, "err");

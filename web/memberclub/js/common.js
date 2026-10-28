@@ -2,10 +2,10 @@
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
-  doc, getDoc, collection, query, where, getDocs,
+  doc, getDoc, setDoc, collection, query, where, getDocs, orderBy, limit,
   onSnapshot, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { t, applyI18n, langSwitchHTML, bindLangSwitch, translateReason } from "./i18n.js";
+import { t, applyI18n, langSwitchHTML, bindLangSwitch, translateReason, lang } from "./i18n.js";
 
 export { t, applyI18n, translateReason, lang } from "./i18n.js";
 
@@ -152,8 +152,145 @@ export async function loadBalance(uid) {
     }
   });
   const reserved = redemptions.filter(r => r.status === "pending").reduce((s, r) => s + (r.cost || 0), 0);
+  const expiring = expiringSoon(pointLots(ledger, reserved), now);
 
-  return { ledger, redemptions, available, pending, reserved, spendable: available - reserved, nextUnlock };
+  return { ledger, redemptions, available, pending, reserved, spendable: available - reserved, nextUnlock, expiring };
+}
+
+// ---------- ⏳ 积分有效期（必须和 Google 表格同步脚本的 MS_EXPIRY_MONTHS / msPointLots_ 一致） ----------
+export const EXPIRY_MONTHS = 12;    // 积分入账后几个月过期
+export const EXPIRY_WARN_DAYS = 30; // 过期前几天开始提醒
+
+function addMonths(d, n) {
+  const x = new Date(d);
+  x.setMonth(x.getMonth() + n);
+  return x;
+}
+
+// 每笔积分的起算日：入账时间与可用时间较晚者（补算的旧订单从补算那天起算）
+function lotStart(x) {
+  const a = toDate(x.availableAt), c = toDate(x.createdAt);
+  if (!a) return c;
+  if (!c) return a;
+  return a > c ? a : c;
+}
+
+// 还没用掉的积分批次（先进先出：兑换、扣分、过期都先扣最旧的；审核中的兑换也算已用）
+// 同一张订单的加减先合并，退货不会扣到别的订单的积分
+export function pointLots(ledger, reserved = 0) {
+  const credits = [];
+  const byOrder = {};
+  let used = reserved;
+  ledger.forEach(x => {
+    if (x.orderNo) { (byOrder[x.orderNo] = byOrder[x.orderNo] || []).push(x); return; }
+    if (x.delta > 0) credits.push({ amount: x.delta, start: lotStart(x) });
+    else used -= x.delta;
+  });
+  Object.values(byOrder).forEach(list => {
+    const net = list.reduce((s, x) => s + x.delta, 0);
+    if (net > 0) {
+      const starts = list.filter(x => x.delta > 0).map(lotStart).filter(Boolean);
+      credits.push({ amount: net, start: starts.length ? new Date(Math.min(...starts)) : null });
+    } else if (net < 0) used -= net;
+  });
+  credits.sort((a, b) => (a.start || 0) - (b.start || 0));
+  const lots = [];
+  credits.forEach(c => {
+    const take = Math.min(used, c.amount);
+    used -= take;
+    if (c.amount - take > 0 && c.start) {
+      lots.push({ amount: c.amount - take, start: c.start, expires: addMonths(c.start, EXPIRY_MONTHS) });
+    }
+  });
+  return lots;
+}
+
+// 未来 EXPIRY_WARN_DAYS 天内过期的积分，按日期合并：[{ date, amount }]
+export function expiringSoon(lots, now = new Date()) {
+  const limitAt = new Date(now.getTime() + EXPIRY_WARN_DAYS * 86400000);
+  const map = {};
+  lots.filter(l => l.start <= now && l.expires <= limitAt).forEach(l => {
+    const key = fmtDate(l.expires);
+    if (!map[key]) map[key] = { date: l.expires, amount: 0 };
+    map[key].amount += l.amount;
+  });
+  return Object.values(map).sort((a, b) => a.date - b.date);
+}
+
+// ---------- 🎁 新会员欢迎礼 / 📝 完善资料奖励（必须和 Firestore 规则里的 bonusOk 一致） ----------
+// 都要先绑定至少一个购物账号；每种每人只能领一次（积分记录用固定 ID）
+export const BONUSES = [
+  { key: "welcome",   id: "welcome",          points: 50, reason: "新会员欢迎礼" },
+  { key: "birthday",  id: "profile_birthday",  points: 10, reason: "完善资料：生日" },
+  { key: "whatsapp",  id: "profile_whatsapp",  points: 10, reason: "完善资料：WhatsApp 通知" },
+  { key: "platform2", id: "profile_platform2", points: 20, reason: "完善资料：绑定第二个平台" },
+];
+export function bonusPoints(key) {
+  const b = BONUSES.find(x => x.key === key);
+  return b ? b.points : 0;
+}
+
+// 检查并领取所有符合条件的奖励；回传 { done: 已领过的 key, claimed: 这次新领的 [{key, points}] }
+export async function claimBonuses(uid) {
+  const mine = c => getDocs(query(collection(db, c), where("uid", "==", uid)));
+  const [mSnap, bSnap, lSnap] = await Promise.all([getDoc(doc(db, "members", uid)), mine("bindings"), mine("pointsLedger")]);
+  const member = mSnap.exists() ? mSnap.data() : {};
+  const binds = bSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (toDate(a.createdAt) || 0) - (toDate(b.createdAt) || 0));
+  const have = new Set(lSnap.docs.map(d => d.id));
+  const docId = b => b.id + "_" + uid;
+
+  const done = BONUSES.filter(b => have.has(docId(b))).map(b => b.key);
+  const claimed = [];
+  if (!binds.length) return { done, claimed, member, binds };
+
+  const first = binds[0];
+  const other = binds.find(b => b.platform !== first.platform);
+  const eligible = {
+    welcome: [first.id],
+    birthday: member.birthday ? [first.id] : null,
+    whatsapp: member.waOptIn === true && member.phone ? [first.id] : null,
+    platform2: other ? [first.id, other.id] : null,
+  };
+
+  for (const b of BONUSES) {
+    if (have.has(docId(b)) || !eligible[b.key]) continue;
+    try {
+      await setDoc(doc(db, "pointsLedger", docId(b)), {
+        uid,
+        delta: b.points,
+        reason: b.reason,
+        orderNo: null,
+        bindingIds: eligible[b.key],
+        availableAt: serverTimestamp(),
+        createdAt: serverTimestamp()
+      });
+      claimed.push({ key: b.key, points: b.points });
+      done.push(b.key);
+    } catch (e) {
+      console.warn("bonus " + b.key, e);
+    }
+  }
+  return { done, claimed, member, binds };
+}
+
+// 领到奖励时跳出提示
+export function toastBonuses(claimed) {
+  claimed.forEach((c, i) => setTimeout(() => toast("🎉 " + t("bonus.toast", { n: c.points, what: t("bonus." + c.key) })), i * 2600));
+}
+
+export function toast(text) {
+  let el = document.getElementById("toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "toast";
+    el.className = "toast";
+    document.body.appendChild(el);
+  }
+  el.textContent = text;
+  el.classList.add("show");
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove("show"), 2400);
 }
 
 // ---------- 登录检查：未登录或未完成资料的人会被送回首页 ----------
@@ -169,9 +306,21 @@ export function requireMember(onReady) {
         const adm = await getDoc(doc(db, "admins", user.uid)).catch(() => null);
         if (!adm || !adm.exists()) { location.replace("index.html"); return; }
       }
+      // 自动领取符合条件的欢迎礼 / 完善资料奖励（全部领完后就不再检查）
+      let member = snap.data();
+      const doneKey = "mochiiBonusDone_" + user.uid;
+      let allDone = false;
+      try { allDone = localStorage.getItem(doneKey) === "1"; } catch (e) {}
+      if (!allDone) {
+        try {
+          const r = await claimBonuses(user.uid);
+          if (r.done.length === BONUSES.length) { try { localStorage.setItem(doneKey, "1"); } catch (e) {} }
+          toastBonuses(r.claimed);
+        } catch (e) { console.warn("claimBonuses", e); }
+      }
       document.body.classList.remove("loading");
-      onReady(user, snap.data());
-            initBell(user, snap.data());
+      onReady(user, member);
+      initBell(user, member);
     } catch (e) {
       console.error(e);
       const el = document.getElementById("pageError");
@@ -226,7 +375,8 @@ export function renderNav(active) {
 }
 
 // ---------- 🔔 通知铃铛：积分进账、积分可用、兑换批准/拒绝 ----------
-const bell = { ledger: [], redemptions: [], seenAt: null, highlightSince: null };
+const bell = { ledger: [], redemptions: [], announcements: [], seenAt: null, highlightSince: null };
+const ANNOUNCE_DAYS = 60; // 公告在铃铛里显示多少天
 
 function buildEvents() {
   const now = new Date();
@@ -238,7 +388,7 @@ function buildEvents() {
     const stillPending = avail && avail > now;
     ev.push({
       time: at,
-      icon: x.delta >= 0 ? "🎉" : "↩️",
+      icon: x.reason === "积分过期" ? "⌛" : x.delta >= 0 ? "🎉" : "↩️",
       title: translateReason(x.reason),
       detail: (x.delta >= 0 ? t("notif.plus", { n: x.delta }) : t("notif.minus", { n: x.delta }))
         + (stillPending && x.delta > 0 ? " · " + t("notif.pendingUntil", { d: fmtDate(avail) }) : ""),
@@ -258,7 +408,41 @@ function buildEvents() {
       ev.push({ time: at, icon: "❌", title: t("notif.rejected", { name: r.rewardName }), detail: r.note || "" });
     }
   });
+  // ⏳ 积分快过期：过期前 EXPIRY_WARN_DAYS 天提醒
+  const reserved = bell.redemptions.filter(r => r.status === "pending").reduce((s, r) => s + (r.cost || 0), 0);
+  expiringSoon(pointLots(bell.ledger, reserved), now).forEach(x => {
+    ev.push({
+      time: new Date(x.date.getTime() - EXPIRY_WARN_DAYS * 86400000),
+      icon: "⏳",
+      title: t("notif.expiring", { n: x.amount, d: fmtDate(x.date) }),
+      detail: t("notif.expiringDetail"),
+      link: "shop.html",
+    });
+  });
+  // 📢 管理员公告（有当前语言的版本就用那个）
+  bell.announcements.forEach(a => {
+    const at = toDate(a.createdAt);
+    if (!at) return;
+    const loc = (a.i18n && a.i18n[lang]) || {};
+    ev.push({
+      time: at,
+      icon: "📢",
+      title: loc.title || a.title || "",
+      detail: loc.body || a.body || "",
+      link: a.link || "",
+      announce: true,
+    });
+  });
   return ev.filter(e => e.time <= now).sort((a, b) => b.time - a.time).slice(0, 50);
+}
+
+// 只允许站内页面或 https 链接
+function safeLink(u) {
+  u = String(u || "").trim();
+  if (!u) return "";
+  if (/^https:\/\//i.test(u)) return u;
+  if (/^[a-z0-9_-]+\.html(#[\w-]*)?$/i.test(u)) return u;
+  return "";
 }
 
 function renderBell() {
@@ -272,11 +456,12 @@ function renderBell() {
   document.getElementById("bellBtn").classList.toggle("has-new", !!unread);
   const hl = bell.highlightSince;
   list.innerHTML = events.length ? events.map(e => `
-    <li class="${!hl || e.time > hl ? "unread" : ""}">
+    <li class="${!hl || e.time > hl ? "unread" : ""}${e.announce ? " announce" : ""}">
       <span class="bell-icon">${e.icon}</span>
       <div>
         <div class="bell-title">${esc(e.title)}</div>
         ${e.detail ? `<div class="bell-detail">${esc(e.detail)}</div>` : ""}
+        ${safeLink(e.link) ? `<a class="bell-link" href="${esc(safeLink(e.link))}">${t("notif.open")}</a>` : ""}
         <div class="bell-time">${fmtDate(e.time, true)}</div>
       </div>
     </li>`).join("") : `<li class="bell-empty">${t("notif.empty")}</li>`;
@@ -292,6 +477,12 @@ export function initBell(user, member) {
   const mine = c => query(collection(db, c), where("uid", "==", user.uid));
   onSnapshot(mine("pointsLedger"), s => { bell.ledger = s.docs.map(d => d.data()); renderBell(); });
   onSnapshot(mine("redemptions"), s => { bell.redemptions = s.docs.map(d => ({ id: d.id, ...d.data() })); renderBell(); });
+  const since = new Date(Date.now() - ANNOUNCE_DAYS * 86400000);
+  onSnapshot(
+    query(collection(db, "announcements"), where("createdAt", ">=", since), orderBy("createdAt", "desc"), limit(20)),
+    s => { bell.announcements = s.docs.map(d => ({ id: d.id, ...d.data() })); renderBell(); },
+    err => console.warn("announcements", err)
+  );
 
   btn.addEventListener("click", async e => {
     e.stopPropagation();

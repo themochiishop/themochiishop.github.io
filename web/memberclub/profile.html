@@ -31,6 +31,7 @@
           <input type="checkbox" id="waOptIn">
           <span data-i18n="idx.waOptIn"></span>
         </label>
+        <p class="bonus-hint" id="waBonusHint"></p>
         <button type="submit" class="btn btn-primary" id="nameSubmit" data-i18n="prof.save"></button>
       </form>
       <p id="nameMsg" class="msg"></p>
@@ -47,6 +48,7 @@
           <input type="date" id="birthday" required>
           <small data-i18n="prof.bdayHint"></small>
         </label>
+        <p class="bonus-hint" id="bdayBonusHint"></p>
         <button type="submit" class="btn btn-primary" id="birthdaySubmit" data-i18n="prof.bdaySubmit"></button>
       </form>
       <p id="birthdayMsg" class="msg"></p>
@@ -64,7 +66,10 @@
   <script type="module">
     import { db } from "./js/firebase-config.js";
     import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-    import { requireMember, renderNav, logout, t, normalizePhone, isValidPhone } from "./js/common.js";
+    import {
+      requireMember, renderNav, logout, t, normalizePhone, isValidPhone,
+      claimBonuses, toastBonuses, bonusPoints
+    } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
     renderNav("profile");
@@ -94,6 +99,8 @@
       $("phone").value = member.phone || "";
       $("waOptIn").checked = !!member.waOptIn;
       showBirthday(member.birthday);
+      $("waBonusHint").textContent = t("prof.waBonus", { n: bonusPoints("whatsapp") });
+      $("bdayBonusHint").textContent = t("prof.bdayBonus", { n: bonusPoints("birthday") });
 
       // 从「补充手机号码」提示点进来时，直接聚焦手机栏
       if (location.hash === "#phone") setTimeout(() => $("phone").focus(), 300);
@@ -107,6 +114,7 @@
           await updateDoc(ref, { name: $("name").value.trim(), phone, waOptIn: $("waOptIn").checked });
           $("phone").value = phone;
           setMsg($("nameMsg"), t("prof.saved"), "ok");
+          try { toastBonuses((await claimBonuses(user.uid)).claimed); } catch (e2) { console.warn(e2); }
         } catch (err) {
           setMsg($("nameMsg"), t("idx.saveFail") + err.message, "err");
         } finally {
@@ -124,6 +132,7 @@
           await updateDoc(ref, { birthday: b });
           showBirthday(b);
           setMsg($("birthdayMsg"), t("prof.bdaySet"), "ok");
+          try { toastBonuses((await claimBonuses(user.uid)).claimed); } catch (e2) { console.warn(e2); }
         } catch (err) {
           setMsg($("birthdayMsg"), t("prof.setFail") + err.message, "err");
           $("birthdaySubmit").disabled = false;
