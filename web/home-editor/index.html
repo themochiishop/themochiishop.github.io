@@ -126,6 +126,19 @@
             .prow .u { grid-area: u; } .prow .d { grid-area: d; } .prow .x2 { grid-area: x2; }
       .prow .u, .prow .d, .prow .x2 { width: 100%; }
     }
+        .nv { border: 1px solid #e9e2e6; border-radius: 10px; padding: 10px; margin-bottom: 10px; background: #fcfbfc; }
+    .nv-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) minmax(0, 1.2fr) 30px 30px 34px; grid-template-areas: "c n h u d x"; gap: 6px; align-items: center; margin-bottom: 6px; }
+    .nv-row input[type=text] { padding: 8px 10px; font-size: .85rem; min-width: 0; }
+    .nv-row .c { grid-area: c; width: 18px; height: 18px; cursor: pointer; }
+    .nv-row .n { grid-area: n; } .nv-row .h { grid-area: h; } .nv-row .u { grid-area: u; } .nv-row .d { grid-area: d; } .nv-row .nvx { grid-area: x; }
+    .nvx { width: 34px; height: 34px; border: 1px solid #e8b4ad; background: #fff; color: #c0392b; border-radius: 8px; cursor: pointer; font: inherit; }
+    .nv-sub { margin-left: 18px; padding-left: 10px; border-left: 2px solid #e0628a55; grid-template-areas: "c n h u d x" ". o o l l l"; }
+    .nv-row .nt { grid-area: o; padding: 7px 10px; font-size: .8rem; }
+    .nv-row .nl { grid-area: l; margin: 0; font-weight: 500; font-size: .76rem; display: flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; }
+    @media (max-width: 600px) {
+      .nv-row { grid-template-columns: 22px minmax(0, 1fr) 30px 30px 34px; grid-template-areas: "c n n n n" "c h u d x"; }
+      .nv-sub { margin-left: 8px; grid-template-areas: "c n n n n" "c h u d x" ". o o o o" ". l l l l"; }
+    }
   </style>
 </head>
 <body>
@@ -400,8 +413,7 @@
     <div class="panel" id="panel-nav">
       <div class="panel-head"><h2>🧭 导航菜单</h2><a class="btn ghost small" href="/" target="_blank" rel="noopener">查看网站 ↗</a></div>
       <div class="card">
-        <p class="hint">勾选 = 显示在页头。链接以 / 开头是本站页面(例如 /about-us/),以 https:// 开头是外部网站(会在新窗口打开)。用 ↑ ↓ 调整顺序,保存后所有页面同时生效。</p>
-        <div id="navList"></div>
+        <p class="hint">每个大块是一个主菜单,下面缩进的是它的子菜单(最多两层)。勾选 = 显示。链接以 / 开头是本站页面(例如 /about-us/),以 https:// 开头是外部网站(新窗口打开)。主菜单有子菜单时,它只负责展开、不跳转,链接可以留空。子菜单可以写一行说明,并可以勾选"红点 LIVE"。Monthly Draw 默认带两个子菜单,可以修改或删除。保存后所有页面的页头和页脚 Site Map 同时生效。</p>        <div id="navList"></div>
         <datalist id="navPages">
           <option value="/"></option>
           <option value="/live-stream/"></option>
@@ -822,61 +834,116 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
     return '';
   }
   
-    /* ---------- 导航菜单 ---------- */
+      /* ---------- 导航菜单(主菜单 + 子菜单) ---------- */
+  const MONTHLY_KIDS = [
+    { label: 'Monthly Draw', href: '/monthly-draw/', note: "This month's prizes & winners", live: false, show: true },
+    { label: 'Live Draw', href: '/live-draw/', note: 'Watch the draw live, in real time', live: true, show: true }
+  ];
+  const isMonthly = h => String(h || '').trim().replace(/\/+$/, '') === '/monthly-draw';
   const NAV_DEFAULT = [
     { label: 'Home', href: '/', show: true },
     { label: 'Live Stream', href: '/live-stream/', show: true },
     { label: 'Figures Toy', href: '/figures-toy/', show: true },
-    { label: 'Monthly Draw', href: '/monthly-draw/', show: true },
+    { label: 'Monthly Draw', href: '/monthly-draw/', show: true, children: MONTHLY_KIDS },
     { label: 'About Us', href: '/about-us/', show: true },
     { label: 'Contact Us', href: '/contact-us/', show: true }
   ];
-  let navItems = NAV_DEFAULT.map(x => ({ ...x }));
+  const kidCopy = c => ({ label: c.label, href: c.href, show: c.show !== false, note: c.note || '', live: c.live === true });
+  const navCopy = list => list.map(x => ({ label: x.label, href: x.href, show: x.show !== false, nosub: x.nosub === true, children: (x.children || []).map(kidCopy) }));
+  let navItems = navCopy(NAV_DEFAULT);
+
+  function navRow(it, arr, i, isSub) {
+    const row = document.createElement('div'); row.className = 'nv-row' + (isSub ? ' nv-sub' : '');
+
+    const chk = document.createElement('input'); chk.type = 'checkbox'; chk.className = 'c'; chk.checked = it.show !== false; chk.title = '显示';
+    chk.onchange = () => { it.show = chk.checked; };
+
+    const lab = document.createElement('input'); lab.type = 'text'; lab.className = 'n'; lab.placeholder = isSub ? '子菜单名称' : '菜单名称'; lab.value = it.label; lab.maxLength = 30;
+    lab.oninput = () => { it.label = lab.value; };
+
+    const hr = document.createElement('input'); hr.type = 'text'; hr.className = 'h'; hr.value = it.href; hr.setAttribute('list', 'navPages');
+    hr.placeholder = isSub ? '链接,例如 /about-us/' : '链接(有子菜单时可留空)';
+    hr.oninput = () => { it.href = hr.value; };
+
+    const mv = (cls, txt, label, dir) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'wm ' + cls; b.textContent = txt; b.setAttribute('aria-label', label);
+      const j = i + dir; b.disabled = j < 0 || j >= arr.length;
+      b.onclick = () => { [arr[i], arr[j]] = [arr[j], arr[i]]; renderNav(); };
+      return b;
+    };
+    const del = document.createElement('button'); del.type = 'button'; del.className = 'nvx'; del.textContent = '×'; del.setAttribute('aria-label', '删除');
+    del.onclick = () => {
+      if (!isSub && (it.children || []).length && !confirm('删除「' + (it.label || '未命名') + '」和它下面的子菜单?')) return;
+      arr.splice(i, 1); renderNav();
+    };
+
+    row.append(chk, lab, hr, mv('u', '↑', '上移', -1), mv('d', '↓', '下移', 1), del);
+
+    if (isSub) {
+      const nt = document.createElement('input'); nt.type = 'text'; nt.className = 'nt'; nt.placeholder = '说明(可留空,显示在名称下面的小字)'; nt.value = it.note || ''; nt.maxLength = 60;
+      nt.oninput = () => { it.note = nt.value; };
+      const lv = document.createElement('label'); lv.className = 'nl';
+      const lc = document.createElement('input'); lc.type = 'checkbox'; lc.checked = it.live === true;
+      lc.onchange = () => { it.live = lc.checked; };
+      lv.append(lc, document.createTextNode(' 红点 LIVE'));
+      row.append(nt, lv);
+    }
+    return row;
+  }
 
   function renderNav() {
     const box = $('#navList'); box.innerHTML = '';
     navItems.forEach((it, i) => {
-      const row = document.createElement('div'); row.className = 'slide-item';
-
-      const chk = document.createElement('input'); chk.type = 'checkbox'; chk.checked = it.show !== false; chk.title = '显示在页头';
-      chk.style.cssText = 'width:20px;height:20px;flex-shrink:0;cursor:pointer';
-      chk.onchange = () => { it.show = chk.checked; };
-
-      const mid = document.createElement('div'); mid.className = 'mid';
-      const lab = document.createElement('input'); lab.type = 'text'; lab.placeholder = '菜单名称'; lab.value = it.label; lab.maxLength = 24;
-      lab.oninput = () => { it.label = lab.value; };
-      const hr = document.createElement('input'); hr.type = 'text'; hr.placeholder = '链接,例如 /about-us/'; hr.value = it.href;
-      hr.setAttribute('list', 'navPages');
-      hr.oninput = () => { it.href = hr.value; };
-      mid.append(lab, hr);
-
-      const ops = document.createElement('div'); ops.className = 'ops';
-      const up = btn('↑', 'ghost small', () => { [navItems[i], navItems[i - 1]] = [navItems[i - 1], navItems[i]]; renderNav(); }); up.disabled = i === 0;
-      const dn = btn('↓', 'ghost small', () => { [navItems[i], navItems[i + 1]] = [navItems[i + 1], navItems[i]]; renderNav(); }); dn.disabled = i === navItems.length - 1;
-      const del = btn('删除', 'danger small', () => { navItems.splice(i, 1); renderNav(); });
-      ops.append(up, dn, del);
-
-      row.append(chk, mid, ops);
-      box.appendChild(row);
+      if (!Array.isArray(it.children)) it.children = [];
+      const blk = document.createElement('div'); blk.className = 'nv';
+      blk.appendChild(navRow(it, navItems, i, false));
+      it.children.forEach((c, j) => blk.appendChild(navRow(c, it.children, j, true)));
+      const add = btn('＋ 添加子菜单', 'ghost small', () => { it.children.push({ label: '', href: '/', show: true, note: '', live: false }); renderNav(); });
+      add.style.marginLeft = '18px';
+      blk.appendChild(add);
+      box.appendChild(blk);
     });
     markDirty();
   }
-  $('#navAdd').onclick = () => { navItems.push({ label: '', href: '/', show: true }); renderNav(); };
+  $('#navAdd').onclick = () => { navItems.push({ label: '', href: '/', show: true, children: [] }); renderNav(); };
   $('#navReset').onclick = () => {
     if (!confirm('恢复成默认菜单?当前的修改会被覆盖(点保存后才会生效)。')) return;
-    navItems = NAV_DEFAULT.map(x => ({ ...x })); renderNav();
+    navItems = navCopy(NAV_DEFAULT); renderNav();
   };
   function loadNav(v) {
     const list = Array.isArray(v) ? v : Object.values(v || {});
-    const ok = list.filter(x => x && typeof x.label === 'string' && typeof x.href === 'string')
-      .map(x => ({ label: x.label, href: x.href, show: x.show !== false }));
-    navItems = ok.length ? ok : NAV_DEFAULT.map(x => ({ ...x }));
+    const ok = list.filter(x => x && typeof x.label === 'string').map(x => {
+      const raw = Array.isArray(x.children) ? x.children : Object.values(x.children || {});
+      let kids = raw.filter(c => c && typeof c.label === 'string').map(c => ({ label: c.label, href: typeof c.href === 'string' ? c.href : '', show: c.show !== false, note: typeof c.note === 'string' ? c.note : '', live: c.live === true }));
+      const href = typeof x.href === 'string' ? x.href : '';
+      if (!kids.length && isMonthly(href) && x.nosub !== true) kids = MONTHLY_KIDS.map(kidCopy);   // 以前存的 Monthly 补上默认子菜单
+      return { label: x.label, href, show: x.show !== false, nosub: x.nosub === true, children: kids };
+    });
+    navItems = ok.length ? ok : navCopy(NAV_DEFAULT);
     renderNav();
   }
+  const navOut = () => navItems.map(x => {
+    const o = { label: x.label.trim(), href: x.href.trim(), show: x.show !== false };
+    const ch = (x.children || []).map(c => {
+      const k = { label: c.label.trim(), href: c.href.trim(), show: c.show !== false };
+      if ((c.note || '').trim()) k.note = c.note.trim();
+      if (c.live) k.live = true;
+      return k;
+    });
+    if (ch.length) o.children = ch; else if (isMonthly(o.href)) o.nosub = true;   // Monthly 的子菜单全删了,记住"不要再用默认"
+    return o;
+  });
   function validateNav() {
+    const okHref = h => /^(\/|https:\/\/)/.test(h);
     for (const it of navItems) {
       if (!it.label.trim()) return '导航菜单:有菜单项没有填写名称';
-      if (!/^(\/|https:\/\/)/.test(it.href.trim())) return '导航菜单:链接必须以 / 或 https:// 开头:' + it.label;
+      const h = it.href.trim(), subs = it.children || [];
+      if (!h && !subs.length) return '导航菜单:「' + it.label + '」没有链接,也没有子菜单';
+      if (h && !okHref(h)) return '导航菜单:链接必须以 / 或 https:// 开头:' + it.label;
+      for (const c of subs) {
+        if (!c.label.trim()) return '导航菜单:「' + it.label + '」下有子菜单没有填写名称';
+        if (!okHref(c.href.trim())) return '导航菜单:子菜单链接必须以 / 或 https:// 开头:' + c.label;
+      }
     }
     if (!navItems.some(x => x.show !== false)) return '导航菜单:至少要显示一项';
     return '';
@@ -1068,7 +1135,7 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
             await set(ref(db, 'homepage/figuresBanner'), banner || null);
       const abOut = {}; if (about.story) abOut.story = about.story; if (about.dream) abOut.dream = about.dream;
       await set(ref(db, 'homepage/about'), Object.keys(abOut).length ? abOut : null);
-            await set(ref(db, 'homepage/nav'), navItems.map(x => ({ label: x.label.trim(), href: x.href.trim(), show: x.show !== false })));
+                  await set(ref(db, 'homepage/nav'), navOut());, navItems.map(x => ({ label: x.label.trim(), href: x.href.trim(), show: x.show !== false })));
             await set(ref(db, 'homepage/popup'), { on: $('#popupOn').checked, title: $('#popupTitle').value.trim(), text: $('#popupText').value.trim(), btn: $('#popupBtn').value.trim(), link: popupLink });
                   const idsNow = new Set(draws.map(d => d.id));
       await set(ref(db, 'homepage/drawIndex'), draws.length ? draws.map(d => ({ id: d.id, month: d.month.trim() })) : null);
