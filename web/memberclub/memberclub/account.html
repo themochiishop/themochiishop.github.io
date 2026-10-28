@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n-title="acc.pageTitle">My Points · The Mochii Shop</title>
+  <link rel="stylesheet" href="css/member.css">
+</head>
+<body class="loading">
+  <header id="topbar"></header>
+
+  <main class="page">
+    <h1 id="hello"></h1>
+    <p class="muted" data-i18n="acc.sub"></p>
+    <p id="pageError" class="msg err hidden"></p>
+
+    <!-- 还没填手机号码的提示（早期注册的会员） -->
+    <div id="phoneCallout" class="callout hidden">
+      <p data-i18n="acc.phoneCallout"></p>
+      <a href="profile.html#phone" class="btn btn-primary btn-inline" data-i18n="acc.addPhone"></a>
+    </div>
+
+    <!-- 尚未绑定时的提示 -->
+    <div id="bindCallout" class="callout hidden">
+      <p data-i18n="acc.bindCallout"></p>
+      <p class="welcome-line" id="welcomeLine"></p>
+      <a href="bind.html" class="btn btn-primary btn-inline" data-i18n="acc.goBind"></a>
+    </div>
+
+    <!-- 会员等级 -->
+    <div class="card tier-card" id="tierCard">
+      <div class="tier-head">
+        <div class="tier-icon" id="tierIcon"></div>        <div>
+          <div class="tier-name" id="tierName">-</div>
+          <div class="tier-perk" id="tierPerk"></div>
+        </div>
+      </div>
+      <div class="bar"><div id="tierBar" style="width:0%"></div></div>
+      <div class="muted" style="font-size:.85rem" id="tierNext"></div>
+      <details>
+        <summary data-i18n="tier.explain"></summary>
+        <table class="tier-table" id="tierTable"></table>
+        <p class="muted" style="font-size:.78rem;margin-top:8px" data-i18n="tier.note"></p>
+      </details>
+    </div>
+
+    <!-- 积分摘要 -->
+    <div class="stats">
+      <div class="stat main">
+        <div class="label" data-i18n="acc.available"></div>
+        <div class="value" id="spendable">-</div>
+        <div class="sub" id="reservedNote"><a href="rewards.html" data-i18n="acc.goRedeem"></a></div>
+      </div>
+      <div class="stat">
+        <div class="label" data-i18n="acc.pending"></div>
+        <div class="value" id="pending">-</div>
+        <div class="sub" id="nextUnlock">&nbsp;</div>
+      </div>
+    </div>
+
+    <p class="expiry-note" id="expiryNote"></p>
+
+    <!-- 赚更多积分：欢迎礼 + 完善资料任务（全部完成后自动隐藏） -->
+    <div class="card task-card hidden" id="taskCard">
+      <h2 data-i18n="task.title"></h2>
+      <p class="muted task-sub" data-i18n="task.sub"></p>
+      <ul class="task-list" id="taskList"></ul>
+    </div>
+
+    <!-- 已绑定账号 -->
+    <div class="card">
+      <h2 data-i18n="acc.bound"></h2>
+      <div id="bindings" class="chips"><span class="muted" data-i18n="common.loading"></span></div>
+    </div>
+
+    <!-- 记录 -->
+    <div class="tabs">
+      <button data-tab="ledger" class="active" data-i18n="acc.tabLedger"></button>
+      <button data-tab="orders" data-i18n="acc.tabOrders"></button>
+    </div>
+    <div class="card">
+      <ul id="ledgerList" class="list"><li class="empty" data-i18n="common.loading"></li></ul>
+      <ul id="ordersList" class="list hidden"></ul>
+    </div>
+  </main>
+
+  <script type="module">
+    import { db } from "./js/firebase-config.js";
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import {
+      requireMember, renderNav, loadBalance, toDate, fmtDate, fmtMoney, esc, platformTag,
+      TIERS, tierProgress, tierLabel, tierIconHTML, t, translateReason,
+      BONUSES, bonusPoints, EXPIRY_MONTHS
+    } from "./js/common.js";
+
+    const $ = id => document.getElementById(id);
+    renderNav("account");
+
+    // 分页切换
+    document.querySelectorAll(".tabs button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("active", b === btn));
+        $("ledgerList").classList.toggle("hidden", btn.dataset.tab !== "ledger");
+        $("ordersList").classList.toggle("hidden", btn.dataset.tab !== "orders");
+      });
+    });
+
+    requireMember(async (user, member) => {
+      $("hello").textContent = t("acc.hello", { name: member.name || t("acc.member") });
+      $("phoneCallout").classList.toggle("hidden", !!member.phone);
+
+      // ---------- 会员等级 ----------
+      const tp = tierProgress(member);
+      $("tierCard").classList.add("tier-" + tp.tier.id);
+      $("tierIcon").innerHTML = tierIconHTML(tp.tier);      $("tierName").textContent = tierLabel(tp.tier);
+      $("tierPerk").textContent = t("tier.perk", { m: tp.tier.multiplier, b: tp.tier.birthday, s: fmtMoney(tp.spend) });
+      $("tierBar").style.width = tp.pct + "%";
+      $("tierNext").textContent = tp.next
+        ? t("tier.next", { need: fmtMoney(tp.need), icon: tp.next.icon, label: tierLabel(tp.next), m: tp.next.multiplier })
+        : t("tier.max");
+      $("tierTable").innerHTML = `
+        <tr><th>${t("tier.colTier")}</th><th>${t("tier.colSpend")}</th><th>${t("tier.colMult")}</th><th>${t("tier.colBday")}</th></tr>
+        ${TIERS.map(x => `
+          <tr class="${x.id === tp.tier.id ? "current" : ""}">
+            <td>${x.icon ? x.icon + " " : ""}${tierLabel(x)}</td>            <td>${x.minSpend ? t("tier.minSpend", { n: x.minSpend }) : t("tier.free")}</td>
+            <td>×${x.multiplier}</td>
+            <td>${t("unit.pts", { n: x.birthday })}</td>
+          </tr>`).join("")}`;
+
+      const mine = c => getDocs(query(collection(db, c), where("uid", "==", user.uid)));
+      let bal, ordersSnap, bindSnap;
+      try {
+        [bal, ordersSnap, bindSnap] = await Promise.all([
+          loadBalance(user.uid), mine("orders"), mine("bindings")
+        ]);
+      } catch (e) {
+        $("pageError").textContent = t("common.loadFail") + e.message;
+        $("pageError").classList.remove("hidden");
+        return;
+      }
+
+      const now = new Date();
+
+      // ---------- 已绑定账号 ----------
+      const bindings = bindSnap.docs.map(d => d.data());
+      $("bindCallout").classList.toggle("hidden", bindings.length > 0);
+      $("bindings").innerHTML = bindings.length
+        ? bindings.map(b => `<span class="chip">${platformTag(b.platform)} ${esc(b.username)}</span>`).join("")
+        : `<span class="muted">${t("acc.notBound")}</span>`;
+
+      // ---------- 积分摘要 ----------
+      $("spendable").textContent = bal.spendable.toLocaleString();
+      if (bal.reserved > 0) {
+        $("reservedNote").innerHTML = `${esc(t("acc.reserved", { n: bal.reserved }))} · <a href="rewards.html">${t("acc.view")}</a>`;
+      }
+      $("pending").textContent = bal.pending.toLocaleString();
+      $("nextUnlock").textContent = bal.nextUnlock ? t("acc.nextUnlock", { d: fmtDate(bal.nextUnlock) }) : " ";
+
+      // ---------- ⏳ 积分有效期 ----------
+      if (bal.expiring.length) {
+        $("expiryNote").innerHTML = bal.expiring.map(x =>
+          `<span class="expiry-soon">⏳ ${esc(t("acc.expiring", { n: x.amount.toLocaleString(), d: fmtDate(x.date) }))}</span>`
+        ).join("") + ` <a href="shop.html">${t("acc.useNow")}</a>`;
+      } else {
+        $("expiryNote").textContent = t("acc.expiryRule", { m: EXPIRY_MONTHS });
+      }
+
+      // ---------- 🎁 赚更多积分 ----------
+      const got = new Set(bal.ledger.map(x => (BONUSES.find(b => b.reason === x.reason) || {}).key).filter(Boolean));
+      const tasks = [
+        { key: "welcome",   href: "bind.html" },
+        { key: "birthday",  href: "profile.html" },
+        { key: "whatsapp",  href: "profile.html#phone" },
+        { key: "platform2", href: "bind.html" },
+      ].map(x => ({ ...x, ok: got.has(x.key) }));
+      $("welcomeLine").textContent = t("acc.welcomeBonus", { n: bonusPoints("welcome") });
+      if (tasks.some(x => !x.ok)) {
+        $("taskCard").classList.remove("hidden");
+        $("taskList").innerHTML = tasks.map(x => `
+          <li class="${x.ok ? "done" : ""}">
+            <span class="task-check">${x.ok ? "✓" : ""}</span>
+            <span class="task-text">${t("task." + x.key)}${!x.ok && !bindings.length && x.key !== "welcome" ? ` <small class="muted">${t("task.needBind")}</small>` : ""}</span>
+            ${x.ok
+              ? `<span class="task-pts muted">${t("notif.plus", { n: bonusPoints(x.key) })}</span>`
+              : `<a class="task-pts" href="${x.href}">${t("notif.plus", { n: bonusPoints(x.key) })} ➔</a>`}
+          </li>`).join("");
+      }
+
+      // ---------- 积分记录 ----------
+      $("ledgerList").innerHTML = bal.ledger.length ? bal.ledger.map(x => {
+        const isPending = x.availableAt && x.availableAt > now;
+        return `
+          <li>
+            <div class="main">
+              <div class="title">${esc(translateReason(x.reason))} ${isPending ? `<span class="tag tag-pending">${t("tag.pending")}</span>` : ""}</div>
+              <div class="meta">${x.orderNo ? t("acc.orderNo") + " " + esc(x.orderNo) + " · " : ""}${fmtDate(x.createdAt)}</div>
+            </div>
+            <div class="right">
+              <div class="pts ${x.delta >= 0 ? "plus" : "minus"}">${x.delta >= 0 ? "+" : ""}${x.delta}</div>
+            </div>
+          </li>`;
+      }).join("") : `<li class="empty">${t("acc.noLedger")}</li>`;
+
+      // ---------- 订单记录 ----------
+      const orders = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .map(o => ({ ...o, orderTime: toDate(o.orderTime), availableAt: toDate(o.availableAt) }))
+        .sort((a, b) => (b.orderTime || 0) - (a.orderTime || 0));
+
+      $("ordersList").innerHTML = orders.length ? orders.map(o => {
+        let state;
+        if (o.status === "refunded") state = `<span class="tag tag-bad">${t("tag.refunded")}</span>`;
+        else if (o.availableAt && o.availableAt > now) state = `<span class="tag tag-pending">${t("tag.pending")}</span>`;
+        else state = `<span class="tag tag-ok">${t("tag.credited")}</span>`;
+        return `
+          <li>
+            <div class="main">
+              <div class="title">${platformTag(o.platform)} ${fmtMoney(o.amount)}</div>
+              <div class="meta">${esc(o.id)} · ${fmtDate(o.orderTime, true)}</div>
+            </div>
+            <div class="right">
+              <div class="pts">${t("unit.pts", { n: o.points || 0 })}</div>
+              ${state}
+            </div>
+          </li>`;
+      }).join("") : `<li class="empty">${t("acc.noOrders")}</li>`;
+    });
+  </script>
+</body>
+</html>

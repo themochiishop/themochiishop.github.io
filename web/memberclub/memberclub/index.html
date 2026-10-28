@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n-title="idx.pageTitle">Mochii Member Club · The Mochii Shop</title>  <link rel="stylesheet" href="css/member.css">
+</head>
+<body>
+  <div class="auth-wrap">
+    <div id="langBox" class="auth-lang"></div>
+
+    <div class="brand-hero">
+      <img class="logo-img" src="img/member.jpg" alt="Mochii Member Club">      <h1 data-i18n="idx.title"></h1>
+      <p data-i18n="idx.tagline"></p>
+    </div>
+
+    <!-- 载入中 -->
+    <div id="loading" class="card center muted" data-i18n="common.loading"></div>
+    <div id="authArea" class="auth-area">
+    <!-- 登录 / 注册 -->
+    <div id="loginBox" class="card hidden">
+      <button id="googleBtn" class="btn btn-google" type="button">
+        <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.8c4.3-4 6.9-9.9 6.9-17.2z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.8c-2.1 1.4-4.8 2.3-8.5 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>
+        <span data-i18n="idx.google"></span>
+      </button>
+
+      <div class="divider" data-i18n="idx.or"></div>
+
+      <form id="emailForm">
+        <label><span data-i18n="idx.email"></span>
+          <input type="email" id="email" required autocomplete="email">
+        </label>
+        <label><span data-i18n="idx.password"></span>
+          <input type="password" id="password" required minlength="6" autocomplete="current-password">
+        </label>
+        <button type="submit" class="btn btn-primary" id="emailSubmit" data-i18n="idx.login"></button>
+      </form>
+
+      <div class="row-links">
+        <a href="#" id="toggleMode" data-i18n="idx.toRegister"></a>
+        <a href="#" id="forgot" data-i18n="idx.forgot"></a>
+      </div>
+           <p id="loginMsg" class="msg"></p>
+    </div>
+
+    <!-- 俱乐部维修中：盖在登录框上面 -->
+    <div id="closedBox" class="closed-card hidden">
+      <div class="closed-emoji">🛠️</div>
+      <h2 data-i18n="closed.title"></h2>
+      <p data-i18n="closed.text"></p>
+    </div>
+    </div>
+
+    <!-- 首次登录：填写会员资料 -->
+    <div id="setupBox" class="card hidden">
+      <h2 data-i18n="idx.setupTitle"></h2>
+      <p class="muted" style="margin-bottom:16px" data-i18n="idx.setupSub"></p>
+      <form id="setupForm">
+        <label><span data-i18n="idx.name"></span>
+          <input id="name" required maxlength="40" data-i18n-ph="idx.namePh">
+        </label>
+        <label><span data-i18n="idx.phone"></span>
+          <input type="tel" id="phone" required inputmode="tel" autocomplete="tel" data-i18n-ph="idx.phonePh">
+          <small class="muted" data-i18n="idx.phoneHint"></small>
+        </label>
+        <label><span data-i18n="idx.birthday"></span>
+          <input type="date" id="birthday">
+          <small data-i18n="idx.bdayWarn"></small>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="waOptIn">
+          <span data-i18n="idx.waOptIn"></span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="consent" required>
+          <span data-i18n-html="idx.consent"></span>
+        </label>
+        <button class="btn btn-primary" type="submit" id="setupSubmit" data-i18n="idx.join"></button>
+      </form>
+      <a href="#" id="setupLogout" class="small-link" data-i18n="idx.otherAccount"></a>
+      <p id="setupMsg" class="msg"></p>
+    </div>
+
+    <p class="small-link">
+      <a href="terms.html" data-i18n="common.terms"></a> ·
+      <a href="privacy.html" data-i18n="common.privacy"></a>
+    </p>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./js/firebase-config.js";
+    import {
+      GoogleAuthProvider, signInWithPopup,
+      signInWithEmailAndPassword, createUserWithEmailAndPassword,
+      sendPasswordResetEmail, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import { authErrorText, normalizePhone, isValidPhone } from "./js/common.js";
+    import { t, applyI18n, langSwitchHTML, bindLangSwitch } from "./js/i18n.js";
+
+    const $ = id => document.getElementById(id);
+    applyI18n();
+    $("langBox").innerHTML = langSwitchHTML();
+    bindLangSwitch($("langBox"));
+
+    let registerMode = false;
+
+       function show(id) {
+      // 维修中：登录框照样显示，但模糊、不能点，装修卡片盖在上面
+      const closed = id === "closedBox";
+      ["loading", "loginBox", "setupBox"].forEach(x =>
+        $(x).classList.toggle("hidden", closed ? x !== "loginBox" : x !== id));
+      $("closedBox").classList.toggle("hidden", !closed);
+      $("authArea").classList.toggle("is-closed", closed);
+      $("loginBox").inert = closed;
+    }
+    function setMsg(el, text, type) {
+      el.textContent = text;
+      el.className = "msg" + (type ? " " + type : "");
+    }
+
+    // ---------- 登录状态 ----------
+        // ---------- 俱乐部开放检查（后台开关） ----------
+    const PREVIEW = new URLSearchParams(location.search).has("preview");
+    let clubOpen = false;
+    try {
+      const cs = await getDoc(doc(db, "settings", "club"));
+      clubOpen = cs.exists() && cs.data().open === true;
+    } catch (e) { clubOpen = false; }
+
+    async function isAdminUser(user) {
+      try { return (await getDoc(doc(db, "admins", user.uid))).exists(); }
+      catch (e) { return false; }
+    }
+
+    onAuthStateChanged(auth, async user => {
+      // 维修中：只有管理员能进；没登录的人只有加 ?preview=1 才看到登录框
+      if (!clubOpen && !(user ? await isAdminUser(user) : PREVIEW)) { show("closedBox"); return; }
+      if (!user) { show("loginBox"); return; }
+      show("loading");
+      try {
+        const snap = await getDoc(doc(db, "members", user.uid));
+        if (snap.exists()) { location.replace("shop.html"); return; }
+        $("name").value = user.displayName || "";
+        show("setupBox");
+      } catch (e) {
+        show("loginBox");
+        setMsg($("loginMsg"), t("common.loadFail") + e.message, "err");
+      }
+    });
+
+    // ---------- Google 登录 ----------
+    $("googleBtn").addEventListener("click", async () => {
+      setMsg($("loginMsg"), "");
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch (e) {
+        setMsg($("loginMsg"), authErrorText(e), "err");
+      }
+    });
+
+    // ---------- 电子邮件登录 / 注册 ----------
+    $("emailForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const email = $("email").value.trim();
+      const pw = $("password").value;
+      $("emailSubmit").disabled = true;
+      setMsg($("loginMsg"), "");
+      try {
+        if (registerMode) await createUserWithEmailAndPassword(auth, email, pw);
+        else await signInWithEmailAndPassword(auth, email, pw);
+      } catch (err) {
+        setMsg($("loginMsg"), authErrorText(err), "err");
+      } finally {
+        $("emailSubmit").disabled = false;
+      }
+    });
+
+    $("toggleMode").addEventListener("click", e => {
+      e.preventDefault();
+      registerMode = !registerMode;
+      $("emailSubmit").textContent = t(registerMode ? "idx.register" : "idx.login");
+      $("toggleMode").textContent = t(registerMode ? "idx.toLogin" : "idx.toRegister");
+      $("password").autocomplete = registerMode ? "new-password" : "current-password";
+      setMsg($("loginMsg"), registerMode ? t("idx.pwHint") : "");
+    });
+
+    $("forgot").addEventListener("click", async e => {
+      e.preventDefault();
+      const email = $("email").value.trim();
+      if (!email) { setMsg($("loginMsg"), t("idx.needEmail"), "err"); return; }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        setMsg($("loginMsg"), t("idx.resetSent"), "ok");
+      } catch (err) {
+        setMsg($("loginMsg"), authErrorText(err), "err");
+      }
+    });
+
+    // ---------- 完成会员资料 ----------
+    $("setupForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const user = auth.currentUser;
+      if (!user) return;
+      const name = $("name").value.trim();
+      const birthday = $("birthday").value; // YYYY-MM-DD 或空白
+      const phone = normalizePhone($("phone").value);
+
+      if (!isValidPhone(phone)) { setMsg($("setupMsg"), t("idx.phoneBad"), "err"); $("phone").focus(); return; }
+      if (birthday && !confirm(t("idx.bdayConfirm", { b: birthday }))) return;
+
+      const data = {
+        name, email: user.email || "", phone, waOptIn: $("waOptIn").checked, createdAt: serverTimestamp()
+      };
+      if (birthday) data.birthday = birthday;
+
+      $("setupSubmit").disabled = true;
+      try {
+        await setDoc(doc(db, "members", user.uid), data);
+        location.replace("shop.html");
+      } catch (err) {
+        setMsg($("setupMsg"), t("idx.saveFail") + err.message, "err");
+        $("setupSubmit").disabled = false;
+      }
+    });
+
+    $("setupLogout").addEventListener("click", e => {
+      e.preventDefault();
+      signOut(auth);
+    });
+  </script>
+</body>
+</html>
