@@ -841,11 +841,9 @@ input.locked { opacity: .6; cursor: not-allowed; }
 .faq-a .pre { white-space: pre-wrap; }
 /* 💬 还有问题？联系卡片 */
 .contact-card { background: linear-gradient(135deg, rgba(255,111,174,.10), rgba(124,92,255,.10)), var(--card); border-color: rgba(255,111,174,.35); }
-.contact-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.contact-head { margin-bottom: 14px; padding-left: 15px; }   /* 和下面按钮的图标左边对齐（按钮 padding 14 + 边框 1） */
 .contact-head h2 { margin: 0 0 2px; font-size: 1.05rem; }
 .contact-head p { margin: 0; font-size: .84rem; }
-.contact-ico { flex: none; width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; font-size: 1.3rem;
-  background: linear-gradient(135deg, var(--accent), var(--accent2)); }
 .contact-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
 .contact-tile { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: var(--card2);
   border: 1px solid var(--line); color: var(--text); text-decoration: none; transition: transform .15s, border-color .15s; }
@@ -861,7 +859,7 @@ input.locked { opacity: .6; cursor: not-allowed; }
 @media (max-width: 640px) {
   .contact-tiles { grid-template-columns: 1fr; gap: 8px; }
   .contact-tile { padding: 10px 12px; }
-  .contact-ico { width: 38px; height: 38px; font-size: 1.1rem; }
+  .contact-head { padding-left: 13px; }
 }
 
 /* 📄 分页 */

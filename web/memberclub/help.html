@@ -30,7 +30,6 @@
     <!-- 联系我们 -->
     <div class="card contact-card hidden" id="contactCard">
       <div class="contact-head">
-        <span class="contact-ico">💬</span>
         <div>
           <h2 data-i18n="help.contactTitle"></h2>
           <p class="muted" data-i18n="help.contactSub"></p>
@@ -55,7 +54,7 @@
     const STORE_CATS = ["order", "shipping", "payment", "return", "product", "live", "contact"];
 
     let tab = "club", cat = "all", page = 0;
-    const PER = 10;   // 每页几题
+    const PER = 8;   // 超过 8 题就分页
     let club = [], store = [], contacts = {};
 
     // 网址带 #club-redeem、#store 之类，直接打开对应分类
