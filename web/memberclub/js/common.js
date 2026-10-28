@@ -109,6 +109,71 @@ export function catName(c) {
   return (c && (c[lang] || c.zh || c.en)) || "";
 }
 
+// 把图片缩到最长边 max 像素，转成小档案（会员上传签收照片用）
+export function compressImage(file, max = 720) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      let url = c.toDataURL("image/webp", 0.8);
+      if (!url.startsWith("data:image/webp")) url = c.toDataURL("image/jpeg", 0.82);
+      URL.revokeObjectURL(img.src);
+      resolve(url);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+// ---------- 📦 实体奖品：收货地址、运输公司、进度 ----------
+export const AUTO_COMPLETE_DAYS = 14;   // 发货后几天没确认就自动完成（和 Apps Script 的 MS_AUTO_COMPLETE_DAYS 一致）
+export const MY_STATES = [
+  "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", "Pahang", "Perak", "Perlis",
+  "Pulau Pinang", "Sabah", "Sarawak", "Selangor", "Terengganu",
+  "W.P. Kuala Lumpur", "W.P. Labuan", "W.P. Putrajaya",
+];
+export const MAX_ADDRESSES = 5;
+
+// 检查地址；回传错误的 i18n key，没问题回传 ""
+export function addressError(a) {
+  if (!a.name) return "addr.errName";
+  if (!isValidPhone(a.phone || "")) return "idx.phoneBad";
+  if (!a.line1) return "addr.errLine";
+  if (!/^\d{5}$/.test(a.postcode || "")) return "addr.errPostcode";
+  if (!a.city) return "addr.errCity";
+  if (!a.state) return "addr.errState";
+  return "";
+}
+export function cleanAddress(a) {
+  return {
+    name: String(a.name || "").trim().slice(0, 60),
+    phone: normalizePhone(a.phone),
+    line1: String(a.line1 || "").trim().slice(0, 120),
+    line2: String(a.line2 || "").trim().slice(0, 120),
+    postcode: String(a.postcode || "").trim(),
+    city: String(a.city || "").trim().slice(0, 60),
+    state: String(a.state || "").trim(),
+    country: "Malaysia",
+  };
+}
+export function addressHTML(a) {
+  if (!a) return "";
+  return `<b>${esc(a.name)}</b> · ${esc(a.phone)}<br>${esc(a.line1)}${a.line2 ? ", " + esc(a.line2) : ""}<br>${esc(a.postcode)} ${esc(a.city)}, ${esc(a.state)}`;
+}
+
+// 实体奖品进度：0 已申请 · 1 已通过 · 2 已发货 · 3 已签收 · 4 完成
+export const GIFT_STEPS = ["pending", "approved", "shipped", "received", "completed"];
+export function giftStep(r) {
+  if (r.status === "completed") return 4;
+  if (r.status === "shipped") return 2;
+  if (r.status === "approved" || r.status === "problem") return 1;
+  return 0;
+}
+
 // ---------- ⏰ 即将下架 ----------
 // 回传 null（没设定）、{ ended: true }（已过时间，前台隐藏）或 { end, label }（倒数文字）
 export function endState(r, now = new Date()) {
@@ -499,12 +564,26 @@ function buildEvents() {
   });
   bell.redemptions.forEach(r => {
     const at = toDate(r.decidedAt);
-    if (!at) return;
-    if (r.status === "approved") {
-      ev.push({ time: at, icon: "🎁", title: t("notif.approved", { name: r.rewardName }),
-        detail: r.couponCode ? t("notif.code", { code: r.couponCode }) : (r.note || "") });
-    } else if (r.status === "rejected") {
-      ev.push({ time: at, icon: "❌", title: t("notif.rejected", { name: r.rewardName }), detail: r.note || "" });
+    const v = { name: r.rewardName };
+    if (at && r.status === "rejected") {
+      ev.push({ time: at, icon: "❌", title: t("notif.rejected", v), detail: r.note || "", link: "rewards.html" });
+    } else if (at && r.status !== "pending") {
+      ev.push({ time: at, icon: "🎁", title: t(r.kind === "gift" ? "notif.approvedGift" : "notif.approved", v),
+        detail: r.couponCode ? t("notif.code", { code: r.couponCode }) : (r.note || ""), link: "rewards.html" });
+    }
+    // 📦 实体奖品：发货、配送异常、取消、完成、快自动完成
+    const sh = toDate(r.shippedAt);
+    if (sh) ev.push({ time: sh, icon: "🚚", title: t("notif.shipped", v),
+      detail: r.shipping ? [r.shipping.carrierName, r.shipping.trackingNo].filter(Boolean).join(" · ") : "", link: "rewards.html" });
+    const pr = toDate(r.problemAt);
+    if (pr && r.status === "problem") ev.push({ time: pr, icon: "⚠️", title: t("notif.problem", v), detail: r.problemNote || "", link: "rewards.html" });
+    const cc = toDate(r.cancelledAt);
+    if (cc && r.adminCancelled) ev.push({ time: cc, icon: "↩️", title: t("notif.adminCancelled", v), detail: r.cancelNote || t("notif.refunded", { n: r.cost }), link: "rewards.html" });
+    const done = toDate(r.completedAt);
+    if (done && r.autoCompleted) ev.push({ time: done, icon: "✅", title: t("notif.autoCompleted", v), detail: "", link: "rewards.html" });
+    if (sh && r.status === "shipped") {
+      const remind = new Date(sh.getTime() + (AUTO_COMPLETE_DAYS - 2) * 86400000);
+      ev.push({ time: remind, icon: "📦", title: t("notif.confirmSoon", v), detail: t("notif.confirmSoonDetail"), link: "rewards.html" });
     }
   });
   // ⏳ 积分快过期：过期前 EXPIRY_WARN_DAYS 天提醒
@@ -554,7 +633,7 @@ function safeLink(u) {
 
 // 每种通知的颜色
 const BELL_TONE = { "🎉": "green", "✅": "green", "↩️": "red", "⌛": "orange", "⏳": "orange",
-  "🎁": "pink", "❌": "red", "🔗": "blue", "✂️": "red", "📢": "purple" };
+  "🎁": "pink", "❌": "red", "🔗": "blue", "✂️": "red", "📢": "purple", "🚚": "blue", "⚠️": "orange", "📦": "orange" };
 
 function renderBell() {
   const badge = document.getElementById("bellBadge");

@@ -699,3 +699,75 @@ a.home-feed:hover { text-decoration: none; border-color: var(--accent); }
   .ending-badge { font-size: .62rem; padding: 2px 6px; top: 4px; left: 4px; }
   .ending-line { font-size: .66rem; }
 }
+
+/* ---------- 弹出框 ---------- */
+.modal {
+  position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
+  background: rgba(5,8,18,.72); backdrop-filter: blur(3px); padding: 16px;
+}
+.modal-card {
+  position: relative; width: 100%; max-width: 460px; max-height: 88vh; overflow-y: auto;
+  background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.5);
+}
+.modal-card h2 { font-size: 1.1rem; margin-bottom: 6px; padding-right: 30px; }
+.modal-x {
+  position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--card2); color: var(--muted); cursor: pointer;
+}
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1.3fr 1.3fr; gap: 0 10px; }
+@media (max-width: 480px) { .grid3 { grid-template-columns: 1fr 1fr; } .grid3 label:last-child { grid-column: 1 / -1; } }
+.actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-xs { padding: 4px 10px !important; font-size: .74rem !important; }
+select {
+  width: 100%; padding: 11px 12px; margin-top: 6px; font-size: .95rem;
+  background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 10px;
+}
+
+/* ---------- 📦 收货地址 ---------- */
+.addr-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.addr-item {
+  display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap;
+  padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--card2); cursor: pointer;
+}
+.addr-item.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,111,174,.2); }
+.addr-item input[type=radio] { margin-top: 3px; accent-color: var(--accent); }
+.addr-text { flex: 1; min-width: 0; font-size: .85rem; line-height: 1.5; word-break: break-word; }
+.addr-actions { display: flex; gap: 6px; flex-wrap: wrap; width: 100%; justify-content: flex-end; }
+.addr-country { font-size: .8rem; margin: -6px 0 10px; }
+.addr-list li.empty { list-style: none; }
+
+/* ---------- 🎁 实体奖品进度 ---------- */
+.gift-steps { display: grid; grid-template-columns: repeat(5, 1fr); margin: 12px 0 8px; position: relative; }
+.gstep { display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; gap: 3px; }
+.gstep::before {
+  content: ""; position: absolute; top: 6px; left: -50%; width: 100%; height: 3px; background: var(--line); z-index: 0;
+}
+.gstep:first-child::before { display: none; }
+.gstep.done::before { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+.gstep .dot {
+  width: 15px; height: 15px; border-radius: 50%; background: var(--card); border: 2px solid var(--line); position: relative; z-index: 1;
+}
+.gstep.done .dot { background: var(--accent); border-color: var(--accent); }
+.gstep.now .dot { box-shadow: 0 0 0 4px rgba(255,111,174,.25); }
+.gstep .lbl { font-size: .7rem; color: var(--muted); font-weight: 700; }
+.gstep.done .lbl { color: var(--text); }
+.gstep .dt { font-size: .64rem; color: var(--muted); min-height: .8em; }
+.gift-ship, .gift-addr, .gift-receipt, .gift-problem {
+  font-size: .82rem; margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--card2); line-height: 1.6;
+  word-break: break-word;
+}
+.gift-problem { background: rgba(245,158,11,.12); color: var(--warn); font-weight: 700; }
+.gift-ship .mono { font-family: ui-monospace, Menlo, monospace; letter-spacing: .03em; }
+.gift-photos { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.gift-photos img { width: 96px; height: 96px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+.gift-auto { font-size: .74rem; margin-top: 6px; }
+.gift-confirm { margin-top: 10px; }
+.tag-ship { background: rgba(56,189,248,.18); color: #7dd3fc; }
+.rcv-prev { width: 160px; border-radius: 10px; border: 1px solid var(--line); }
+@media (max-width: 480px) {
+  .gstep .lbl { font-size: .62rem; }
+  .gift-photos img { width: 48px; height: 48px; }
+  .rcv-prev { width: 80px; }
+}

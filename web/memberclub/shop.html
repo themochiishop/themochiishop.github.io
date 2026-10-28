@@ -25,14 +25,33 @@
     <p id="redeemMsg" class="msg"></p>
   </main>
 
+  <!-- 📦 兑换实体奖品：确认收货地址 -->
+  <div id="addrModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button type="button" class="modal-x" id="amClose" aria-label="close">✕</button>
+      <h2 data-i18n="addr.pickTitle"></h2>
+      <p class="muted" id="amReward" style="font-size:.85rem;margin-bottom:10px"></p>
+      <ul id="amList" class="addr-list"></ul>
+      <button type="button" class="btn btn-ghost btn-inline" id="amNew" data-i18n="addr.add"></button>
+      <div id="amForm" class="hidden" style="margin-top:10px">
+        <div id="amFields"></div>
+        <label class="check"><input type="checkbox" id="amSave" checked> <span data-i18n="addr.saveToBook"></span></label>
+      </div>
+      <p class="muted" style="font-size:.78rem;margin-top:8px" data-i18n="addr.freeShip"></p>
+      <p id="amMsg" class="msg"></p>
+      <button type="button" class="btn btn-primary" id="amSubmit"></button>
+    </div>
+  </div>
+
   <script type="module">
     import { db } from "./js/firebase-config.js";
     import {
       collection, query, where, getDocs, addDoc, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
-      requireMember, renderNav, loadBalance, esc, t, loadShopCats, catOf, catName, endState, fmtDate
+      requireMember, renderNav, loadBalance, esc, t, loadShopCats, catOf, catName, endState, fmtDate, MAX_ADDRESSES
     } from "./js/common.js";
+    import { addressFormHTML, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
 
     const $ = id => document.getElementById(id);
     renderNav("shop");
@@ -120,28 +139,95 @@
       });
 
       // 兑换
+      async function submitRedeem(r, address) {
+        const data = {
+          uid: user.uid,
+          rewardId: r.id,
+          rewardName: r.name,
+          cost: r.cost,
+          status: "pending",
+          kind: r.type === "coupon" ? "coupon" : "gift",
+          createdAt: serverTimestamp()
+        };
+        if (address) data.address = address;
+        await addDoc(collection(db, "redemptions"), data);
+      }
+
       $("rewardGrid").addEventListener("click", async e => {
         const id = e.target.dataset.redeem;
         if (!id) return;
         const r = rewards.find(x => x.id === id);
         if (!r) return;
+        if (r.type !== "coupon") { openAddrModal(r); return; }   // 实体奖品：先选地址
         if (!confirm(t("rw.confirm", { name: r.name, cost: r.cost }))) return;
         e.target.disabled = true;
         setMsg(t("rw.submitting"));
         try {
-          await addDoc(collection(db, "redemptions"), {
-            uid: user.uid,
-            rewardId: r.id,
-            rewardName: r.name,
-            cost: r.cost,
-            status: "pending",
-            createdAt: serverTimestamp()
-          });
+          await submitRedeem(r, null);
           setMsg(t("rw.submitted", { name: r.name }), "ok");
           await load();
         } catch (err) {
           setMsg(err.code === "permission-denied" ? t("rw.denied") : t("rw.fail") + err.message, "err");
           e.target.disabled = false;
+        }
+      });
+
+      // ---------- 📦 选收货地址 ----------
+      let addresses = Array.isArray(member.addresses) ? member.addresses.slice() : [];
+      let modalReward = null, pick = 0;
+      $("amFields").innerHTML = addressFormHTML();
+      const amMsg = (text, type) => { $("amMsg").textContent = text; $("amMsg").className = "msg" + (type ? " " + type : ""); };
+      function renderPick() {
+        const usingNew = pick === -1;
+        $("amList").innerHTML = addresses.map((a, i) => addressCardHTML(a, i, { radio: true, selected: i === pick })).join("");
+        $("amForm").classList.toggle("hidden", !usingNew);
+        $("amNew").classList.toggle("hidden", usingNew || addresses.length >= MAX_ADDRESSES);
+      }
+      function openAddrModal(r) {
+        modalReward = r;
+        pick = addresses.length ? 0 : -1;
+        fillAddressForm($("amFields"), { name: member.name || "", phone: member.phone || "" });
+        $("amSave").checked = true;
+        $("amReward").textContent = t("addr.pickFor", { name: r.name, cost: r.cost });
+        $("amSubmit").textContent = t("addr.confirmRedeem", { cost: r.cost });
+        $("amSubmit").disabled = false;
+        amMsg("");
+        renderPick();
+        $("addrModal").classList.remove("hidden");
+      }
+      const closeModal = () => $("addrModal").classList.add("hidden");
+      $("amClose").addEventListener("click", closeModal);
+      $("addrModal").addEventListener("click", e => { if (e.target.id === "addrModal") closeModal(); });
+      $("amList").addEventListener("change", e => { if (e.target.name === "addrPick") { pick = +e.target.value; renderPick(); } });
+      $("amList").addEventListener("click", e => {
+        const li = e.target.closest(".addr-item");
+        if (li && pick !== +li.dataset.i) { pick = +li.dataset.i; renderPick(); }
+      });
+      $("amNew").addEventListener("click", () => { pick = -1; renderPick(); });
+      $("amSubmit").addEventListener("click", async () => {
+        const r = modalReward;
+        if (!r) return;
+        let address;
+        if (pick === -1) {
+          const v = validateAddressForm($("amFields"));
+          if (v.error) { amMsg(v.error, "err"); return; }
+          address = v.address;
+        } else address = addresses[pick];
+        $("amSubmit").disabled = true;
+        amMsg(t("rw.submitting"));
+        try {
+          if (pick === -1 && $("amSave").checked && addresses.length < MAX_ADDRESSES) {
+            const next = [...addresses, address];
+            await saveAddresses(user.uid, next);
+            addresses = next;
+          }
+          await submitRedeem(r, address);
+          closeModal();
+          setMsg(t("rw.submittedGift", { name: r.name }), "ok");
+          await load();
+        } catch (err) {
+          amMsg(err.code === "permission-denied" ? t("rw.denied") : t("rw.fail") + err.message, "err");
+          $("amSubmit").disabled = false;
         }
       });
 

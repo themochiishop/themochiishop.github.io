@@ -37,6 +37,22 @@
       <p id="nameMsg" class="msg"></p>
     </div>
 
+    <!-- 📦 收货地址（兑换实体奖品用） -->
+    <div class="card" id="addr">
+      <h2 data-i18n="addr.title"></h2>
+      <p class="muted" style="font-size:.85rem;margin:-6px 0 10px" data-i18n="addr.sub"></p>
+      <ul id="addrList" class="addr-list"></ul>
+      <button type="button" class="btn btn-ghost btn-inline" id="addrAdd" data-i18n="addr.add"></button>
+      <form id="addrForm" class="hidden" style="margin-top:12px">
+        <div id="addrFields"></div>
+        <div class="actions-row">
+          <button type="submit" class="btn btn-primary btn-inline" id="addrSave" data-i18n="prof.save"></button>
+          <button type="button" class="btn btn-ghost btn-inline" id="addrCancel" data-i18n="addr.cancel"></button>
+        </div>
+      </form>
+      <p id="addrMsg" class="msg"></p>
+    </div>
+
     <div class="card">
       <h2 data-i18n="prof.bday"></h2>
       <div id="birthdayLocked" class="hidden">
@@ -70,6 +86,8 @@
       requireMember, renderNav, logout, t, normalizePhone, isValidPhone,
       claimBonuses, toastBonuses, bonusPoints, bonusActive
     } from "./js/common.js";
+    import { addressFormHTML, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
+    import { MAX_ADDRESSES } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
     renderNav("profile");
@@ -104,6 +122,63 @@
 
       // 从「补充手机号码」提示点进来时，直接聚焦手机栏
       if (location.hash === "#phone") setTimeout(() => $("phone").focus(), 300);
+
+      // ---------- 📦 收货地址 ----------
+      let addresses = Array.isArray(member.addresses) ? member.addresses.slice() : [];
+      let editing = -1;   // -1 = 新增
+      $("addrFields").innerHTML = addressFormHTML();
+      function renderAddr() {
+        $("addrList").innerHTML = addresses.length
+          ? addresses.map((a, i) => addressCardHTML(a, i, { actions: true })).join("")
+          : `<li class="empty">${t("addr.none")}</li>`;
+        $("addrAdd").classList.toggle("hidden", addresses.length >= MAX_ADDRESSES);
+      }
+      function openAddr(i) {
+        editing = i;
+        fillAddressForm($("addrFields"), i >= 0 ? addresses[i] : { name: member.name || "", phone: member.phone || "" });
+        $("addrForm").classList.remove("hidden");
+        $("addrAdd").classList.add("hidden");
+        setMsg($("addrMsg"), "");
+      }
+      function closeAddr() {
+        $("addrForm").classList.add("hidden");
+        renderAddr();
+      }
+      async function persist(next, okText) {
+        try {
+          await saveAddresses(user.uid, next);
+          addresses = next;
+          closeAddr();
+          setMsg($("addrMsg"), okText, "ok");
+        } catch (err) { setMsg($("addrMsg"), t("idx.saveFail") + err.message, "err"); }
+      }
+      renderAddr();
+      if (location.hash === "#addr") setTimeout(() => $("addr").scrollIntoView({ behavior: "smooth" }), 300);
+      $("addrAdd").addEventListener("click", () => openAddr(-1));
+      $("addrCancel").addEventListener("click", closeAddr);
+      $("addrForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const r = validateAddressForm($("addrFields"));
+        if (r.error) { setMsg($("addrMsg"), r.error, "err"); return; }
+        const next = addresses.slice();
+        if (editing >= 0) next[editing] = r.address; else next.push(r.address);
+        $("addrSave").disabled = true;
+        await persist(next, t("prof.saved"));
+        $("addrSave").disabled = false;
+      });
+      $("addrList").addEventListener("click", async e => {
+        const b = e.target.closest("[data-addr]");
+        if (!b) return;
+        const i = +b.closest(".addr-item").dataset.i;
+        if (b.dataset.addr === "edit") { openAddr(i); return; }
+        const next = addresses.slice();
+        if (b.dataset.addr === "default") next.unshift(next.splice(i, 1)[0]);
+        if (b.dataset.addr === "del") {
+          if (!confirm(t("addr.delConfirm"))) return;
+          next.splice(i, 1);
+        }
+        await persist(next, t("prof.saved"));
+      });
 
       $("nameForm").addEventListener("submit", async e => {
         e.preventDefault();

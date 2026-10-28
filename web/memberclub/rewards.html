@@ -35,21 +35,65 @@
     </div>
   </main>
 
+  <!-- ✅ 确认收货 -->
+  <div id="rcvModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button type="button" class="modal-x" data-close aria-label="close">✕</button>
+      <h2 data-i18n="gift.confirmTitle"></h2>
+      <p class="muted" style="font-size:.85rem;margin-bottom:12px" data-i18n="gift.confirmSub"></p>
+      <label><span data-i18n="gift.photo"></span>
+        <input type="file" id="rcvFile" accept="image/*">
+      </label>
+      <div id="rcvPrevBox" class="hidden" style="margin:-6px 0 12px"><img id="rcvPrev" class="rcv-prev" alt=""></div>
+      <label><span data-i18n="gift.comment"></span>
+        <textarea id="rcvComment" rows="2" maxlength="200"></textarea>
+      </label>
+      <p id="rcvMsg" class="msg"></p>
+      <button type="button" class="btn btn-primary" id="rcvSubmit" data-i18n="gift.confirmBtn"></button>
+    </div>
+  </div>
+
+  <!-- 📍 修改这笔兑换的收货地址 -->
+  <div id="eaModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button type="button" class="modal-x" data-close aria-label="close">✕</button>
+      <h2 data-i18n="gift.editAddr"></h2>
+      <ul id="eaList" class="addr-list"></ul>
+      <div id="eaFields"></div>
+      <p id="eaMsg" class="msg"></p>
+      <button type="button" class="btn btn-primary" id="eaSubmit" data-i18n="prof.save"></button>
+    </div>
+  </div>
+
   <script type="module">
     import { db } from "./js/firebase-config.js";
     import {
-      doc, updateDoc, collection, getDocs
+      doc, updateDoc, collection, getDocs, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-    import { requireMember, renderNav, loadBalance, esc, fmtDate, t } from "./js/common.js";
+    import {
+      requireMember, renderNav, loadBalance, esc, fmtDate, t, toDate,
+      giftStep, GIFT_STEPS, addressHTML, AUTO_COMPLETE_DAYS, compressImage
+    } from "./js/common.js";
+    import { addressFormHTML, fillAddressForm, validateAddressForm, addressCardHTML } from "./js/address.js";
 
     const $ = id => document.getElementById(id);
     renderNav("rewards");
 
-    const STATUS_CLASS = { pending: "tag-pending", approved: "tag-ok", rejected: "tag-bad", cancelled: "" };
-    const statusTag = s => `<span class="tag ${STATUS_CLASS[s] || ""}">${t("rw.st." + s)}</span>`;
+    const STATUS_CLASS = { pending: "tag-pending", approved: "tag-ok", rejected: "tag-bad", cancelled: "",
+      shipped: "tag-ship", problem: "tag-pending", completed: "tag-ok" };
+    const statusTag = r => {
+      let key = "rw.st." + r.status;
+      if (r.kind === "gift" && r.status === "approved") key = "gift.st.toShip";
+      if (r.status === "shipped" || r.status === "problem" || r.status === "completed") key = "gift.st." + r.status;
+      if (r.status === "cancelled" && r.adminCancelled) key = "gift.st.adminCancelled";
+      return `<span class="tag ${STATUS_CLASS[r.status] || ""}">${t(key)}</span>`;
+    };
 
+    document.querySelectorAll(".modal").forEach(m => {
+      m.addEventListener("click", e => { if (e.target === m || e.target.closest("[data-close]")) m.classList.add("hidden"); });
+    });
 
-    requireMember(user => {
+    requireMember((user, member) => {
       let bal = null;
       const rewardInfo = {};   // 奖品 ID → 图片 / 类型（下架的也读得到）
 
@@ -70,24 +114,69 @@
         const info = rewardInfo[r.rewardId] || {};
         return info.image
           ? `<img class="redeem-thumb" src="${esc(info.image)}" alt="" loading="lazy">`
-          : `<span class="redeem-thumb">${info.type === "coupon" ? "🎫" : "🎁"}</span>`;
+          : `<span class="redeem-thumb">${info.type === "coupon" || r.kind === "coupon" ? "🎫" : "🎁"}</span>`;
+      }
+
+      // ---------- 📦 实体奖品：进度条 + 物流 ----------
+      function giftBlock(r) {
+        if (r.kind !== "gift" || r.status === "rejected" || r.status === "cancelled") {
+          return r.kind === "gift" && r.address ? `<div class="gift-addr muted">📍 ${addressHTML(r.address)}</div>` : "";
+        }
+        const step = giftStep(r);
+        const dates = [r.createdAt, r.decidedAt, toDate(r.shippedAt), toDate(r.receivedAt) || toDate(r.completedAt), toDate(r.completedAt)];
+        const bar = `
+          <div class="gift-steps">
+            ${GIFT_STEPS.map((k, i) => `
+              <div class="gstep${i <= step ? " done" : ""}${i === step ? " now" : ""}">
+                <span class="dot"></span>
+                <span class="lbl">${t("gift.step." + k)}</span>
+                <span class="dt">${i <= step && dates[i] ? fmtDate(dates[i]).slice(0, 5) : ""}</span>
+              </div>`).join("")}
+          </div>`;
+        const sh = r.shipping || {};
+        const ship = r.shippedAt ? `
+          <div class="gift-ship">
+            <div>🚚 <b>${esc(sh.carrierName || "")}</b>${sh.trackingNo ? ` · <span class="mono">${esc(sh.trackingNo)}</span>
+              <button class="btn btn-ghost btn-inline btn-xs" data-copy="${esc(sh.trackingNo)}">${t("rw.copy")}</button>` : ""}
+              ${/^https:\/\//i.test(sh.trackingUrl || "") ? ` <a class="btn btn-primary btn-inline btn-xs" href="${esc(sh.trackingUrl)}" target="_blank" rel="noopener">${t("gift.track")}</a>` : ""}</div>
+            ${sh.weightKg || (sh.dims && sh.dims.l) ? `<div class="muted">📦 ${sh.weightKg ? esc(sh.weightKg) + " kg" : ""}${sh.dims && sh.dims.l ? ` · ${esc(sh.dims.l)}×${esc(sh.dims.w)}×${esc(sh.dims.h)} cm` : ""}</div>` : ""}
+            ${(sh.photos || []).length ? `<div class="gift-photos">${sh.photos.map(p => `<a href="${esc(p)}" target="_blank"><img src="${esc(p)}" alt="" loading="lazy"></a>`).join("")}</div>` : ""}
+            ${sh.note ? `<div>💬 ${esc(sh.note)}</div>` : ""}
+          </div>` : "";
+        const problem = r.status === "problem" ? `<div class="gift-problem">⚠️ ${esc(t("gift.problem"))}${r.problemNote ? "：" + esc(r.problemNote) : ""}</div>` : "";
+        const auto = r.status === "shipped" && r.shippedAt
+          ? `<div class="muted gift-auto">${esc(t("gift.autoNote", { d: fmtDate(new Date(toDate(r.shippedAt).getTime() + AUTO_COMPLETE_DAYS * 86400000)) }))}</div>` : "";
+        const rc = r.receipt || {};
+        const receipt = r.status === "completed" ? `
+          <div class="gift-receipt">${r.autoCompleted ? "✅ " + esc(t("gift.autoDone")) : "✅ " + esc(t("gift.received", { d: fmtDate(toDate(r.receivedAt)) }))}
+            ${rc.photo ? `<div class="gift-photos"><img src="${esc(rc.photo)}" alt=""></div>` : ""}
+            ${rc.comment ? `<div class="muted">「${esc(rc.comment)}」</div>` : ""}</div>` : "";
+        const canEdit = ["pending", "approved", "problem"].includes(r.status);
+        return `
+          ${bar}${problem}${ship}
+          <div class="gift-addr">📍 ${addressHTML(r.address)}
+            ${canEdit ? ` <button class="btn btn-ghost btn-inline btn-xs" data-editaddr="${esc(r.id)}">${t("addr.edit")}</button>` : ""}</div>
+          ${receipt}${auto}
+          ${r.status === "shipped" ? `<button class="btn btn-primary gift-confirm" data-receive="${esc(r.id)}">✅ ${t("gift.confirmBtn")}</button>` : ""}`;
       }
 
       function render() {
         $("spendable").textContent = bal.spendable.toLocaleString();
         $("pending").textContent = bal.pending.toLocaleString();
-        $("reservedNote").textContent = bal.reserved > 0 ? t("acc.reserved", { n: bal.reserved }) : " ";
+        $("reservedNote").textContent = bal.reserved > 0 ? t("acc.reserved", { n: bal.reserved }) : " ";
 
         // 我的兑换
         $("myList").innerHTML = bal.redemptions.length ? bal.redemptions.map(r => `
-          <li>
+          <li class="${r.kind === "gift" ? "gift-item" : ""}">
             <div class="main redeem-row">
               ${thumb(r)}
               <div style="min-width:0;flex:1">
-              <div class="title">${esc(r.rewardName)} ${statusTag(r.status)}</div>
-              <div class="meta">${t("unit.pts", { n: r.cost })} · ${t("rw.appliedOn", { d: fmtDate(r.createdAt) })}${r.decidedAt ? " · " + t("rw.decidedOn", { d: fmtDate(r.decidedAt) }) : ""}</div>
+              <div class="title">${esc(r.rewardName)} ${statusTag(r)}</div>
+              <div class="meta">${t("unit.pts", { n: r.cost })} · ${t("rw.appliedOn", { d: fmtDate(r.createdAt) })}${r.decidedAt && r.kind !== "gift" ? " · " + t("rw.decidedOn", { d: fmtDate(r.decidedAt) }) : ""}</div>
               ${r.couponCode ? `<div class="code"><span class="code-txt">${t("rw.code")} <b>${esc(r.couponCode)}</b></span> <button class="btn btn-ghost btn-inline" data-copy="${esc(r.couponCode)}">${t("rw.copy")}</button></div>` : ""}
               ${r.note ? `<div class="meta">${t("rw.note")}${esc(r.note)}</div>` : ""}
+              ${r.adminCancelled && r.cancelNote ? `<div class="meta">${esc(r.cancelNote)}</div>` : ""}
+              ${giftBlock(r)}
               </div>
             </div>
             <div class="right">
@@ -96,28 +185,96 @@
           </li>`).join("") : `<li class="empty">${t("rw.noneMine")}</li>`;
       }
 
-      // 取消、复制券码
+      // 取消、复制券码 / 单号、改地址、确认收货
       $("myList").addEventListener("click", async e => {
-        const cancelId = e.target.dataset.cancel;
-        const code = e.target.dataset.copy;
+        const b = e.target.closest("button");
+        if (!b) return;
+        const { cancel: cancelId, copy: code, editaddr, receive } = b.dataset;
         if (cancelId) {
           if (!confirm(t("rw.cancelConfirm"))) return;
-          e.target.disabled = true;
+          b.disabled = true;
           try {
             await updateDoc(doc(db, "redemptions", cancelId), { status: "cancelled" });
             await load();
           } catch (err) {
             alert(t("rw.cancelFail") + err.message);
-            e.target.disabled = false;
+            b.disabled = false;
           }
         }
         if (code) {
           try {
             await navigator.clipboard.writeText(code);
-            e.target.textContent = t("rw.copied");
-            setTimeout(() => e.target.textContent = t("rw.copy"), 1500);
+            b.textContent = t("rw.copied");
+            setTimeout(() => b.textContent = t("rw.copy"), 1500);
           } catch { prompt(t("rw.copyPrompt"), code); }
         }
+        if (editaddr) openEditAddr(editaddr);
+        if (receive) openReceive(receive);
+      });
+
+      // ---------- 📍 修改收货地址 ----------
+      let eaId = null, eaPick = -1;
+      const book = Array.isArray(member.addresses) ? member.addresses : [];
+      $("eaFields").innerHTML = addressFormHTML();
+      const eaMsg = (x, ty) => { $("eaMsg").textContent = x; $("eaMsg").className = "msg" + (ty ? " " + ty : ""); };
+      function openEditAddr(id) {
+        const r = bal.redemptions.find(x => x.id === id);
+        if (!r) return;
+        eaId = id; eaPick = -1;
+        fillAddressForm($("eaFields"), r.address || {});
+        $("eaList").innerHTML = book.map((a, i) => addressCardHTML(a, i, {})).join("");
+        $("eaList").classList.toggle("hidden", !book.length);
+        eaMsg(book.length ? t("gift.pickFromBook") : "");
+        $("eaModal").classList.remove("hidden");
+      }
+      $("eaList").addEventListener("click", e => {
+        const li = e.target.closest(".addr-item");
+        if (!li) return;
+        fillAddressForm($("eaFields"), book[+li.dataset.i]);
+      });
+      $("eaSubmit").addEventListener("click", async () => {
+        const v = validateAddressForm($("eaFields"));
+        if (v.error) { eaMsg(v.error, "err"); return; }
+        $("eaSubmit").disabled = true;
+        try {
+          await updateDoc(doc(db, "redemptions", eaId), { address: v.address, addressUpdatedAt: serverTimestamp() });
+          $("eaModal").classList.add("hidden");
+          await load();
+        } catch (err) { eaMsg(t("idx.saveFail") + err.message, "err"); }
+        finally { $("eaSubmit").disabled = false; }
+      });
+
+      // ---------- ✅ 确认收货（照片、留言都是选填） ----------
+      let rcvId = null, rcvPhoto = null;
+      function openReceive(id) {
+        rcvId = id; rcvPhoto = null;
+        $("rcvFile").value = ""; $("rcvComment").value = "";
+        $("rcvPrevBox").classList.add("hidden");
+        $("rcvMsg").textContent = "";
+        $("rcvModal").classList.remove("hidden");
+      }
+      $("rcvFile").addEventListener("change", async () => {
+        const f = $("rcvFile").files[0];
+        if (!f) return;
+        let url = await compressImage(f, 720);
+        if (url.length > 300000) url = await compressImage(f, 480);
+        rcvPhoto = url;
+        $("rcvPrev").src = url;
+        $("rcvPrevBox").classList.remove("hidden");
+      });
+      $("rcvSubmit").addEventListener("click", async () => {
+        const comment = $("rcvComment").value.trim();
+        const data = { status: "completed", receivedAt: serverTimestamp(), completedAt: serverTimestamp() };
+        if (rcvPhoto || comment) data.receipt = { photo: rcvPhoto || "", comment };
+        $("rcvSubmit").disabled = true;
+        try {
+          await updateDoc(doc(db, "redemptions", rcvId), data);
+          $("rcvModal").classList.add("hidden");
+          await load();
+        } catch (err) {
+          $("rcvMsg").textContent = t("idx.saveFail") + err.message;
+          $("rcvMsg").className = "msg err";
+        } finally { $("rcvSubmit").disabled = false; }
       });
 
       load();
