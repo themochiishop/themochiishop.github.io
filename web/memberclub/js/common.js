@@ -450,16 +450,28 @@ export async function claimBonuses(uid) {
 
   const done = BONUSES.filter(b => have.has(docId(b))).map(b => b.key);
   const claimed = [];
-  if (!binds.length) return { done, claimed, member, binds };
+  const internal = isInternalMember(member);
+  if (!binds.length && !internal) return { done, claimed, member, binds };
 
-  const first = binds[0];
-  const other = binds.find(b => b.platform !== first.platform);
-  const eligible = {
-    welcome: [first.id],
-    birthday: member.birthday ? [first.id] : null,
-    whatsapp: member.waOptIn === true && member.phone ? [first.id] : null,
-    platform2: other ? [first.id, other.id] : null,
-  };
+  let eligible;
+  if (internal) {
+    // 🏷️ 内部会员：不用绑定账号
+    eligible = {
+      welcome: [],
+      birthday: member.birthday ? [] : null,
+      whatsapp: member.waOptIn === true && member.phone ? [] : null,
+      platform2: [],
+    };
+  } else {
+    const first = binds[0];
+    const other = binds.find(b => b.platform !== first.platform);
+    eligible = {
+      welcome: [first.id],
+      birthday: member.birthday ? [first.id] : null,
+      whatsapp: member.waOptIn === true && member.phone ? [first.id] : null,
+      platform2: other ? [first.id, other.id] : null,
+    };
+  }
 
   for (const b of activeBonuses()) {
     const pts = bonusPoints(b.key);
@@ -481,6 +493,11 @@ export async function claimBonuses(uid) {
     }
   }
   return { done, claimed, member, binds };
+}
+
+// 🏷️ 内部会员（店主在后台标记，员工 / 测试用）
+export function isInternalMember(m) {
+  return !!(m && m.internal && m.internal.on === true);
 }
 
 // 领到奖励时跳出提示

@@ -4,6 +4,7 @@
 const DICT = {
   // ======================= English =======================
   en: {
+    "home.noOrderInternal": "You're an internal member — no account linking needed. Points are added by the shop owner.",
     "addr.pickStateFirst": "Choose a state first",
     "addr.cityOther": "Other (type it in)",
     "addr.cityOtherPh": "Enter your city / town",
@@ -365,6 +366,7 @@ const DICT = {
 
   // ======================= Bahasa Melayu =======================
   ms: {
+    "home.noOrderInternal": "Anda ahli dalaman — tidak perlu memautkan akaun. Mata ditambah oleh pemilik kedai.",
     "addr.pickStateFirst": "Pilih negeri dahulu",
     "addr.cityOther": "Lain-lain (taip sendiri)",
     "addr.cityOtherPh": "Masukkan bandar / pekan",
@@ -726,6 +728,7 @@ const DICT = {
 
   // ======================= 中文 =======================
   zh: {
+    "home.noOrderInternal": "你是内部会员，不需要绑定账号。积分由店主在后台发放。",
     "addr.pickStateFirst": "请先选州属",
     "addr.cityOther": "其他（自己填写）",
     "addr.cityOtherPh": "请填写城市 / 市镇",

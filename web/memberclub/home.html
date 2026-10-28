@@ -22,7 +22,7 @@
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, tierProgress, tierLabel, tierIconHTML,
-      toDate, fmtDate, fmtMoney, esc, platformTag, t, lang, endState
+      toDate, fmtDate, fmtMoney, esc, platformTag, t, lang, endState, isInternalMember
     } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
@@ -120,7 +120,9 @@
             .sort((a, b) => (b.orderTime || 0) - (a.orderTime || 0));
           const o = orders[0];
           let body;
-          if (!o) {
+          if (!o && isInternalMember(member)) {
+            body = `<p class="muted" style="font-size:.88rem">${t("home.noOrderInternal")}</p>`;
+          } else if (!o) {
             body = `<p class="muted" style="font-size:.88rem">${t("home.noOrder")}</p>
                     <a href="bind.html" class="btn btn-primary btn-inline" style="margin-top:10px">${t("acc.goBind")}</a>`;
           } else {

@@ -78,7 +78,7 @@
     import {
       requireMember, renderNav, loadBalance, toDate, fmtDate, fmtMoney, esc, platformTag,
       TIERS, tierProgress, tierLabel, tierIconHTML, t, translateReason,
-      BONUSES, bonusPoints, bonusActive, activeBonuses, customPerks, EXPIRY_MONTHS
+      BONUSES, bonusPoints, bonusActive, activeBonuses, customPerks, EXPIRY_MONTHS, isInternalMember
     } from "./js/common.js";
     import { renderFaq } from "./js/faq.js";
 
@@ -122,7 +122,8 @@
 
       // ---------- 已绑定账号 ----------
       const bindings = bindSnap.docs.map(d => d.data());
-      $("bindCallout").classList.toggle("hidden", bindings.length > 0);
+      const internal = isInternalMember(member);
+      $("bindCallout").classList.toggle("hidden", bindings.length > 0 || internal);
 
       // ---------- 积分摘要 ----------
       $("spendable").textContent = bal.spendable.toLocaleString();
@@ -153,7 +154,7 @@
         $("taskList").innerHTML = tasks.map(x => `
           <li class="${x.ok ? "done" : ""}">
             <span class="task-check">${x.ok ? "✓" : ""}</span>
-            <span class="task-text">${t("task." + x.key)}${!x.ok && !bindings.length && x.key !== "welcome" ? ` <small class="muted">${t("task.needBind")}</small>` : ""}</span>
+            <span class="task-text">${t("task." + x.key)}${!x.ok && !bindings.length && !internal && x.key !== "welcome" ? ` <small class="muted">${t("task.needBind")}</small>` : ""}</span>
             ${x.ok
               ? `<span class="task-pts muted">${t("notif.plus", { n: bonusPoints(x.key) })}</span>`
               : `<a class="task-pts" href="${x.href}">${t("notif.plus", { n: bonusPoints(x.key) })} ➔</a>`}
