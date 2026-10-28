@@ -165,7 +165,7 @@
           ${receipt}${auto}`;
         return `
           ${bar}
-          ${old
+          ${r.status === "completed"   // 收货后马上收起；查询链接要 3 天后才变灰
             ? `<details class="gift-more"><summary>${t("gift.showDetails")}</summary>${details}</details>`
             : details}
           ${r.status === "shipped" ? `<button class="btn btn-primary gift-confirm" data-receive="${esc(r.id)}">✅ ${t("gift.confirmBtn")}</button>` : ""}`;

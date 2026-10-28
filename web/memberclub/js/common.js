@@ -215,7 +215,7 @@ export function addressHTML(a) {
 export function redeemCode(id) {
   return "#" + String(id || "").slice(0, 6).toUpperCase();
 }
-export const DETAIL_COLLAPSE_DAYS = 3;   // 收货几天后，查询物流变灰、详情预设收起
+export const DETAIL_COLLAPSE_DAYS = 3;   // 收货几天后，查询物流链接变灰（详情在收货后马上收起）
 
 // 实体奖品进度：0 已申请 · 1 已通过 · 2 已发货 · 3 已签收 · 4 完成
 export const GIFT_STEPS = ["pending", "approved", "shipped", "received", "completed"];
@@ -609,8 +609,8 @@ const NAV = [
     sub: [["shop", "shop.html", "nav.mall"], ["rewards", "rewards.html", "nav.rewards"]] },
   { key: "member", icon: "💎", label: "nav.points", href: "account.html", pages: ["account", "points"],
     sub: [["account", "account.html", "nav.account"], ["points", "points.html", "nav.pointsDetail"]] },
-  { key: "me",     icon: "👤", label: "nav.me",     href: "profile.html", pages: ["profile", "bind"],
-    sub: [["profile", "profile.html", "nav.profile"], ["bind", "bind.html", "nav.bind"]] },
+  { key: "me",     icon: "👤", label: "nav.me",     href: "profile.html", pages: ["profile", "bind", "help"],
+    sub: [["profile", "profile.html", "nav.profile"], ["bind", "bind.html", "nav.bind"], ["help", "help.html", "nav.help"]] },
 ];
 
 export function renderNav(active) {

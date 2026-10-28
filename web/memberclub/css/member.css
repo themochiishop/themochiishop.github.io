@@ -102,7 +102,7 @@ a:hover { text-decoration: underline; }
 
 /* ---------- 表单 ---------- */
 label { display: block; font-size: .88rem; color: var(--muted); margin-bottom: 14px; }
-input[type=text], input[type=email], input[type=password], input[type=date], input:not([type]) {
+input[type=text], input[type=email], input[type=password], input[type=date], input[type=search], input:not([type]) {
   display: block; width: 100%; margin-top: 6px;
   padding: 11px 12px; font-size: 1rem;
   background: var(--bg); color: var(--text);
@@ -831,3 +831,24 @@ body.navigating main { opacity: .55; transition: opacity .15s; }
 
 /* 昵称锁定中 */
 input.locked { opacity: .6; cursor: not-allowed; }
+
+/* ---------- ❓ 帮助中心 ---------- */
+.help-link { display: flex; align-items: center; gap: 8px; padding: 12px 14px; margin: 4px 0 16px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); text-decoration: none; font-size: .86rem; }
+.help-link:hover { color: var(--text); border-color: var(--accent); }
+.help-link .go { margin-left: auto; color: var(--accent); }
+.help-search { width: 100%; margin: 6px 0 12px; }
+.help-where { display: inline-block; font-size: .7rem; padding: 1px 6px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); color: var(--muted); margin-right: 4px; vertical-align: middle; }
+.faq-a .pre { white-space: pre-wrap; }
+.contact-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.contact-btns .btn { flex: 1 1 140px; text-align: center; }
+@media (max-width: 640px) { .faq-item summary { font-size: .86rem; } .faq-a { font-size: .8rem; } }
+
+/* ---------- 📅 记录按月收起 / 载入更多 ---------- */
+.list li.month-head.toggle { display: flex; justify-content: space-between; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.list li.month-head.toggle small { font-weight: 400; color: var(--muted); }
+.month-sum { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; }
+.month-sum .plus { color: var(--ok, #4ade80); }
+.month-sum .minus { color: var(--bad, #f87171); }
+.month-head .chev { display: inline-block; transition: transform .2s; color: var(--muted); }
+.month-head:not(.open) .chev { transform: rotate(-90deg); }
+.list li.load-more { justify-content: center; border: 0; padding-top: 12px; }

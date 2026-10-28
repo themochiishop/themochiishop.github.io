@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n-title="help.pageTitle">Help Centre · Mochii Club</title>
+  <link rel="stylesheet" href="css/member.css">
+</head>
+<body class="loading">
+  <header id="topbar"></header>
+
+  <main class="page">
+    <h1 data-i18n="help.title"></h1>
+    <p class="muted" data-i18n="help.sub"></p>
+    <p id="pageError" class="msg err hidden"></p>
+
+    <input id="helpSearch" class="help-search" type="search" data-i18n-ph="help.searchPh" autocomplete="off">
+
+    <div class="tabs" id="helpTabs">
+      <button data-tab="club" class="active" data-i18n="help.tabClub"></button>
+      <button data-tab="store" data-i18n="help.tabStore"></button>
+    </div>
+
+    <div class="card">
+      <div id="helpCats" class="filter-chips"></div>
+      <div id="helpList" class="faq-list"><p class="empty" data-i18n="common.loading"></p></div>
+    </div>
+
+    <!-- 联系我们 -->
+    <div class="card hidden" id="contactCard">
+      <h2 data-i18n="help.contactTitle"></h2>
+      <p class="muted" style="font-size:.85rem;margin:-6px 0 12px" data-i18n="help.contactSub"></p>
+      <div class="contact-btns" id="contactBtns"></div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { db } from "./js/firebase-config.js";
+    import {
+      collection, getDocs, getDoc, doc
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import { requireMember, renderNav, esc, t, lang } from "./js/common.js";
+    import { clubFaq } from "./js/faq.js";
+
+    const $ = id => document.getElementById(id);
+    renderNav("help");
+
+    // 商店帮助的分类（和后台 storehelp.html 的 STORE_CATS 一致）
+    const STORE_CATS = ["order", "shipping", "payment", "return", "product", "live", "contact"];
+
+    let tab = "club", cat = "all";
+    let club = [], store = [];
+
+    // 网址带 #club-redeem、#store 之类，直接打开对应分类
+    const hash = location.hash.slice(1);
+    if (hash.startsWith("store")) tab = "store";
+    if (hash.startsWith("club-")) cat = hash.slice(5);
+    else if (hash && !hash.startsWith("store")) cat = hash;   // help.html#points 也可以
+
+    const norm = x => String(x || "").toLowerCase();
+    const strip = html => String(html || "").replace(/<[^>]+>/g, " ");
+
+    function items() {
+      if (tab === "club") return club.flatMap(g => g.items.map(i => ({ ...i, cat: g.sec, html: true })));
+      return store.map(x => ({ q: x.q, a: x.a, cat: x.cat, html: false }));
+    }
+
+    function render() {
+      document.querySelectorAll("#helpTabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+      const q = norm($("helpSearch").value.trim());
+
+      // 搜索：两边一起找
+      if (q) {
+        $("helpCats").innerHTML = "";
+        const all = [
+          ...club.flatMap(g => g.items.map(i => ({ ...i, html: true, where: t("help.tabClub") }))),
+          ...store.map(x => ({ q: x.q, a: x.a, html: false, where: t("help.tabStore") })),
+        ].filter(i => norm(i.q).includes(q) || norm(i.html ? strip(i.a) : i.a).includes(q));
+        $("helpList").innerHTML = all.length ? all.map(i => itemHTML(i, true)).join("") : `<p class="empty">${t("help.noResult")}</p>`;
+        return;
+      }
+
+      const cats = tab === "club" ? club.map(g => g.sec) : STORE_CATS.filter(c => store.some(x => x.cat === c));
+      if (cat !== "all" && !cats.includes(cat)) cat = "all";
+      $("helpCats").innerHTML = cats.length > 1
+        ? [`<button type="button" data-k="all" class="${cat === "all" ? "active" : ""}">${t("pts.kind.all")}</button>`,
+           ...cats.map(c => `<button type="button" data-k="${esc(c)}" class="${c === cat ? "active" : ""}">${t((tab === "club" ? "help.club." : "help.store.") + c)}</button>`)].join("")
+        : "";
+      const list = items().filter(i => cat === "all" || i.cat === cat);
+      $("helpList").innerHTML = list.length ? list.map(i => itemHTML(i, false)).join("")
+        : `<p class="empty">${t(tab === "store" ? "help.storeEmpty" : "help.noResult")}</p>`;
+    }
+
+    function itemHTML(i, showWhere) {
+      return `
+        <details class="faq-item">
+          <summary>${showWhere ? `<span class="help-where">${esc(i.where)}</span> ` : ""}${esc(i.q)}</summary>
+          <div class="faq-a">${i.html ? i.a : `<div class="pre">${esc(i.a)}</div>`}</div>
+        </details>`;
+    }
+
+    $("helpTabs").addEventListener("click", e => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      tab = b.dataset.tab; cat = "all";
+      $("helpSearch").value = "";
+      render();
+    });
+    $("helpCats").addEventListener("click", e => {
+      const b = e.target.closest("[data-k]");
+      if (!b) return;
+      cat = b.dataset.k;
+      render();
+    });
+    $("helpSearch").addEventListener("input", render);
+
+    requireMember(async () => {
+      club = clubFaq();
+      render();
+      try {
+        const [fs, hs] = await Promise.all([getDocs(collection(db, "storeFaq")), getDoc(doc(db, "settings", "help"))]);
+        store = fs.docs.map(d => ({ id: d.id, ...d.data() }))
+          .filter(x => x.active !== false && !x.draft)
+          .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999))
+          .map(x => {
+            const loc = (x.i18n && x.i18n[lang]) || {};
+            return { q: loc.q || x.q || "", a: loc.a || x.a || "", cat: x.cat || "order" };
+          });
+        render();
+
+        // 联系我们
+        const c = hs.exists() ? hs.data() : {};
+        const wa = String(c.whatsapp || "").replace(/\D/g, "");
+        const safe = u => /^https:\/\//i.test(u || "") ? u : "";
+        const btns = [
+          wa ? `<a class="btn contact-wa" href="https://wa.me/${wa}" target="_blank" rel="noopener">💬 WhatsApp</a>` : "",
+          safe(c.shopee) ? `<a class="btn contact-shopee" href="${esc(c.shopee)}" target="_blank" rel="noopener">🛍️ Shopee</a>` : "",
+          safe(c.tiktok) ? `<a class="btn contact-tiktok" href="${esc(c.tiktok)}" target="_blank" rel="noopener">🎵 TikTok Shop</a>` : "",
+        ].filter(Boolean);
+        $("contactBtns").innerHTML = btns.join("");
+        $("contactCard").classList.toggle("hidden", !btns.length);
+      } catch (e) {
+        console.warn("store help", e);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -56,6 +56,25 @@ const TEXT = {
       ["可以解除绑定吗？", () => `请联系我们。解除后，该账号订单的积分会扣回，绑定记录会保留在「已解除的账号」里。`],
       ["改了平台用户名怎么办？", () => `系统是用用户名配对订单的。改名后的新订单可能配对不到，请用新用户名再绑定一次，或联系我们帮你处理。`],
     ],
+    redeem: [
+      ["怎么兑换奖品？", () => `到「兑换商城」选奖品，按「兑换」就好。<b>优惠券</b>审核通过后，券码会出现在「兑换记录」；<b>实体奖品</b>兑换时要选收货地址，审核通过后我们会寄出。`],
+      ["兑换后积分什么时候扣？", () => `提交后积分先<b>暂扣</b>（显示在「兑换审核中」）。审核通过才正式扣除；没通过或你自己取消，暂扣的积分会退回。`],
+      ["可以取消兑换吗？", () => `「审核中」的兑换可以在「兑换记录」自己取消。审核通过后如需取消，请联系我们。`],
+      ["优惠券怎么用？", () => `在「兑换记录」复制券码，到 Shopee 或 TikTok 结账时输入。使用条件（最低消费、有效期等）请看奖品说明。`],
+      ["实体奖品要运费吗？寄到哪里？", () => `<b>免运费</b>，由 The Mochii Shop 寄出。目前只寄马来西亚境内地址。`],
+      ["实体奖品多久寄出？怎么查物流？", () => `审核通过后会尽快安排寄出。发货后，「兑换记录」会显示运输公司、追踪单号和「查询物流」链接，铃铛也会通知你。`],
+      ["地址填错了怎么办？", () => `<b>发货前</b>可以在「兑换记录」那一笔按「修改」更改地址。已经发货的话，请马上联系我们。`],
+      ["收到奖品后要做什么？", () => `在「兑换记录」按「确认收货」，可以选填照片和留言。如果没有确认，发货 14 天后会自动完成。`],
+      ["「即将下架」是什么意思？", () => `奖品设定了下架时间，时间一到就不能再兑换。商城会显示剩余天数或小时。`],
+    ],
+    account: [
+      ["怎么修改昵称？", () => `到「我的 › 个人资料」修改。昵称<b>每 30 天只能改一次</b>。`],
+      ["手机号码、WhatsApp 通知可以改吗？", () => `可以，在「个人资料」随时修改。手机号码用来联系你领取奖品，请填可以用 WhatsApp 联系的号码。`],
+      ["生日可以改吗？", () => `生日只能设定一次，用来发生日礼。如果填错，请联系我们更正。`],
+      ["收货地址怎么管理？", () => `在「个人资料 › 收货地址」新增、修改或删除，最多存 5 个，第一个是默认地址。邮编填好后会自动选州属，城市照州属选择。`],
+      ["怎么换语言？", () => `点右上角的国旗，可以选 English、Bahasa Melayu 或中文。`],
+      ["想删除账号或个人资料？", () => `请联系我们，我们会按马来西亚个人资料保护法（PDPA）处理你的要求。`],
+    ],
   },
 
   // ======================= English =======================
@@ -93,6 +112,25 @@ const TEXT = {
       ["How soon do I get points after linking?", () => `Points are calculated every hour, so points for your past orders appear within an hour of linking.`],
       ["Can I unlink an account?", () => `Please contact us. Once unlinked, points from that account's orders are removed, and the record stays under “Removed links”.`],
       ["I changed my platform username?", () => `We match orders by username, so new orders under a new username may not match. Link the new username too, or contact us for help.`],
+    ],
+    redeem: [
+      ["How do I redeem a reward?", () => `Go to the Rewards Mall, choose a reward and tap “Redeem”. For <b>coupons</b>, the code appears in “My Redemptions” once approved. For <b>physical rewards</b>, choose a shipping address — we'll send it after approval.`],
+      ["When are my points deducted?", () => `Points are <b>held</b> when you submit (shown as “In review”). They're deducted once approved, and returned if the request isn't approved or you cancel it.`],
+      ["Can I cancel a redemption?", () => `Redemptions still “In review” can be cancelled in “My Redemptions”. After approval, please contact us.`],
+      ["How do I use a coupon?", () => `Copy the code in “My Redemptions” and enter it at Shopee or TikTok checkout. See the reward description for conditions such as minimum spend and validity.`],
+      ["Is there a shipping fee? Where do you ship?", () => `<b>Free shipping</b> by The Mochii Shop. We currently ship to addresses in Malaysia only.`],
+      ["When will my physical reward ship? How do I track it?", () => `We ship as soon as possible after approval. Once shipped, “My Redemptions” shows the courier, tracking number and a “Track parcel” link, and you'll get a 🔔 notification.`],
+      ["I entered the wrong address?", () => `<b>Before it ships</b>, tap “Edit” on that redemption in “My Redemptions”. If it has already shipped, please contact us right away.`],
+      ["What should I do after receiving it?", () => `Tap “Confirm receipt” in “My Redemptions” (photo and comment are optional). If you don't, it completes automatically 14 days after shipping.`],
+      ["What does “Ending soon” mean?", () => `The reward has an end time. After that it can no longer be redeemed. The mall shows the days or hours left.`],
+    ],
+    account: [
+      ["How do I change my name?", () => `In “Me › Profile”. Your name can be changed <b>once every 30 days</b>.`],
+      ["Can I change my phone number or WhatsApp updates?", () => `Yes, any time in “Profile”. We use your number to contact you about rewards, so please use a number reachable on WhatsApp.`],
+      ["Can I change my birthday?", () => `Your birthday can only be set once (it's used for your birthday gift). Contact us if it needs correcting.`],
+      ["How do I manage shipping addresses?", () => `In “Profile › Shipping addresses” — add, edit or delete up to 5. The first one is your default. The state is picked from your postcode, then choose the city.`],
+      ["How do I change the language?", () => `Tap the flag at the top right to choose English, Bahasa Melayu or 中文.`],
+      ["I want my account or data deleted?", () => `Please contact us and we'll handle your request under Malaysia's Personal Data Protection Act (PDPA).`],
     ],
   },
 
@@ -132,8 +170,38 @@ const TEXT = {
       ["Bolehkah saya menyahpautkan akaun?", () => `Sila hubungi kami. Selepas dinyahpaut, mata daripada pesanan akaun itu ditolak, dan rekodnya kekal di bawah “Pautan yang telah dibuang”.`],
       ["Saya menukar nama pengguna platform?", () => `Kami memadankan pesanan ikut nama pengguna, jadi pesanan baharu dengan nama pengguna baharu mungkin tidak sepadan. Pautkan nama pengguna baharu juga, atau hubungi kami untuk bantuan.`],
     ],
+    redeem: [
+      ["Bagaimana menebus ganjaran?", () => `Pergi ke Pusat Ganjaran, pilih ganjaran dan ketik “Tebus”. Bagi <b>kupon</b>, kod dipaparkan dalam “Penebusan Saya” selepas diluluskan. Bagi <b>ganjaran fizikal</b>, pilih alamat penghantaran — kami akan menghantarnya selepas diluluskan.`],
+      ["Bilakah mata ditolak?", () => `Mata <b>ditahan</b> semasa anda menghantar permohonan (dipaparkan sebagai “Dalam semakan”). Ia ditolak selepas diluluskan, dan dikembalikan jika tidak diluluskan atau anda membatalkannya.`],
+      ["Bolehkah saya membatalkan penebusan?", () => `Penebusan yang masih “Dalam semakan” boleh dibatalkan di “Penebusan Saya”. Selepas diluluskan, sila hubungi kami.`],
+      ["Bagaimana menggunakan kupon?", () => `Salin kod di “Penebusan Saya” dan masukkan semasa pembayaran di Shopee atau TikTok. Lihat keterangan ganjaran untuk syarat seperti perbelanjaan minimum dan tempoh sah.`],
+      ["Ada caj penghantaran? Hantar ke mana?", () => `<b>Penghantaran percuma</b> oleh The Mochii Shop. Buat masa ini kami hanya menghantar ke alamat di Malaysia.`],
+      ["Bilakah ganjaran fizikal dihantar? Bagaimana menjejaknya?", () => `Kami menghantar secepat mungkin selepas diluluskan. Selepas dihantar, “Penebusan Saya” memaparkan syarikat kurier, nombor penjejakan dan pautan “Jejak bungkusan”, dan anda akan menerima 🔔 pemberitahuan.`],
+      ["Saya tersalah alamat?", () => `<b>Sebelum dihantar</b>, ketik “Ubah” pada penebusan itu di “Penebusan Saya”. Jika sudah dihantar, sila hubungi kami segera.`],
+      ["Apa perlu dibuat selepas menerimanya?", () => `Ketik “Sahkan penerimaan” di “Penebusan Saya” (foto dan komen adalah pilihan). Jika tidak, ia selesai secara automatik 14 hari selepas dihantar.`],
+      ["Apa maksud “Hampir tamat”?", () => `Ganjaran itu ada masa tamat. Selepas itu ia tidak boleh ditebus lagi. Pusat Ganjaran memaparkan baki hari atau jam.`],
+    ],
+    account: [
+      ["Bagaimana menukar nama?", () => `Di “Saya › Profil”. Nama boleh ditukar <b>sekali setiap 30 hari</b>.`],
+      ["Boleh tukar nombor telefon atau makluman WhatsApp?", () => `Boleh, bila-bila masa di “Profil”. Nombor anda digunakan untuk menghubungi anda berkenaan ganjaran, jadi gunakan nombor yang ada WhatsApp.`],
+      ["Boleh tukar tarikh lahir?", () => `Tarikh lahir hanya boleh ditetapkan sekali (untuk hadiah hari jadi). Hubungi kami jika perlu dibetulkan.`],
+      ["Bagaimana mengurus alamat penghantaran?", () => `Di “Profil › Alamat penghantaran” — tambah, ubah atau padam sehingga 5 alamat. Alamat pertama ialah alamat utama. Negeri dipilih mengikut poskod, kemudian pilih bandar.`],
+      ["Bagaimana menukar bahasa?", () => `Ketik bendera di penjuru kanan atas untuk memilih English, Bahasa Melayu atau 中文.`],
+      ["Saya mahu akaun atau data saya dipadam?", () => `Sila hubungi kami dan kami akan mengendalikan permintaan anda mengikut Akta Perlindungan Data Peribadi Malaysia (PDPA).`],
+    ],
   },
 };
+
+// 帮助中心：会员俱乐部的分类（顺序 = 显示顺序）
+export const CLUB_SECTIONS = ["points", "tier", "redeem", "bind", "account"];
+export function clubFaq() {
+  const L = TEXT[lang] || TEXT.en;
+  const hasCustom = customPerks().length > 0;
+  return CLUB_SECTIONS.map(sec => ({
+    sec,
+    items: (L[sec] || []).filter(([, , only]) => only !== "custom" || hasCustom).map(([q, a]) => ({ q, a: a(L) })),
+  }));
+}
 
 // 把某一区的常见问题放进 el（<details> 折叠式）
 export function renderFaq(el, section) {

@@ -69,7 +69,7 @@
     </div>
 
     <!-- 积分奖励常见问题：内容待全部功能确认后再补（暂时隐藏） -->
-    <div class="card faq-card hidden" id="faqTier"></div>
+    <a class="help-link" href="help.html#tier"><span>❓</span><span data-i18n="help.linkMore"></span><span class="go">➔</span></a>
   </main>
 
   <script type="module">
@@ -80,13 +80,11 @@
       TIERS, tierProgress, tierLabel, tierIconHTML, t, translateReason,
       BONUSES, bonusPoints, bonusActive, activeBonuses, customPerks, EXPIRY_MONTHS, isInternalMember
     } from "./js/common.js";
-    import { renderFaq } from "./js/faq.js";
 
     const $ = id => document.getElementById(id);
     renderNav("account");
 
     requireMember(async (user, member) => {
-      renderFaq($("faqTier"), "tier");
       $("hello").textContent = t("acc.hello", { name: member.name || t("acc.member") });
       if (isInternalMember(member)) $("hello").insertAdjacentHTML("beforeend", ` <span class="tag tag-internal">${t("tag.internal")}</span>`);
       $("phoneCallout").classList.toggle("hidden", !!member.phone);

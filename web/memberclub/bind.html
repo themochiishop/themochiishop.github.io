@@ -40,7 +40,7 @@
       </div>
     </div>
 
-    <div class="card faq-card hidden" id="faqBind"></div>
+    <a class="help-link" href="help.html#bind"><span>❓</span><span data-i18n="help.linkMore"></span><span class="go">➔</span></a>
   </main>
 
   <script type="module">
@@ -53,7 +53,6 @@
       detectPlatform, normalizeOrderNo, normalizeUsername, t, claimBonuses, toastBonuses,
       accountStats, maskOrderNo, fmtMoney
     } from "./js/common.js";
-    import { renderFaq } from "./js/faq.js";
 
     const $ = id => document.getElementById(id);
     renderNav("bind");
@@ -72,7 +71,6 @@
     });
 
     requireMember(async user => {
-      renderFaq($("faqBind"), "bind");
       async function loadBindings() {
         const mine = c => getDocs(query(collection(db, c), where("uid", "==", user.uid)));
         const [bSnap, oSnap, logs] = await Promise.all([
