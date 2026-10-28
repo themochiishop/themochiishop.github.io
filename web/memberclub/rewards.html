@@ -27,11 +27,7 @@
       </div>
     </div>
 
-    <div class="card">
-      <h2 data-i18n="rw.rewards"></h2>
-      <div id="rewardGrid" class="reward-grid"><p class="empty" data-i18n="common.loading"></p></div>
-      <p id="redeemMsg" class="msg"></p>
-    </div>
+    <a href="shop.html" class="btn btn-primary" style="margin-bottom:16px" data-i18n="rw.goShop"></a>
 
     <div class="card">
       <h2 data-i18n="rw.mine"></h2>
@@ -42,38 +38,23 @@
   <script type="module">
     import { db } from "./js/firebase-config.js";
     import {
-      collection, query, where, getDocs, addDoc, doc, updateDoc, serverTimestamp
+      doc, updateDoc
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import { requireMember, renderNav, loadBalance, esc, fmtDate, t } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
     renderNav("rewards");
 
-    const TYPE = {
-      coupon: { icon: "🎫", key: "rw.coupon" },
-      gift: { icon: "🎁", key: "rw.gift" },
-    };
     const STATUS_CLASS = { pending: "tag-pending", approved: "tag-ok", rejected: "tag-bad", cancelled: "" };
     const statusTag = s => `<span class="tag ${STATUS_CLASS[s] || ""}">${t("rw.st." + s)}</span>`;
 
-    function setMsg(text, type) {
-      $("redeemMsg").textContent = text;
-      $("redeemMsg").className = "msg" + (type ? " " + type : "");
-    }
 
     requireMember(user => {
-      let rewards = [];
       let bal = null;
 
       async function load() {
         try {
-          const [b, rSnap] = await Promise.all([
-            loadBalance(user.uid),
-            getDocs(query(collection(db, "rewards"), where("active", "==", true)))
-          ]);
-          bal = b;
-          rewards = rSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-            .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || a.cost - b.cost);
+          bal = await loadBalance(user.uid);
           render();
         } catch (e) {
           $("pageError").textContent = t("common.loadFail") + e.message;
@@ -85,28 +66,6 @@
         $("spendable").textContent = bal.spendable.toLocaleString();
         $("pending").textContent = bal.pending.toLocaleString();
         $("reservedNote").textContent = bal.reserved > 0 ? t("acc.reserved", { n: bal.reserved }) : " ";
-
-        // 奖品（名称和说明照你在后台填写的文字显示）
-        $("rewardGrid").innerHTML = rewards.length ? rewards.map(r => {
-          const ty = TYPE[r.type] || TYPE.gift;
-          const soldOut = typeof r.stock === "number" && r.stock <= 0;
-          const short = r.cost - bal.spendable;
-          let btn;
-          if (soldOut) btn = `<button class="btn btn-ghost" disabled>${t("rw.soldOut")}</button>`;
-          else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
-          else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
-          return `
-            <div class="reward">
-              ${r.image
-  ? `<img class="reward-img" src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">`
-  : `<div class="reward-icon">${ty.icon}</div>`}
-              <div class="reward-type muted">${t(ty.key)}${typeof r.stock === "number" ? " · " + t("rw.left", { n: Math.max(r.stock, 0) }) : ""}</div>
-              <div class="reward-name">${esc(r.name)}</div>
-              ${r.description ? `<div class="reward-desc muted">${esc(r.description)}</div>` : ""}
-              <div class="reward-cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
-              ${btn}
-            </div>`;
-        }).join("") : `<p class="empty">${t("rw.none")}</p>`;
 
         // 我的兑换
         $("myList").innerHTML = bal.redemptions.length ? bal.redemptions.map(r => `
@@ -122,32 +81,6 @@
             </div>
           </li>`).join("") : `<li class="empty">${t("rw.noneMine")}</li>`;
       }
-
-      // 兑换
-      $("rewardGrid").addEventListener("click", async e => {
-        const id = e.target.dataset.redeem;
-        if (!id) return;
-        const r = rewards.find(x => x.id === id);
-        if (!r) return;
-        if (!confirm(t("rw.confirm", { name: r.name, cost: r.cost }))) return;
-        e.target.disabled = true;
-        setMsg(t("rw.submitting"));
-        try {
-          await addDoc(collection(db, "redemptions"), {
-            uid: user.uid,
-            rewardId: r.id,
-            rewardName: r.name,
-            cost: r.cost,
-            status: "pending",
-            createdAt: serverTimestamp()
-          });
-          setMsg(t("rw.submitted", { name: r.name }), "ok");
-          await load();
-        } catch (err) {
-          setMsg(err.code === "permission-denied" ? t("rw.denied") : t("rw.fail") + err.message, "err");
-          e.target.disabled = false;
-        }
-      });
 
       // 取消、复制券码
       $("myList").addEventListener("click", async e => {

@@ -20,28 +20,22 @@
         <div class="pts-big" id="heroPoints">-</div>
         <div class="sub" id="heroTier">&nbsp;</div>
       </div>
-      <a href="account.html" data-i18n="shop.myPoints"></a>
+      <a href="rewards.html" data-i18n="shop.toHistory"></a>
     </div>
 
-    <!-- 兑换商城（框架：商品之后再制定） -->
     <h1 data-i18n="shop.title"></h1>
-    <p class="muted" data-i18n="shop.sub"></p>
+    <p class="muted" data-i18n="rw.sub"></p>
 
     <div class="cat-chips" id="cats"></div>
-    <div class="shop-grid" id="shopGrid"></div>
-    <p class="muted center" style="margin:14px 0 26px;font-size:.85rem" data-i18n="shop.soonNote"></p>
-
-    <!-- 目前可兑换的奖品（来自「积分兑换」） -->
-    <div class="card">
-      <h2 data-i18n="shop.nowAvailable"></h2>
-      <div class="shop-grid" id="rewardPreview"><p class="empty" data-i18n="common.loading"></p></div>
-      <a href="rewards.html" class="btn btn-primary" style="margin-top:14px" data-i18n="shop.goRewards"></a>
-    </div>
+    <div id="rewardGrid" class="reward-grid"><p class="empty" data-i18n="common.loading"></p></div>
+    <p id="redeemMsg" class="msg"></p>
   </main>
 
   <script type="module">
     import { db } from "./js/firebase-config.js";
-    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import {
+      collection, query, where, getDocs, addDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, tierProgress, tierLabel, esc, t
     } from "./js/common.js";
@@ -49,79 +43,110 @@
     const $ = id => document.getElementById(id);
     renderNav("shop");
 
-    // ---------- 商城分类（之后可增减） ----------
-    const CATS = [
-      ["all", "shop.cat.all"],
-      ["coupon", "shop.cat.coupon"],
-      ["bracelet", "shop.cat.bracelet"],
-      ["blindbox", "shop.cat.blindbox"],
-    ];
-
-    // ---------- 商城商品（框架示范，之后改成从后台读取） ----------
-    const SHOP_ITEMS = [
-      { cat: "coupon",   icon: "🎫" },
-      { cat: "bracelet", icon: "📿" },
-      { cat: "blindbox", icon: "🎁" },
-      { cat: "bracelet", icon: "💎" },
-    ];
-
+    // 奖品类型（后台「奖品管理」的类型）
+    const TYPE = {
+      coupon: { icon: "🎫", key: "rw.coupon" },
+      gift: { icon: "🎁", key: "rw.gift" },
+    };
+    const CATS = [["all", "shop.cat.all"], ["coupon", "shop.cat.coupon"], ["gift", "shop.cat.gift"]];
     let currentCat = "all";
 
-    function renderCats() {
-      $("cats").innerHTML = CATS.map(([k, key]) =>
-        `<button type="button" data-cat="${k}" class="${k === currentCat ? "active" : ""}">${t(key)}</button>`).join("");
+    function setMsg(text, type) {
+      $("redeemMsg").textContent = text;
+      $("redeemMsg").className = "msg" + (type ? " " + type : "");
     }
 
-    function renderShop() {
-      const items = SHOP_ITEMS.filter(x => currentCat === "all" || x.cat === currentCat);
-      $("shopGrid").innerHTML = items.map(x => `
-        <div class="shop-item soon">
-          <div class="ph">${x.icon}</div>
-          <div class="info">
-            <div class="name">${t("shop.cat." + x.cat)}</div>
-            <div class="cost"><span class="tag tag-pending">${t("shop.soon")}</span></div>
-          </div>
-        </div>`).join("");
-    }
+    requireMember((user, member) => {
+      let rewards = [];
+      let bal = null;
 
-    $("cats").addEventListener("click", e => {
-      const c = e.target.dataset.cat;
-      if (!c) return;
-      currentCat = c;
-      renderCats();
-      renderShop();
-    });
-
-    renderCats();
-    renderShop();
-
-    requireMember(async (user, member) => {
       $("heroHello").textContent = t("acc.hello", { name: member.name || t("acc.member") });
       const tp = tierProgress(member);
       $("heroTier").textContent = `${tp.tier.icon ? tp.tier.icon + " " : ""}${tierLabel(tp.tier)}`;
 
-      try {
-        const [bal, rSnap] = await Promise.all([
-          loadBalance(user.uid),
-          getDocs(query(collection(db, "rewards"), where("active", "==", true)))
-        ]);
+      async function load() {
+        try {
+          const [b, rSnap] = await Promise.all([
+            loadBalance(user.uid),
+            getDocs(query(collection(db, "rewards"), where("active", "==", true)))
+          ]);
+          bal = b;
+          rewards = rSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || a.cost - b.cost);
+          render();
+        } catch (e) {
+          $("pageError").textContent = t("common.loadFail") + e.message;
+          $("pageError").classList.remove("hidden");
+        }
+      }
+
+      function render() {
         $("heroPoints").textContent = t("unit.pts", { n: bal.spendable.toLocaleString() });
 
-        const rewards = rSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-          .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || a.cost - b.cost)
-          .slice(0, 4);
-        $("rewardPreview").innerHTML = rewards.length ? rewards.map(r => `
-          <a class="shop-item" href="rewards.html" style="color:inherit;text-decoration:none">
-            <div class="ph">${r.image ? `<img src="${esc(r.image)}" alt="" loading="lazy">` : (r.type === "coupon" ? "🎫" : "🎁")}</div>
-            <div class="info">
-              <div class="name">${esc(r.name)}</div>
-              <div class="cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
-            </div>
-          </a>`).join("") : `<p class="empty">${t("rw.none")}</p>`;
-      } catch (e) {
-        $("pageError").textContent = t("common.loadFail") + e.message;
-        $("pageError").classList.remove("hidden");
+        // 分类：只显示有奖品的类型
+        const types = new Set(rewards.map(r => TYPE[r.type] ? r.type : "gift"));
+        const cats = CATS.filter(([k]) => k === "all" || types.has(k));
+        $("cats").classList.toggle("hidden", cats.length < 3);
+        $("cats").innerHTML = cats.map(([k, key]) =>
+          `<button type="button" data-cat="${k}" class="${k === currentCat ? "active" : ""}">${t(key)}</button>`).join("");
+
+        const list = rewards.filter(r => currentCat === "all" || (TYPE[r.type] ? r.type : "gift") === currentCat);
+        $("rewardGrid").innerHTML = list.length ? list.map(r => {
+          const ty = TYPE[r.type] || TYPE.gift;
+          const soldOut = typeof r.stock === "number" && r.stock <= 0;
+          const short = r.cost - bal.spendable;
+          let btn;
+          if (soldOut) btn = `<button class="btn btn-ghost" disabled>${t("rw.soldOut")}</button>`;
+          else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
+          else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
+          return `
+            <div class="reward">
+              ${r.image
+                ? `<img class="reward-img" src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">`
+                : `<div class="reward-icon">${ty.icon}</div>`}
+              <div class="reward-type muted">${t(ty.key)}${typeof r.stock === "number" ? " · " + t("rw.left", { n: Math.max(r.stock, 0) }) : ""}</div>
+              <div class="reward-name">${esc(r.name)}</div>
+              ${r.description ? `<div class="reward-desc muted">${esc(r.description)}</div>` : ""}
+              <div class="reward-cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
+              ${btn}
+            </div>`;
+        }).join("") : `<p class="empty">${t("rw.none")}</p>`;
       }
+
+      $("cats").addEventListener("click", e => {
+        const c = e.target.dataset.cat;
+        if (!c) return;
+        currentCat = c;
+        render();
+      });
+
+      // 兑换
+      $("rewardGrid").addEventListener("click", async e => {
+        const id = e.target.dataset.redeem;
+        if (!id) return;
+        const r = rewards.find(x => x.id === id);
+        if (!r) return;
+        if (!confirm(t("rw.confirm", { name: r.name, cost: r.cost }))) return;
+        e.target.disabled = true;
+        setMsg(t("rw.submitting"));
+        try {
+          await addDoc(collection(db, "redemptions"), {
+            uid: user.uid,
+            rewardId: r.id,
+            rewardName: r.name,
+            cost: r.cost,
+            status: "pending",
+            createdAt: serverTimestamp()
+          });
+          setMsg(t("rw.submitted", { name: r.name }), "ok");
+          await load();
+        } catch (err) {
+          setMsg(err.code === "permission-denied" ? t("rw.denied") : t("rw.fail") + err.message, "err");
+          e.target.disabled = false;
+        }
+      });
+
+      load();
     });
   </script>
 </body>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n-title="pts.pageTitle">Points Details · The Mochii Shop</title>
+  <link rel="stylesheet" href="css/member.css">
+</head>
+<body class="loading">
+  <header id="topbar"></header>
+
+  <main class="page">
+    <h1 data-i18n="pts.title"></h1>
+    <p class="muted" data-i18n="pts.sub"></p>
+    <p id="pageError" class="msg err hidden"></p>
+
+    <!-- 积分摘要 -->
+    <div class="mini-stats">
+      <div><span class="label" data-i18n="acc.available"></span><b id="sAvail">-</b></div>
+      <div><span class="label" data-i18n="acc.pending"></span><b id="sPending">-</b></div>
+      <div><span class="label" data-i18n="pts.reserved"></span><b id="sReserved">-</b></div>
+      <div><span class="label" data-i18n="pts.earned"></span><b id="sEarned">-</b></div>
+    </div>
+    <p class="expiry-note" id="expiryNote"></p>
+
+    <!-- 记录 -->
+    <div class="tabs">
+      <button data-tab="ledger" class="active" data-i18n="acc.tabLedger"></button>
+      <button data-tab="orders" data-i18n="acc.tabOrders"></button>
+    </div>
+    <div class="card">
+      <div id="ledgerFilter" class="filter-chips"></div>
+      <ul id="ledgerList" class="list"><li class="empty" data-i18n="common.loading"></li></ul>
+      <div id="orderFilter" class="filter-chips hidden"></div>
+      <ul id="ordersList" class="list hidden"></ul>
+    </div>
+
+    <!-- 积分常见问题（到账、扣分、额外福利）：内容待全部功能确认后再补（暂时隐藏） -->
+    <div class="card faq-card hidden" id="faqPoints"></div>
+  </main>
+
+  <script type="module">
+    import { db } from "./js/firebase-config.js";
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import {
+      requireMember, renderNav, loadBalance, toDate, fmtDate, fmtMoney, esc, platformTag, platformLabel,
+      t, translateReason, BONUSES, lang
+    } from "./js/common.js";
+
+    const $ = id => document.getElementById(id);
+    renderNav("points");
+
+    // 分页切换
+    document.querySelectorAll(".tabs button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("active", b === btn));
+        $("ledgerList").classList.toggle("hidden", tab !== "ledger");
+        $("ledgerFilter").classList.toggle("hidden", tab !== "ledger");
+        $("ordersList").classList.toggle("hidden", tab !== "orders");
+        $("orderFilter").classList.toggle("hidden", tab !== "orders");
+      });
+    });
+    if (location.hash === "#orders") document.querySelector('.tabs button[data-tab="orders"]').click();
+
+    // 积分记录的类别
+    const BONUS_REASONS = new Set(BONUSES.map(b => b.reason));
+    function kindOf(x) {
+      const r = String(x.reason || "");
+      if (x.redemptionId || r.startsWith("兑换：")) return "redeem";
+      if (r === "积分过期") return "expired";
+      if (x.orderNo) return x.delta >= 0 ? "purchase" : "deduct";
+      if (BONUS_REASONS.has(r) || r.startsWith("🎂") || r.startsWith("奖励：")) return "perk";
+      return x.delta >= 0 ? "perk" : "deduct";
+    }
+    const KINDS = ["all", "purchase", "perk", "redeem", "deduct", "expired"];
+
+    function chips(el, list, current, labelOf, onPick) {
+      el.innerHTML = list.map(k => `<button type="button" class="${k === current ? "active" : ""}" data-k="${esc(k)}">${labelOf(k)}</button>`).join("");
+      el.onclick = e => { const b = e.target.closest("[data-k]"); if (b) onPick(b.dataset.k); };
+    }
+
+    requireMember(async user => {
+      let bal, ordersSnap;
+      try {
+        [bal, ordersSnap] = await Promise.all([
+          loadBalance(user.uid),
+          getDocs(query(collection(db, "orders"), where("uid", "==", user.uid)))
+        ]);
+      } catch (e) {
+        $("pageError").textContent = t("common.loadFail") + e.message;
+        $("pageError").classList.remove("hidden");
+        return;
+      }
+      const now = new Date();
+
+      // ---------- 摘要 ----------
+      const earned = bal.ledger.filter(x => x.delta > 0 && !(x.availableAt && x.availableAt > now)).reduce((s, x) => s + x.delta, 0);
+      $("sAvail").textContent = bal.spendable.toLocaleString();
+      $("sPending").textContent = bal.pending.toLocaleString();
+      $("sReserved").textContent = bal.reserved.toLocaleString();
+      $("sEarned").textContent = earned.toLocaleString();
+      if (bal.expiring.length) {
+        $("expiryNote").innerHTML = bal.expiring.map(x =>
+          `<span class="expiry-soon">⏳ ${esc(t("acc.expiring", { n: x.amount.toLocaleString(), d: fmtDate(x.date) }))}</span>`
+        ).join("") + ` <a href="shop.html">${t("acc.useNow")}</a>`;
+      }
+
+      // ---------- 积分记录：同一张订单的多笔合并成一行，点开看过程 ----------
+      const groups = [];
+      const byOrder = {};
+      bal.ledger.forEach(x => {   // ledger 已按时间新→旧排序
+        if (x.orderNo) {
+          if (!byOrder[x.orderNo]) { byOrder[x.orderNo] = { orderNo: x.orderNo, items: [] }; groups.push(byOrder[x.orderNo]); }
+          byOrder[x.orderNo].items.push(x);
+        } else groups.push({ items: [x] });
+      });
+      groups.forEach(g => {
+        g.latest = g.items[0];
+        g.net = g.items.reduce((s, x) => s + x.delta, 0);
+        g.pending = g.items.some(x => x.delta > 0 && x.availableAt && x.availableAt > now);
+        g.availableAt = g.items.filter(x => x.delta > 0 && x.availableAt).map(x => x.availableAt).sort((a, b) => b - a)[0] || null;
+        const lastPlus = g.items.find(x => x.delta > 0);
+        g.title = translateReason((g.items.length > 1 && g.net >= 0 && lastPlus ? lastPlus : g.latest).reason);
+        g.kind = g.items.length > 1 ? (g.net >= 0 ? kindOf(lastPlus || g.latest) : "deduct") : kindOf(g.latest);
+      });
+
+      const LOCALE = { en: "en-MY", ms: "ms-MY", zh: "zh-CN" }[lang] || "en-MY";
+      const monthOf = d => d ? d.toLocaleDateString(LOCALE, { year: "numeric", month: "long" }) : "";
+      const ptsHTML = n => `<div class="pts ${n >= 0 ? "plus" : "minus"}">${n >= 0 ? "+" : ""}${n.toLocaleString()}</div>`;
+
+      let kind = "all";
+      function renderLedger() {
+        const used = new Set(groups.map(g => g.kind));
+        chips($("ledgerFilter"), KINDS.filter(k => k === "all" || used.has(k)), kind, k => t("pts.kind." + k), k => { kind = k; renderLedger(); });
+        const list = kind === "all" ? groups : groups.filter(g => g.kind === kind);
+        let month = "";
+        $("ledgerList").innerHTML = list.length ? list.map((g, i) => {
+          const m = monthOf(g.latest.createdAt);
+          const head = m !== month ? `<li class="month-head">${esc(m)}</li>` : "";
+          month = m;
+          const multi = g.items.length > 1;
+          return head + `
+            <li class="ledger-row${multi ? " expandable" : ""}" ${multi ? `data-g="${i}"` : ""}>
+              <div class="main">
+                <div class="title">${esc(g.title)} ${g.pending ? `<span class="tag tag-pending">${t("tag.pending")}</span>` : ""}</div>
+                <div class="meta">${g.orderNo ? t("acc.orderNo") + " " + esc(g.orderNo) + " · " : ""}${fmtDate(g.latest.createdAt, true)}${g.pending ? " · " + esc(t("notif.pendingUntil", { d: fmtDate(g.availableAt) })) : ""}</div>
+                ${multi ? `<div class="more-link">${t("pts.records", { n: g.items.length })} <span class="chev">▾</span></div>
+                <ul class="sub-ledger hidden">
+                  ${g.items.slice().reverse().map(x => `
+                    <li><span>${esc(translateReason(x.reason))}<small>${fmtDate(x.createdAt, true)}</small></span>
+                      <b class="${x.delta >= 0 ? "plus" : "minus"}">${x.delta >= 0 ? "+" : ""}${x.delta}</b></li>`).join("")}
+                </ul>` : ""}
+              </div>
+              <div class="right">${ptsHTML(g.net)}</div>
+            </li>`;
+        }).join("") : `<li class="empty">${t("acc.noLedger")}</li>`;
+      }
+      $("ledgerList").addEventListener("click", e => {
+        const row = e.target.closest(".expandable");
+        if (!row) return;
+        const sub = row.querySelector(".sub-ledger");
+        const open = sub.classList.toggle("hidden") === false;
+        row.classList.toggle("open", open);
+        row.querySelector(".more-link").firstChild.textContent =
+          (open ? t("pts.hide") : t("pts.records", { n: sub.children.length })) + " ";
+      });
+      renderLedger();
+
+      // ---------- 订单记录（可按绑定账号筛选） ----------
+      const orders = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .map(o => ({ ...o, orderTime: toDate(o.orderTime), availableAt: toDate(o.availableAt) }))
+        .sort((a, b) => (b.orderTime || 0) - (a.orderTime || 0));
+      const accounts = [...new Set(orders.map(o => o.platform + "_" + o.username))];
+      let acct = "all";
+      function renderOrders() {
+        if (accounts.length > 1) {
+          chips($("orderFilter"), ["all", ...accounts], acct, k => {
+            if (k === "all") return esc(t("pts.kind.all"));
+            const o = orders.find(x => x.platform + "_" + x.username === k);
+            return esc(platformLabel(o.platform) + " · " + o.username);
+          }, k => { acct = k; renderOrders(); });
+        }
+        const list = acct === "all" ? orders : orders.filter(o => o.platform + "_" + o.username === acct);
+        $("ordersList").innerHTML = list.length ? list.map(o => {
+          let state;
+          if (o.status === "refunded") state = `<span class="tag tag-bad">${t("tag.refunded")}</span>`;
+          else if (o.availableAt && o.availableAt > now) state = `<span class="tag tag-pending">${t("tag.pending")}</span>`;
+          else state = `<span class="tag tag-ok">${t("tag.credited")}</span>`;
+          return `
+            <li>
+              <div class="main">
+                <div class="title">${platformTag(o.platform)} ${fmtMoney(o.amount)}</div>
+                <div class="meta">${esc(o.username)} · ${esc(o.id)} · ${fmtDate(o.orderTime, true)}</div>
+              </div>
+              <div class="right">
+                <div class="pts">${t("unit.pts", { n: o.points || 0 })}</div>
+                ${state}
+              </div>
+            </li>`;
+        }).join("") : `<li class="empty">${t("acc.noOrders")}</li>`;
+      }
+      renderOrders();
+    });
+  </script>
+</body>
+</html>

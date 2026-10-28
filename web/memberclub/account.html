@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title data-i18n-title="acc.pageTitle">My Points · The Mochii Shop</title>
+  <title data-i18n-title="acc.pageTitle">Member Tier · The Mochii Shop</title>
   <link rel="stylesheet" href="css/member.css">
 </head>
 <body class="loading">
@@ -49,7 +49,7 @@
       <div class="stat main">
         <div class="label" data-i18n="acc.available"></div>
         <div class="value" id="spendable">-</div>
-        <div class="sub" id="reservedNote"><a href="rewards.html" data-i18n="acc.goRedeem"></a></div>
+        <div class="sub" id="reservedNote"><a href="shop.html" data-i18n="acc.goRedeem"></a></div>
       </div>
       <div class="stat">
         <div class="label" data-i18n="acc.pending"></div>
@@ -59,32 +59,17 @@
     </div>
 
     <p class="expiry-note" id="expiryNote"></p>
+    <a href="points.html" class="detail-link" data-i18n="acc.toDetail"></a>
 
-    <!-- 赚更多积分：欢迎礼 + 完善资料任务（全部完成后自动隐藏） -->
+    <!-- 🎁 额外福利：欢迎礼 + 完善资料奖励（之后改成后台可设定） -->
     <div class="card task-card hidden" id="taskCard">
       <h2 data-i18n="task.title"></h2>
       <p class="muted task-sub" data-i18n="task.sub"></p>
       <ul class="task-list" id="taskList"></ul>
     </div>
 
-    <!-- 已绑定账号 -->
-    <div class="card">
-      <div class="card-head">
-        <h2 data-i18n="acc.bound"></h2>
-        <a href="bind.html" class="small" id="boundMore"></a>
-      </div>
-      <div id="bindings" class="chips"><span class="muted" data-i18n="common.loading"></span></div>
-    </div>
-
-    <!-- 记录 -->
-    <div class="tabs">
-      <button data-tab="ledger" class="active" data-i18n="acc.tabLedger"></button>
-      <button data-tab="orders" data-i18n="acc.tabOrders"></button>
-    </div>
-    <div class="card">
-      <ul id="ledgerList" class="list"><li class="empty" data-i18n="common.loading"></li></ul>
-      <ul id="ordersList" class="list hidden"></ul>
-    </div>
+    <!-- 积分奖励常见问题：内容待全部功能确认后再补（暂时隐藏） -->
+    <div class="card faq-card hidden" id="faqTier"></div>
   </main>
 
   <script type="module">
@@ -98,15 +83,6 @@
 
     const $ = id => document.getElementById(id);
     renderNav("account");
-
-    // 分页切换
-    document.querySelectorAll(".tabs button").forEach(btn => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("active", b === btn));
-        $("ledgerList").classList.toggle("hidden", btn.dataset.tab !== "ledger");
-        $("ordersList").classList.toggle("hidden", btn.dataset.tab !== "orders");
-      });
-    });
 
     requireMember(async (user, member) => {
       $("hello").textContent = t("acc.hello", { name: member.name || t("acc.member") });
@@ -131,11 +107,9 @@
           </tr>`).join("")}`;
 
       const mine = c => getDocs(query(collection(db, c), where("uid", "==", user.uid)));
-      let bal, ordersSnap, bindSnap;
+      let bal, bindSnap;
       try {
-        [bal, ordersSnap, bindSnap] = await Promise.all([
-          loadBalance(user.uid), mine("orders"), mine("bindings")
-        ]);
+        [bal, bindSnap] = await Promise.all([loadBalance(user.uid), mine("bindings")]);
       } catch (e) {
         $("pageError").textContent = t("common.loadFail") + e.message;
         $("pageError").classList.remove("hidden");
@@ -147,10 +121,6 @@
       // ---------- 已绑定账号 ----------
       const bindings = bindSnap.docs.map(d => d.data());
       $("bindCallout").classList.toggle("hidden", bindings.length > 0);
-      $("boundMore").textContent = bindings.length ? t("acc.boundMore", { n: bindings.length }) : "";
-      $("bindings").innerHTML = bindings.length
-        ? bindings.map(b => `<span class="chip">${platformTag(b.platform)} ${esc(b.username)}</span>`).join("")
-        : `<span class="muted">${t("acc.notBound")}</span>`;
 
       // ---------- 积分摘要 ----------
       $("spendable").textContent = bal.spendable.toLocaleString();
@@ -178,7 +148,7 @@
         { key: "platform2", href: "bind.html" },
       ].map(x => ({ ...x, ok: got.has(x.key) }));
       $("welcomeLine").textContent = t("acc.welcomeBonus", { n: bonusPoints("welcome") });
-      if (tasks.some(x => !x.ok)) {
+      {
         $("taskCard").classList.remove("hidden");
         $("taskList").innerHTML = tasks.map(x => `
           <li class="${x.ok ? "done" : ""}">
@@ -190,43 +160,6 @@
           </li>`).join("");
       }
 
-      // ---------- 积分记录 ----------
-      $("ledgerList").innerHTML = bal.ledger.length ? bal.ledger.map(x => {
-        const isPending = x.availableAt && x.availableAt > now;
-        return `
-          <li>
-            <div class="main">
-              <div class="title">${esc(translateReason(x.reason))} ${isPending ? `<span class="tag tag-pending">${t("tag.pending")}</span>` : ""}</div>
-              <div class="meta">${x.orderNo ? t("acc.orderNo") + " " + esc(x.orderNo) + " · " : ""}${fmtDate(x.createdAt)}</div>
-            </div>
-            <div class="right">
-              <div class="pts ${x.delta >= 0 ? "plus" : "minus"}">${x.delta >= 0 ? "+" : ""}${x.delta}</div>
-            </div>
-          </li>`;
-      }).join("") : `<li class="empty">${t("acc.noLedger")}</li>`;
-
-      // ---------- 订单记录 ----------
-      const orders = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-        .map(o => ({ ...o, orderTime: toDate(o.orderTime), availableAt: toDate(o.availableAt) }))
-        .sort((a, b) => (b.orderTime || 0) - (a.orderTime || 0));
-
-      $("ordersList").innerHTML = orders.length ? orders.map(o => {
-        let state;
-        if (o.status === "refunded") state = `<span class="tag tag-bad">${t("tag.refunded")}</span>`;
-        else if (o.availableAt && o.availableAt > now) state = `<span class="tag tag-pending">${t("tag.pending")}</span>`;
-        else state = `<span class="tag tag-ok">${t("tag.credited")}</span>`;
-        return `
-          <li>
-            <div class="main">
-              <div class="title">${platformTag(o.platform)} ${fmtMoney(o.amount)}</div>
-              <div class="meta">${esc(o.id)} · ${fmtDate(o.orderTime, true)}</div>
-            </div>
-            <div class="right">
-              <div class="pts">${t("unit.pts", { n: o.points || 0 })}</div>
-              ${state}
-            </div>
-          </li>`;
-      }).join("") : `<li class="empty">${t("acc.noOrders")}</li>`;
     });
   </script>
 </body>

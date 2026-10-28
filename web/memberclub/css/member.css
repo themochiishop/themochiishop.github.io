@@ -417,3 +417,43 @@ details summary { cursor: pointer; color: var(--muted); font-size: .85rem; }
 .acct-stats { font-size: .8rem; color: var(--text); opacity: .85; margin-top: 3px; }
 .removed-title { font-size: .9rem; color: var(--muted); margin: 16px 0 4px; }
 .acct-list.removed .title { opacity: .6; }
+
+/* ---------- 💎 会员等级 / 积分明细 ---------- */
+.detail-link { display: block; text-align: right; font-size: .85rem; font-weight: 700; margin: -8px 0 16px; }
+.mini-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px;
+}
+.mini-stats > div {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0;
+}
+.mini-stats > div:first-child { background: linear-gradient(135deg, rgba(255,111,174,.18), rgba(124,92,255,.18)); border-color: rgba(255,111,174,.4); }
+.mini-stats .label { display: block; color: var(--muted); font-size: .72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-stats b { font-size: 1.2rem; font-weight: 800; }
+@media (max-width: 480px) { .mini-stats { grid-template-columns: repeat(2, 1fr); } }
+
+.filter-chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 4px; }
+.filter-chips button {
+  flex-shrink: 0; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--card2); color: var(--muted); font-size: .8rem; font-weight: 700; cursor: pointer;
+}
+.filter-chips button.active { color: #fff; border-color: transparent; background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+
+.list li.month-head {
+  display: block; padding: 14px 0 4px; border-bottom: none;
+  color: var(--muted); font-size: .78rem; font-weight: 800; letter-spacing: .03em;
+}
+.ledger-row.expandable { cursor: pointer; }
+.more-link { font-size: .78rem; color: var(--accent); font-weight: 700; margin-top: 3px; }
+.ledger-row .chev { display: inline-block; transition: transform .2s; }
+.ledger-row.open .chev { transform: rotate(180deg); }
+.sub-ledger {
+  list-style: none; margin-top: 8px; padding: 6px 10px; border-left: 2px solid var(--line);
+  background: rgba(255,255,255,.02); border-radius: 0 8px 8px 0;
+}
+.sub-ledger li {
+  display: flex; justify-content: space-between; gap: 12px; padding: 5px 0;
+  border-bottom: 1px dashed var(--line); font-size: .82rem;
+}
+.sub-ledger li:last-child { border-bottom: none; }
+.sub-ledger small { display: block; color: var(--muted); font-size: .72rem; }
+.sub-ledger b.plus { color: var(--ok); } .sub-ledger b.minus { color: var(--bad); }

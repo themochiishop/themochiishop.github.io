@@ -56,7 +56,8 @@ export function isValidPhone(p) {
 
 // ---------- 会员等级（必须和 Google 表格同步脚本的 MS_TIERS 一致；名称在 i18n.js） ----------
 export const TIERS = [
-  { id: "mochii",  icon: "",   minSpend: 0,    multiplier: 1,   birthday: 88  },  // 图标用 member.jpg，见 tierIconHTML  { id: "silver",  icon: "🥈", minSpend: 300,  multiplier: 1.2, birthday: 128 },
+  { id: "mochii",  icon: "",   minSpend: 0,    multiplier: 1,   birthday: 88  },  // 图标用 member.jpg，见 tierIconHTML
+  { id: "silver",  icon: "🥈", minSpend: 300,  multiplier: 1.2, birthday: 128 },
   { id: "gold",    icon: "🥇", minSpend: 800,  multiplier: 1.5, birthday: 188 },
   { id: "diamond", icon: "💎", minSpend: 2000, multiplier: 2,   birthday: 288 },
 ];
@@ -359,9 +360,10 @@ export function logout() {
 
 // ---------- 顶部导航：会员俱乐部 logo、铃铛、语言、三大分类 + 子分页 ----------
 const NAV = [
-  { key: "shop",   icon: "🛍️", label: "nav.shop",   href: "shop.html",    pages: ["shop"] },
-  { key: "points", icon: "💎", label: "nav.points", href: "account.html", pages: ["account", "rewards"],
-    sub: [["account", "account.html", "nav.account"], ["rewards", "rewards.html", "nav.rewards"]] },
+  { key: "shop",   icon: "🛍️", label: "nav.shop",   href: "shop.html",    pages: ["shop", "rewards"],
+    sub: [["shop", "shop.html", "nav.mall"], ["rewards", "rewards.html", "nav.rewards"]] },
+  { key: "member", icon: "💎", label: "nav.points", href: "account.html", pages: ["account", "points"],
+    sub: [["account", "account.html", "nav.account"], ["points", "points.html", "nav.pointsDetail"]] },
   { key: "me",     icon: "👤", label: "nav.me",     href: "profile.html", pages: ["profile", "bind"],
     sub: [["profile", "profile.html", "nav.profile"], ["bind", "bind.html", "nav.bind"]] },
 ];
