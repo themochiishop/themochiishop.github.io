@@ -4,6 +4,8 @@
 const DICT = {
   // ======================= English =======================
   en: {
+    "help.pageInfo": "{a}–{b} of {n}",
+    "help.chatShop": "Chat with the shop",
     "help.waClub": "Club tech support",
     "help.waStore": "Customer service",
     "nav.help": "Help",
@@ -11,10 +13,10 @@ const DICT = {
     "help.title": "❓ Help Centre",
     "help.sub": "Answers about the Member Club and our Shopee / TikTok stores.",
     "help.searchPh": "🔍 Search questions…",
-    "help.tabClub": "Member Club",
+    "help.tabClub": "Mochii Club",
     "help.tabStore": "Shop Help",
-    "help.contactTitle": "💬 Still need help?",
-    "help.contactSub": "Message us and we'll get back to you as soon as we can.",
+    "help.contactTitle": "Still need help?",
+    "help.contactSub": "Can't find your answer? Message us and we'll reply as soon as we can.",
     "help.noResult": "No matching questions.",
     "help.storeEmpty": "No shop questions yet.",
     "help.linkMore": "Have a question? Visit the Help Centre",
@@ -400,6 +402,8 @@ const DICT = {
 
   // ======================= Bahasa Melayu =======================
   ms: {
+    "help.pageInfo": "{a}–{b} daripada {n}",
+    "help.chatShop": "Sembang dengan kedai",
     "help.waClub": "Sokongan teknikal kelab",
     "help.waStore": "Khidmat pelanggan",
     "nav.help": "Bantuan",
@@ -407,10 +411,10 @@ const DICT = {
     "help.title": "❓ Pusat Bantuan",
     "help.sub": "Jawapan tentang Kelab Ahli dan kedai Shopee / TikTok kami.",
     "help.searchPh": "🔍 Cari soalan…",
-    "help.tabClub": "Kelab Ahli",
+    "help.tabClub": "Mochii Club",
     "help.tabStore": "Bantuan Kedai",
-    "help.contactTitle": "💬 Masih perlukan bantuan?",
-    "help.contactSub": "Hubungi kami dan kami akan membalas secepat mungkin.",
+    "help.contactTitle": "Masih perlukan bantuan?",
+    "help.contactSub": "Tidak jumpa jawapan? Hubungi kami dan kami akan membalas secepat mungkin.",
     "help.noResult": "Tiada soalan yang sepadan.",
     "help.storeEmpty": "Belum ada soalan kedai.",
     "help.linkMore": "Ada soalan? Lawati Pusat Bantuan",
@@ -796,6 +800,8 @@ const DICT = {
 
   // ======================= 中文 =======================
   zh: {
+    "help.pageInfo": "第 {a}–{b} 题，共 {n} 题",
+    "help.chatShop": "在平台聊天",
     "help.waClub": "俱乐部技术支援",
     "help.waStore": "联系客服",
     "nav.help": "帮助中心",
@@ -805,8 +811,8 @@ const DICT = {
     "help.searchPh": "🔍 搜索问题…",
     "help.tabClub": "会员俱乐部",
     "help.tabStore": "商店帮助",
-    "help.contactTitle": "💬 还有问题？",
-    "help.contactSub": "直接联系我们，我们会尽快回复。",
+    "help.contactTitle": "还有问题？",
+    "help.contactSub": "找不到答案？直接联系我们，我们会尽快回复。",
     "help.noResult": "找不到相关问题。",
     "help.storeEmpty": "暂时没有商店问题。",
     "help.linkMore": "有疑问？前往帮助中心",

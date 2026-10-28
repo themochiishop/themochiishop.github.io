@@ -24,13 +24,19 @@
     <div class="card">
       <div id="helpCats" class="filter-chips"></div>
       <div id="helpList" class="faq-list"><p class="empty" data-i18n="common.loading"></p></div>
+      <div id="helpPager" class="pager hidden"></div>
     </div>
 
     <!-- 联系我们 -->
-    <div class="card hidden" id="contactCard">
-      <h2 data-i18n="help.contactTitle"></h2>
-      <p class="muted" style="font-size:.85rem;margin:-6px 0 12px" data-i18n="help.contactSub"></p>
-      <div class="contact-btns" id="contactBtns"></div>
+    <div class="card contact-card hidden" id="contactCard">
+      <div class="contact-head">
+        <span class="contact-ico">💬</span>
+        <div>
+          <h2 data-i18n="help.contactTitle"></h2>
+          <p class="muted" data-i18n="help.contactSub"></p>
+        </div>
+      </div>
+      <div class="contact-tiles" id="contactBtns"></div>
     </div>
   </main>
 
@@ -48,7 +54,8 @@
     // 商店帮助的分类（和后台 storehelp.html 的 STORE_CATS 一致）
     const STORE_CATS = ["order", "shipping", "payment", "return", "product", "live", "contact"];
 
-    let tab = "club", cat = "all";
+    let tab = "club", cat = "all", page = 0;
+    const PER = 10;   // 每页几题
     let club = [], store = [], contacts = {};
 
     // 网址带 #club-redeem、#store 之类，直接打开对应分类
@@ -65,6 +72,13 @@
       return store.map(x => ({ q: x.q, a: x.a, cat: x.cat, html: false }));
     }
 
+    const tile = (cls, href, icon, title, sub) => `
+      <a class="contact-tile ${cls}" href="${esc(href)}" target="_blank" rel="noopener">
+        <span class="ci">${icon}</span>
+        <span class="ct"><b>${esc(title)}</b><small>${esc(sub)}</small></span>
+        <span class="go" aria-hidden="true">➔</span>
+      </a>`;
+
     // 💬 联系按钮：俱乐部分页显示「俱乐部技术支援」，商店分页显示「客服 + Shopee + TikTok」
     function renderContacts(both) {
       const c = contacts;
@@ -72,13 +86,13 @@
       const label = (obj, key) => (obj && (obj[lang] || obj.zh)) || t(key);
       const wa = (num, obj, key) => {
         num = String(num || "").replace(/\D/g, "");
-        return num ? `<a class="btn contact-wa" href="https://wa.me/${num}" target="_blank" rel="noopener">💬 ${esc(label(obj, key))}</a>` : "";
+        return num ? tile("wa", `https://wa.me/${num}`, "💬", label(obj, key), "WhatsApp") : "";
       };
       const clubBtns = [wa(c.waClub, c.waClubLabel, "help.waClub")];
       const storeBtns = [
         wa(c.waStore ?? c.whatsapp, c.waStoreLabel, "help.waStore"),
-        safe(c.shopee) ? `<a class="btn contact-shopee" href="${esc(c.shopee)}" target="_blank" rel="noopener">🛍️ Shopee</a>` : "",
-        safe(c.tiktok) ? `<a class="btn contact-tiktok" href="${esc(c.tiktok)}" target="_blank" rel="noopener">🎵 TikTok Shop</a>` : "",
+        safe(c.shopee) ? tile("shopee", c.shopee, "🛍️", "Shopee", t("help.chatShop")) : "",
+        safe(c.tiktok) ? tile("tiktok", c.tiktok, "🎵", "TikTok Shop", t("help.chatShop")) : "",
       ];
       const btns = (both ? [...clubBtns, ...storeBtns] : tab === "club" ? clubBtns : storeBtns).filter(Boolean);
       $("contactBtns").innerHTML = btns.join("");
@@ -97,7 +111,7 @@
           ...club.flatMap(g => g.items.map(i => ({ ...i, html: true, where: t("help.tabClub") }))),
           ...store.map(x => ({ q: x.q, a: x.a, html: false, where: t("help.tabStore") })),
         ].filter(i => norm(i.q).includes(q) || norm(i.html ? strip(i.a) : i.a).includes(q));
-        $("helpList").innerHTML = all.length ? all.map(i => itemHTML(i, true)).join("") : `<p class="empty">${t("help.noResult")}</p>`;
+        showPage(all, true, t("help.noResult"));
         return;
       }
 
@@ -108,8 +122,26 @@
            ...cats.map(c => `<button type="button" data-k="${esc(c)}" class="${c === cat ? "active" : ""}">${t((tab === "club" ? "help.club." : "help.store.") + c)}</button>`)].join("")
         : "";
       const list = items().filter(i => cat === "all" || i.cat === cat);
-      $("helpList").innerHTML = list.length ? list.map(i => itemHTML(i, false)).join("")
-        : `<p class="empty">${t(tab === "store" ? "help.storeEmpty" : "help.noResult")}</p>`;
+      showPage(list, false, t(tab === "store" ? "help.storeEmpty" : "help.noResult"));
+    }
+
+    // 📄 每页 10 题
+    function showPage(list, showWhere, emptyText) {
+      const pages = Math.ceil(list.length / PER);
+      if (page >= pages) page = Math.max(0, pages - 1);
+      $("helpList").innerHTML = list.length
+        ? list.slice(page * PER, page * PER + PER).map(i => itemHTML(i, showWhere)).join("")
+        : `<p class="empty">${emptyText}</p>`;
+      const pg = $("helpPager");
+      pg.classList.toggle("hidden", pages < 2);
+      if (pages < 2) { pg.innerHTML = ""; return; }
+      const nums = [...Array(pages).keys()].map(i =>
+        `<button type="button" data-p="${i}" class="${i === page ? "active" : ""}">${i + 1}</button>`).join("");
+      pg.innerHTML = `
+        <button type="button" data-p="${page - 1}" ${page === 0 ? "disabled" : ""} aria-label="prev">‹</button>
+        ${nums}
+        <button type="button" data-p="${page + 1}" ${page === pages - 1 ? "disabled" : ""} aria-label="next">›</button>
+        <span class="pager-info">${t("help.pageInfo", { a: page * PER + 1, b: Math.min(list.length, page * PER + PER), n: list.length })}</span>`;
     }
 
     function itemHTML(i, showWhere) {
@@ -123,17 +155,25 @@
     $("helpTabs").addEventListener("click", e => {
       const b = e.target.closest("button");
       if (!b) return;
-      tab = b.dataset.tab; cat = "all";
+      tab = b.dataset.tab; cat = "all"; page = 0;
       $("helpSearch").value = "";
       render();
     });
     $("helpCats").addEventListener("click", e => {
       const b = e.target.closest("[data-k]");
       if (!b) return;
-      cat = b.dataset.k;
+      cat = b.dataset.k; page = 0;
       render();
     });
-    $("helpSearch").addEventListener("input", render);
+    $("helpSearch").addEventListener("input", () => { page = 0; render(); });
+    $("helpPager").addEventListener("click", e => {
+      const b = e.target.closest("[data-p]");
+      if (!b || b.disabled) return;
+      page = Number(b.dataset.p);
+      render();
+      const top = $("helpTabs").getBoundingClientRect().top + window.scrollY - 70;
+      if (window.scrollY > top) window.scrollTo({ top, behavior: "smooth" });
+    });
 
     requireMember(async () => {
       club = clubFaq();
