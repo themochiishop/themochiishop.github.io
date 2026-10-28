@@ -140,7 +140,7 @@
           }
           return `
             <div class="card">
-              <div class="card-head"><h2>🧾 ${t("home.latestOrder")}</h2><a class="small" href="points.html#orders">${t("home.viewAll")}</a></div>
+              <div class="card-head"><h2>🧾 ${t("home.latestOrder")}</h2><a class="head-go" href="points.html#orders" aria-label="${esc(t("home.viewAll"))}" title="${esc(t("home.viewAll"))}">➔</a></div>
               ${body}
             </div>`;
         },
@@ -184,7 +184,7 @@
           if (!list.length) return "";
           return `
             <div class="card">
-              <div class="card-head"><h2>✨ ${t("home.newRewards")}</h2><a class="small" href="shop.html">${t("home.viewAll")}</a></div>
+              <div class="card-head"><h2>✨ ${t("home.newRewards")}</h2><a class="head-go" href="shop.html" aria-label="${esc(t("home.viewAll"))}" title="${esc(t("home.viewAll"))}">➔</a></div>
               <div class="shop-grid">
                 ${list.map(r => `
                   <a class="shop-item" href="shop.html" style="color:inherit;text-decoration:none">

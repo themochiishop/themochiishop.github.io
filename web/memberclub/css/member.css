@@ -667,3 +667,20 @@ a.home-feed:hover { text-decoration: none; border-color: var(--accent); }
   /* 积分明细的常见问题：答案文字小一号 */
   #faqPoints .faq-a { font-size: .78rem; }
 }
+
+/* 首页：你好框内容往右缩进；区块标题右边的箭头（和 Feed 一样） */
+.home-top .home-hero > div { padding-left: 10px; }
+.head-go {
+  flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .8rem; font-weight: 800; color: #fff; text-decoration: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+}
+.head-go:hover { text-decoration: none; filter: brightness(1.1); }
+.card-head { align-items: center; }
+@media (max-width: 480px) {
+  .home-top .home-hero > div { padding-left: 6px; }
+  .head-go { width: 24px; height: 24px; font-size: .72rem; }
+  /* 会员等级的常见问题：答案文字小一号（和积分明细一样） */
+  #faqTier .faq-a { font-size: .78rem; }
+}
