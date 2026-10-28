@@ -10,7 +10,7 @@ const DEFAULT_NAV = [
   { label: 'Contact Us', href: '/contact-us/', show: true }
 ];
 const CACHE_KEY = 'navCache';
-/* Monthly 下拉：1 每月抽奖结果页、2 实时抽奖大屏（直播时让观众用第二台手机看） */
+/* Monthly 下拉默认子菜单:后台没有为它配置子菜单时使用 */
 const MONTHLY_HREF = '/monthly-draw/';
 const MONTHLY_SUB = [
   { label: 'Monthly Draw', note: "This month's prizes & winners", href: '/monthly-draw/' },
@@ -26,42 +26,67 @@ const norm = p => {
   if (p.length > 1 && !p.endsWith('/')) p += '/';
   return p;
 };
+const okHref = h => /^(\/|https:\/\/)/.test(h);
+const isExt = h => /^https:\/\//i.test(h);
+const cleanKid = c => ({ label: c.label.trim(), href: c.href.trim(), show: c.show !== false, note: typeof c.note === 'string' ? c.note.trim() : '', live: c.live === true });
 const clean = list => (Array.isArray(list) ? list : Object.values(list || {}))
-  .filter(x => x && typeof x.label === 'string' && typeof x.href === 'string' && x.label.trim() && /^(\/|https:\/\/)/.test(x.href.trim()))
-  .map(x => ({ label: x.label.trim(), href: x.href.trim(), show: x.show !== false }));
+  .filter(x => x && typeof x.label === 'string' && x.label.trim())
+  .map(x => {
+    const href = typeof x.href === 'string' ? x.href.trim() : '';
+    if (href && !okHref(href)) return null;
+    const kids = (Array.isArray(x.children) ? x.children : Object.values(x.children || {}))
+      .filter(c => c && typeof c.label === 'string' && c.label.trim() && typeof c.href === 'string' && okHref(c.href.trim()))
+      .map(cleanKid);
+    if (!href && !kids.length) return null;
+    const it = { label: x.label.trim(), href, show: x.show !== false };
+    if (kids.length) it.children = kids;
+    if (x.nosub === true) it.nosub = true;
+    return it;
+  }).filter(Boolean);
+
+/* 一个主菜单实际使用的子菜单 */
+function kidsOf(x) {
+  const all = x.children || [];
+  const own = all.filter(c => c.show !== false);
+  if (own.length) return own;
+  if (!all.length && x.href && norm(x.href) === MONTHLY_HREF && !x.nosub) return MONTHLY_SUB;
+  return [];
+}
 
 function makeLink(x, here, activeClass) {
   const a = document.createElement('a');
   a.textContent = x.label;
   a.href = x.href;
-  if (/^https:\/\//i.test(x.href)) { a.target = '_blank'; a.rel = 'noopener'; }
+  if (isExt(x.href)) { a.target = '_blank'; a.rel = 'noopener'; }
   else if (norm(x.href) === here) a.className = activeClass;
   return a;
 }
 
-function makeMonthlyDropdown(here, label) {
+function makeDropdown(x, here, kids) {
   const li = document.createElement('li');
   li.className = 'has-sub';
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = 'sub-toggle' + (here === MONTHLY_HREF ? ' active' : '');
+  const kidHere = kids.some(c => c.href && !isExt(c.href) && norm(c.href) === here);
+  const ownHere = x.href && !isExt(x.href) && norm(x.href) === here;
+  btn.className = 'sub-toggle' + (kidHere || ownHere ? ' active' : '');
   btn.setAttribute('aria-haspopup', 'true');
   btn.setAttribute('aria-expanded', 'false');
-  // 下拉标题跟后台导航菜单设定的名字走（默认的 "Monthly Draw" 显示为 "Monthly"）
-  const name = (!label || label === 'Monthly Draw') ? 'Monthly' : label;
+  // Monthly 默认名字 "Monthly Draw" 显示为 "Monthly";其他菜单显示后台设置的名字
+  const name = (x.href && norm(x.href) === MONTHLY_HREF && (!x.label || x.label === 'Monthly Draw')) ? 'Monthly' : x.label;
   btn.textContent = name + ' ';
   const caret = document.createElement('span'); caret.className = 'caret'; caret.setAttribute('aria-hidden', 'true'); caret.textContent = '▾';
   btn.appendChild(caret);
   const sub = document.createElement('ul');
   sub.className = 'sub';
-  MONTHLY_SUB.forEach(x => {
-    const a = makeLink(x, here, 'active');
+  kids.forEach(c => {
+    const a = makeLink(c, here, 'active');
     a.textContent = '';
     const t = document.createElement('span'); t.className = 'sub-t';
-    if (x.live) { const d = document.createElement('i'); d.className = 'sub-live'; t.appendChild(d); }
-    t.appendChild(document.createTextNode(x.label));
-    const n = document.createElement('small'); n.textContent = x.note;
-    a.append(t, n);
+    if (c.live) { const d = document.createElement('i'); d.className = 'sub-live'; t.appendChild(d); }
+    t.appendChild(document.createTextNode(c.label));
+    a.appendChild(t);
+    if (c.note) { const n = document.createElement('small'); n.textContent = c.note; a.appendChild(n); }
     const s = document.createElement('li'); s.appendChild(a); sub.appendChild(s);
   });
   btn.onclick = (e) => {
@@ -83,9 +108,12 @@ document.addEventListener('keydown', e => {
 
 function renderMenu(items, here) {
   if (!menu) return;
-  const lis = items.map(x => {
-    if (norm(x.href) === MONTHLY_HREF) return makeMonthlyDropdown(here, x.label);
-    const li = document.createElement('li'); li.appendChild(makeLink(x, here, 'active')); return li;
+  const lis = [];
+  items.forEach(x => {
+    const kids = kidsOf(x);
+    if (kids.length) { lis.push(makeDropdown(x, here, kids)); return; }
+    if (!x.href) return;
+    const li = document.createElement('li'); li.appendChild(makeLink(x, here, 'active')); lis.push(li);
   });
   if (lis.length) menu.replaceChildren(...lis);
 }
@@ -101,7 +129,10 @@ function renderSitemap(items, here) {
   }
   const title = document.createElement('div'); title.className = 'sm-title'; title.textContent = 'Site Map';
   const ul = document.createElement('ul');
-   items.forEach(x => { const li = document.createElement('li'); li.appendChild(makeLink(x, here, 'cur')); ul.appendChild(li); });
+  const seen = new Set(), flat = [];
+  const add = x => { const k = isExt(x.href) ? x.href : norm(x.href); if (seen.has(k)) return; seen.add(k); flat.push(x); };
+  items.forEach(x => { if (x.href) add(x); kidsOf(x).forEach(add); });
+  flat.forEach(x => { const li = document.createElement('li'); li.appendChild(makeLink(x, here, 'cur')); ul.appendChild(li); });
   box.replaceChildren(title, ul);
 }
 
@@ -126,7 +157,7 @@ function renderDonate() {
   const t = document.createElement('div'); t.className = 'dn-title'; t.textContent = 'Share the Love';
 
   const imgs = document.createElement('div'); imgs.className = 'dn-imgs';
-   [['/assets/images/OHC_Logo-white.png', 'One Hope Charity & Welfare', 'dn-logo'], ['/assets/images/OHC-Slogan.png', '', 'dn-slogan']].forEach(([src, alt, cls]) => {
+  [['/assets/images/OHC_Logo-white.png', 'One Hope Charity & Welfare', 'dn-logo'], ['/assets/images/OHC-Slogan.png', '', 'dn-slogan']].forEach(([src, alt, cls]) => {
     const im = document.createElement('img'); im.className = cls; im.alt = alt; im.decoding = 'async'; im.src = src;
     im.onerror = () => im.remove();
     imgs.appendChild(im);
@@ -135,18 +166,19 @@ function renderDonate() {
   const l = document.createElement('div'); l.className = 'dn-line';
   const s1 = document.createElement('span'); s1.textContent = 'Support One Hope Charity & Welfare.';
   const s2 = document.createElement('span'); s2.textContent = 'Your kindness brings health and hope.';
-  l.append(s1, document.createTextNode(' '), s2);  const go = document.createElement('span'); go.className = 'dn-go'; go.textContent = 'View Cases →';
+  l.append(s1, document.createTextNode(' '), s2);
+  const go = document.createElement('span'); go.className = 'dn-go'; go.textContent = 'View Cases →';
   const n = document.createElement('div'); n.className = 'dn-note'; n.textContent = "Opens the charity's own website. Donations are made directly to them.";
 
   a.append(t, imgs, l, go, n);
   box.appendChild(a);
   foot.insertBefore(box, foot.firstChild);
 }
-// 菜单里完全没有 Monthly Draw 时，自动加在 About Us 前面（后台设为隐藏的则尊重设置）
+// 菜单里完全没有 Monthly Draw 时,自动加在 About Us 前面(后台设为隐藏的则尊重设置)
 function withMonthly(list) {
-  if (list.some(x => norm(x.href) === MONTHLY_HREF)) return list;
+  if (list.some(x => x.href && norm(x.href) === MONTHLY_HREF)) return list;
   const out = list.slice();
-  const i = out.findIndex(x => norm(x.href) === '/about-us/');
+  const i = out.findIndex(x => x.href && norm(x.href) === '/about-us/');
   out.splice(i < 0 ? out.length : i, 0, { label: 'Monthly Draw', href: MONTHLY_HREF, show: true });
   return out;
 }
@@ -165,12 +197,12 @@ function renderLegal() {
 }
 function render(list) {
   const here = norm(location.pathname);
-  const items = withMonthly(list).filter(x => x.show !== false);
+  const items = withMonthly(list).filter(x => x.show !== false && (x.href || kidsOf(x).length));
   renderMenu(items, here);
   renderSitemap(items, here);
-    renderCompanyTitle();
-    renderDonate();
-    renderLegal();
+  renderCompanyTitle();
+  renderDonate();
+  renderLegal();
 }
 /* ---------- 弹窗公告(后台「📣 弹窗公告」设定) ---------- */
 function showPopup(p) {
@@ -219,7 +251,7 @@ try {
     appId: "1:377694458194:web:71a78ba5dbed4df1b1aa8b"
   };
   const app = getApps().length ? getApp() : initializeApp(cfg);
-    onValue(ref(getDatabase(app), 'homepage/popup'), snap => showPopup(snap.val()));
+  onValue(ref(getDatabase(app), 'homepage/popup'), snap => showPopup(snap.val()));
   onValue(ref(getDatabase(app), 'homepage/nav'), snap => {
     const list = clean(snap.val());
     if (list.length) {
