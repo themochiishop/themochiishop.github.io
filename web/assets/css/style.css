@@ -603,3 +603,31 @@ footer strong { font-weight: 400; }
 /* ===== 页脚 Privacy Policy:与版权文字同色 ===== */
 footer .legal a { color: inherit; }
 footer .legal a:hover { color: #fff; text-decoration: underline; }
+/* ===== 导航:有子菜单的按钮与普通链接完全对齐 ===== */
+.nav ul > li { display: flex; align-items: center; }
+.nav ul > li > a,
+.nav ul > li > button.sub-toggle {
+  font: inherit;
+  font-size: .92rem;
+  font-weight: 500;
+  letter-spacing: .6px;
+  line-height: 1.65;
+  padding: 6px 0;
+  margin: 0;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: #d9d2de;
+  cursor: pointer;
+  vertical-align: baseline;
+  text-transform: none;
+}
+.nav ul > li > a:hover,
+.nav ul > li > a.active,
+.nav ul > li > button.sub-toggle:hover,
+.nav ul > li > button.sub-toggle.active,
+.nav ul > li.has-sub.open > button.sub-toggle {
+  color: #fff;
+  border-bottom-color: var(--gold);
+}
+.nav ul > li > button.sub-toggle .caret { font-size: .7em; margin-left: 2px; }
