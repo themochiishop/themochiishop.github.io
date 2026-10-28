@@ -4,6 +4,8 @@
 const DICT = {
   // ======================= English =======================
   en: {
+    "home.feedTitle": "Mochii Feed",
+    "home.feedText": "See what's new",
     "nav.home": "Home",
     "home.pageTitle": "Home · Mochii Club",
     "home.pending": "{n} pts pending",
@@ -293,6 +295,8 @@ const DICT = {
 
   // ======================= Bahasa Melayu =======================
   ms: {
+    "home.feedTitle": "Mochii Feed",
+    "home.feedText": "Lihat yang terkini",
     "nav.home": "Utama",
     "home.pageTitle": "Utama · Mochii Club",
     "home.pending": "{n} mata belum disahkan",
@@ -582,6 +586,8 @@ const DICT = {
 
   // ======================= 中文 =======================
   zh: {
+    "home.feedTitle": "Mochii Feed",
+    "home.feedText": "看看最新动态",
     "nav.home": "首页",
     "home.pageTitle": "首页 · Mochii Club",
     "home.pending": "{n} 分待确认",

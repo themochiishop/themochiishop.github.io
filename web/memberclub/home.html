@@ -72,7 +72,17 @@
         // ---------- 你好 + 积分 + 等级 ----------
         hero() {
           const tp = tierProgress(member);
-          return `
+          // 右边 Feed 框（文字、链接在后台「首页设定」设定）
+          const feed = cfg.feed || {};
+          const fl = loc(feed);
+          const feedHref = safeLink(feed.link);
+          const feedBox = feed.on === false ? "" : `
+            <${feedHref ? `a href="${esc(feedHref)}"` : "div"} class="home-feed${feedHref ? "" : " no-link"}">
+              <div class="feed-title">${esc(fl.title || feed.title || t("home.feedTitle"))}</div>
+              <div class="feed-text">${esc(fl.text || feed.text || t("home.feedText"))}</div>
+              <span class="feed-go" aria-hidden="true">➔</span>
+            </${feedHref ? "a" : "div"}>`;
+          return `<div class="home-top${feedBox ? "" : " solo"}">
             <a class="shop-hero home-hero" href="account.html">
               <img src="img/member.jpg" alt="">
               <div style="flex:1;min-width:0">
@@ -81,7 +91,9 @@
                 <div class="sub">${tp.tier.icon ? tp.tier.icon + " " : ""}${esc(tierLabel(tp.tier))}${bal.pending ? " · " + esc(t("home.pending", { n: bal.pending.toLocaleString() })) : ""}</div>
               </div>
               <span class="home-hero-go">➔</span>
-            </a>`;
+            </a>
+            ${feedBox}
+          </div>`;
         },
 
         // ---------- 横幅 ----------

@@ -596,3 +596,74 @@ a.news-item:hover .title { color: var(--accent); }
 .faq-a { padding: 0 0 14px; font-size: .86rem; line-height: 1.6; color: var(--text); opacity: .9; }
 .faq-a ul { margin: 6px 0 0 18px; }
 .faq-a li { margin-bottom: 4px; }
+
+/* ---------- 🏠 首页第一行：你好框 70% + Feed 30% ---------- */
+.home-top { display: grid; grid-template-columns: 7fr 3fr; gap: 10px; margin-bottom: 16px; align-items: stretch; }
+.home-top.solo { grid-template-columns: 1fr; }
+.home-top .home-hero { margin-bottom: 0; min-width: 0; }
+.home-feed {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 4px;
+  padding: 12px 8px; border-radius: var(--radius); min-width: 0;
+  background: var(--card); border: 1px solid var(--line); color: var(--text); text-decoration: none;
+}
+a.home-feed:hover { text-decoration: none; border-color: var(--accent); }
+.feed-title { font-size: .78rem; font-weight: 800; color: var(--accent); }
+.feed-text { font-size: .74rem; color: var(--muted); line-height: 1.35; overflow-wrap: anywhere; }
+.feed-go {
+  margin-top: 4px; width: 28px; height: 28px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 800; color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+}
+.home-feed.no-link .feed-go { opacity: .4; }
+
+/* ---------- 🛍️ 商城 / 首页商品卡：图片填满方框 ---------- */
+.shop-item .ph { overflow: hidden; }
+.shop-item .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mall-item { display: flex; flex-direction: column; }
+.mall-item .info { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+.mall-item .desc { font-size: .76rem; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mall-item .sub { font-size: .72rem; color: var(--muted); }
+.mall-item .btn { margin-top: auto; padding: 8px 10px; font-size: .82rem; }
+.mall-item .cost { margin-bottom: 6px; }
+.mall-item.sold-out .ph { opacity: .5; }
+
+/* ---------- 🧾 券码框 ---------- */
+.code-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 480px) {
+  /* 首页第一行 */
+  .home-top { gap: 8px; }
+  .home-top .home-hero { padding: 12px; gap: 10px; }
+  .home-top .home-hero img { width: 40px; height: 40px; border-radius: 10px; }
+  .home-top .home-hero .pts-big { font-size: 1.3rem; }
+  .home-top .home-hero .sub { font-size: .72rem; }
+  .home-top .home-hero-go { display: none; }
+  .feed-title { font-size: .72rem; }
+  .feed-text { font-size: .68rem; }
+  .feed-go { width: 24px; height: 24px; font-size: .72rem; }
+
+  /* 商品卡：一行两个，图片填满方框（不套用手机图片缩小 50% 的规则） */
+  .shop-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .shop-item .ph img { width: 100%; height: 100%; }
+  .shop-item .info { padding: 8px 9px 10px; }
+  .shop-item .name { font-size: .8rem; }
+  .shop-item .cost { font-size: .82rem; }
+  .shop-item .ph { font-size: 1.8rem; }
+  .mall-item .desc { font-size: .7rem; }
+  .mall-item .btn { padding: 6px 6px; font-size: .74rem; }
+
+  /* 券码和复制按钮一行 */
+  .code { flex-wrap: nowrap; font-size: .78rem; padding: 6px 8px; gap: 6px; }
+  .code .btn { flex-shrink: 0; padding: 5px 9px; font-size: .74rem; }
+
+  /* 会员等级表：等级一列对齐 */
+  .tier-table td:first-child, .tier-table th:first-child { width: 72px; text-align: center; }
+  .tier-cell { display: flex; width: 100%; align-items: center; }
+  .tier-cell .ti { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
+  .tier-cell .ti .tier-logo { width: 20px; height: 20px; }
+  .tier-cell > span:last-child { white-space: nowrap; font-size: .74rem; }
+  .tier-table td { vertical-align: middle; }
+
+  /* 积分明细的常见问题：答案文字小一号 */
+  #faqPoints .faq-a { font-size: .78rem; }
+}

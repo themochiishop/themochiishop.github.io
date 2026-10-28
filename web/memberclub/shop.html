@@ -21,7 +21,7 @@
     </div>
 
     <div class="cat-chips" id="cats"></div>
-    <div id="rewardGrid" class="reward-grid"><p class="empty" data-i18n="common.loading"></p></div>
+    <div id="rewardGrid" class="shop-grid mall-grid"><p class="empty" data-i18n="common.loading"></p></div>
     <p id="redeemMsg" class="msg"></p>
   </main>
 
@@ -91,15 +91,15 @@
           else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
           else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
           return `
-            <div class="reward">
-              ${r.image
-                ? `<img class="reward-img" src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">`
-                : `<div class="reward-icon">${ty.icon}</div>`}
-              <div class="reward-type muted">${t(ty.key)}${typeof r.stock === "number" ? " · " + t("rw.left", { n: Math.max(r.stock, 0) }) : ""}</div>
-              <div class="reward-name">${esc(r.name)}</div>
-              ${r.description ? `<div class="reward-desc muted">${esc(r.description)}</div>` : ""}
-              <div class="reward-cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
-              ${btn}
+            <div class="shop-item mall-item${soldOut ? " sold-out" : ""}">
+              <div class="ph">${r.image ? `<img src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">` : ty.icon}</div>
+              <div class="info">
+                <div class="name">${esc(r.name)}</div>
+                ${r.description ? `<div class="desc">${esc(r.description)}</div>` : ""}
+                <div class="sub">${t(ty.key)}${typeof r.stock === "number" ? " · " + t("rw.left", { n: Math.max(r.stock, 0) }) : ""}</div>
+                <div class="cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
+                ${btn}
+              </div>
             </div>`;
         }).join("") : `<p class="empty">${t("rw.none")}</p>`;
       }

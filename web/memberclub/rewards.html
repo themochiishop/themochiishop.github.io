@@ -86,7 +86,7 @@
               <div style="min-width:0;flex:1">
               <div class="title">${esc(r.rewardName)} ${statusTag(r.status)}</div>
               <div class="meta">${t("unit.pts", { n: r.cost })} · ${t("rw.appliedOn", { d: fmtDate(r.createdAt) })}${r.decidedAt ? " · " + t("rw.decidedOn", { d: fmtDate(r.decidedAt) }) : ""}</div>
-              ${r.couponCode ? `<div class="code">${t("rw.code")} <b>${esc(r.couponCode)}</b> <button class="btn btn-ghost btn-inline" data-copy="${esc(r.couponCode)}">${t("rw.copy")}</button></div>` : ""}
+              ${r.couponCode ? `<div class="code"><span class="code-txt">${t("rw.code")} <b>${esc(r.couponCode)}</b></span> <button class="btn btn-ghost btn-inline" data-copy="${esc(r.couponCode)}">${t("rw.copy")}</button></div>` : ""}
               ${r.note ? `<div class="meta">${t("rw.note")}${esc(r.note)}</div>` : ""}
               </div>
             </div>
