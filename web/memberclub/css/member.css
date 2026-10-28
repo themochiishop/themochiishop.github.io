@@ -859,7 +859,7 @@ input.locked { opacity: .6; cursor: not-allowed; }
 @media (max-width: 640px) {
   .contact-tiles { grid-template-columns: 1fr; gap: 8px; }
   .contact-tile { padding: 10px 12px; }
-  .contact-head { padding-left: 18px; }
+  .contact-head { padding-left: 16px; }
 }
 
 /* 📄 分页 */
