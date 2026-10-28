@@ -51,7 +51,7 @@
     import {
       requireMember, renderNav, loadBalance, esc, t, loadShopCats, catOf, catName, endState, fmtDate, MAX_ADDRESSES
     } from "./js/common.js";
-    import { addressFormHTML, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
+    import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
 
     const $ = id => document.getElementById(id);
     renderNav("shop");
@@ -150,7 +150,8 @@
           createdAt: serverTimestamp()
         };
         if (address) data.address = address;
-        await addDoc(collection(db, "redemptions"), data);
+        const ref = await addDoc(collection(db, "redemptions"), data);
+        return ref.id;
       }
 
       $("rewardGrid").addEventListener("click", async e => {
@@ -163,9 +164,9 @@
         e.target.disabled = true;
         setMsg(t("rw.submitting"));
         try {
-          await submitRedeem(r, null);
+          const newId = await submitRedeem(r, null);
           setMsg(t("rw.submitted", { name: r.name }), "ok");
-          await load();
+          location.href = "rewards.html#r-" + newId;   // 自动跳到兑换记录
         } catch (err) {
           setMsg(err.code === "permission-denied" ? t("rw.denied") : t("rw.fail") + err.message, "err");
           e.target.disabled = false;
@@ -176,6 +177,7 @@
       let addresses = Array.isArray(member.addresses) ? member.addresses.slice() : [];
       let modalReward = null, pick = 0;
       $("amFields").innerHTML = addressFormHTML();
+      bindAddressForm($("amFields"));
       const amMsg = (text, type) => { $("amMsg").textContent = text; $("amMsg").className = "msg" + (type ? " " + type : ""); };
       function renderPick() {
         const usingNew = pick === -1;
@@ -221,10 +223,10 @@
             await saveAddresses(user.uid, next);
             addresses = next;
           }
-          await submitRedeem(r, address);
+          const newId = await submitRedeem(r, address);
           closeModal();
           setMsg(t("rw.submittedGift", { name: r.name }), "ok");
-          await load();
+          location.href = "rewards.html#r-" + newId;   // 自动跳到兑换记录
         } catch (err) {
           amMsg(err.code === "permission-denied" ? t("rw.denied") : t("rw.fail") + err.message, "err");
           $("amSubmit").disabled = false;

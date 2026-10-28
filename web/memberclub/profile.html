@@ -86,7 +86,7 @@
       requireMember, renderNav, logout, t, normalizePhone, isValidPhone,
       claimBonuses, toastBonuses, bonusPoints, bonusActive
     } from "./js/common.js";
-    import { addressFormHTML, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
+    import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
     import { MAX_ADDRESSES } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
@@ -127,6 +127,7 @@
       let addresses = Array.isArray(member.addresses) ? member.addresses.slice() : [];
       let editing = -1;   // -1 = 新增
       $("addrFields").innerHTML = addressFormHTML();
+      bindAddressForm($("addrFields"));
       function renderAddr() {
         $("addrList").innerHTML = addresses.length
           ? addresses.map((a, i) => addressCardHTML(a, i, { actions: true })).join("")

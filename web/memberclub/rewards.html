@@ -30,7 +30,7 @@
     <a href="shop.html" class="btn btn-primary" style="margin-bottom:16px" data-i18n="rw.goShop"></a>
 
     <div class="card">
-      <h2 data-i18n="rw.mine"></h2>
+      <h2 class="dash-head" data-i18n="rw.mine"></h2>
       <ul id="myList" class="list"><li class="empty" data-i18n="common.loading"></li></ul>
     </div>
   </main>
@@ -72,9 +72,9 @@
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, esc, fmtDate, t, toDate,
-      giftStep, GIFT_STEPS, addressHTML, AUTO_COMPLETE_DAYS, compressImage
+      giftStep, GIFT_STEPS, addressHTML, AUTO_COMPLETE_DAYS, compressImage, redeemCode, DETAIL_COLLAPSE_DAYS
     } from "./js/common.js";
-    import { addressFormHTML, fillAddressForm, validateAddressForm, addressCardHTML } from "./js/address.js";
+    import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, addressCardHTML } from "./js/address.js";
 
     const $ = id => document.getElementById(id);
     renderNav("rewards");
@@ -134,29 +134,40 @@
               </div>`).join("")}
           </div>`;
         const sh = r.shipping || {};
+        const doneAt = toDate(r.receivedAt) || toDate(r.completedAt);
+        const old = r.status === "completed" && doneAt && (Date.now() - doneAt) > DETAIL_COLLAPSE_DAYS * 86400000;
+        const url = /^https:\/\//i.test(sh.trackingUrl || "") ? sh.trackingUrl : "";
         const ship = r.shippedAt ? `
           <div class="gift-ship">
-            <div>🚚 <b>${esc(sh.carrierName || "")}</b>${sh.trackingNo ? ` · <span class="mono">${esc(sh.trackingNo)}</span>
-              <button class="btn btn-ghost btn-inline btn-xs" data-copy="${esc(sh.trackingNo)}">${t("rw.copy")}</button>` : ""}
-              ${/^https:\/\//i.test(sh.trackingUrl || "") ? ` <a class="btn btn-primary btn-inline btn-xs" href="${esc(sh.trackingUrl)}" target="_blank" rel="noopener">${t("gift.track")}</a>` : ""}</div>
-            ${sh.weightKg || (sh.dims && sh.dims.l) ? `<div class="muted">📦 ${sh.weightKg ? esc(sh.weightKg) + " kg" : ""}${sh.dims && sh.dims.l ? ` · ${esc(sh.dims.l)}×${esc(sh.dims.w)}×${esc(sh.dims.h)} cm` : ""}</div>` : ""}
+            <div class="ship-line">🚚 <b>${esc(sh.carrierName || "")}</b>
+              ${sh.trackingNo ? `<span class="mono small-break">${esc(sh.trackingNo)}</span>
+              <button class="btn btn-ghost btn-inline btn-xs" data-copy="${esc(sh.trackingNo)}">${t("rw.copy")}</button>` : ""}</div>
+            ${url ? (old
+              ? `<div class="track-link disabled">🔗 ${t("gift.track")}</div>`
+              : `<a class="track-link" href="${esc(url)}" target="_blank" rel="noopener">🔗 ${t("gift.track")} <span class="url">${esc(url)}</span></a>`) : ""}
+            ${sh.weightKg || (sh.dims && sh.dims.l) ? `<div class="muted small">📦 ${sh.weightKg ? esc(sh.weightKg) + " kg" : ""}${sh.dims && sh.dims.l ? ` · ${esc(sh.dims.l)}×${esc(sh.dims.w)}×${esc(sh.dims.h)} cm` : ""}</div>` : ""}
             ${(sh.photos || []).length ? `<div class="gift-photos">${sh.photos.map(p => `<a href="${esc(p)}" target="_blank"><img src="${esc(p)}" alt="" loading="lazy"></a>`).join("")}</div>` : ""}
-            ${sh.note ? `<div>💬 ${esc(sh.note)}</div>` : ""}
+            ${sh.note ? `<div class="small">💬 ${esc(sh.note)}</div>` : ""}
           </div>` : "";
         const problem = r.status === "problem" ? `<div class="gift-problem">⚠️ ${esc(t("gift.problem"))}${r.problemNote ? "：" + esc(r.problemNote) : ""}</div>` : "";
         const auto = r.status === "shipped" && r.shippedAt
           ? `<div class="muted gift-auto">${esc(t("gift.autoNote", { d: fmtDate(new Date(toDate(r.shippedAt).getTime() + AUTO_COMPLETE_DAYS * 86400000)) }))}</div>` : "";
         const rc = r.receipt || {};
         const receipt = r.status === "completed" ? `
-          <div class="gift-receipt">${r.autoCompleted ? "✅ " + esc(t("gift.autoDone")) : "✅ " + esc(t("gift.received", { d: fmtDate(toDate(r.receivedAt)) }))}
+          <div class="gift-receipt">${r.autoCompleted ? "✅ " + esc(t("gift.autoDone")) : "✅ " + esc(t("gift.received", { d: fmtDate(doneAt) }))}
             ${rc.photo ? `<div class="gift-photos"><img src="${esc(rc.photo)}" alt=""></div>` : ""}
             ${rc.comment ? `<div class="muted">「${esc(rc.comment)}」</div>` : ""}</div>` : "";
         const canEdit = ["pending", "approved", "problem"].includes(r.status);
-        return `
-          ${bar}${problem}${ship}
+        const details = `
+          ${problem}${ship}
           <div class="gift-addr">📍 ${addressHTML(r.address)}
-            ${canEdit ? ` <button class="btn btn-ghost btn-inline btn-xs" data-editaddr="${esc(r.id)}">${t("addr.edit")}</button>` : ""}</div>
-          ${receipt}${auto}
+            ${canEdit ? `<div><button class="btn btn-ghost btn-inline btn-xs" data-editaddr="${esc(r.id)}">${t("addr.edit")}</button></div>` : ""}</div>
+          ${receipt}${auto}`;
+        return `
+          ${bar}
+          ${old
+            ? `<details class="gift-more"><summary>${t("gift.showDetails")}</summary>${details}</details>`
+            : details}
           ${r.status === "shipped" ? `<button class="btn btn-primary gift-confirm" data-receive="${esc(r.id)}">✅ ${t("gift.confirmBtn")}</button>` : ""}`;
       }
 
@@ -167,22 +178,31 @@
 
         // 我的兑换
         $("myList").innerHTML = bal.redemptions.length ? bal.redemptions.map(r => `
-          <li class="${r.kind === "gift" ? "gift-item" : ""}">
-            <div class="main redeem-row">
+          <li id="r-${esc(r.id)}" class="redeem-li${r.kind === "gift" ? " gift-item" : ""}">
+            <div class="redeem-row">
               ${thumb(r)}
-              <div style="min-width:0;flex:1">
-              <div class="title">${esc(r.rewardName)} ${statusTag(r)}</div>
-              <div class="meta">${t("unit.pts", { n: r.cost })} · ${t("rw.appliedOn", { d: fmtDate(r.createdAt) })}${r.decidedAt && r.kind !== "gift" ? " · " + t("rw.decidedOn", { d: fmtDate(r.decidedAt) }) : ""}</div>
-              ${r.couponCode ? `<div class="code"><span class="code-txt">${t("rw.code")} <b>${esc(r.couponCode)}</b></span> <button class="btn btn-ghost btn-inline" data-copy="${esc(r.couponCode)}">${t("rw.copy")}</button></div>` : ""}
-              ${r.note ? `<div class="meta">${t("rw.note")}${esc(r.note)}</div>` : ""}
-              ${r.adminCancelled && r.cancelNote ? `<div class="meta">${esc(r.cancelNote)}</div>` : ""}
-              ${giftBlock(r)}
+              <div class="redeem-body">
+                <div class="redeem-top">
+                  <div class="title">${esc(r.rewardName)} ${statusTag(r)}</div>
+                  <span class="redeem-no">${redeemCode(r.id)}</span>
+                </div>
+                <div class="meta">${t("unit.pts", { n: r.cost })} · ${t("rw.appliedOn", { d: fmtDate(r.createdAt) })}${r.decidedAt && r.kind !== "gift" ? " · " + t("rw.decidedOn", { d: fmtDate(r.decidedAt) }) : ""}</div>
+                ${r.couponCode ? `<div class="code"><span class="code-txt">${t("rw.code")} <b>${esc(r.couponCode)}</b></span> <button class="btn btn-ghost btn-inline" data-copy="${esc(r.couponCode)}">${t("rw.copy")}</button></div>` : ""}
+                ${r.note ? `<div class="meta">${t("rw.note")}${esc(r.note)}</div>` : ""}
+                ${r.adminCancelled && r.cancelNote ? `<div class="meta">${esc(r.cancelNote)}</div>` : ""}
               </div>
             </div>
-            <div class="right">
-              ${r.status === "pending" ? `<button class="btn btn-ghost btn-inline" data-cancel="${esc(r.id)}">${t("rw.cancel")}</button>` : ""}
-            </div>
+            ${giftBlock(r)}
+            ${r.status === "pending" ? `<div class="redeem-actions"><button class="btn btn-ghost btn-inline btn-xs" data-cancel="${esc(r.id)}">${t("rw.cancel")}</button></div>` : ""}
           </li>`).join("") : `<li class="empty">${t("rw.noneMine")}</li>`;
+
+        // 刚兑换完跳过来：捲到那一笔并闪一下
+        const hash = location.hash.slice(1);
+        if (hash) {
+          const el = document.getElementById(hash);
+          if (el) { el.classList.add("flash"); setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 200); }
+          history.replaceState(null, "", location.pathname);
+        }
       }
 
       // 取消、复制券码 / 单号、改地址、确认收货
@@ -216,6 +236,7 @@
       let eaId = null, eaPick = -1;
       const book = Array.isArray(member.addresses) ? member.addresses : [];
       $("eaFields").innerHTML = addressFormHTML();
+      bindAddressForm($("eaFields"));
       const eaMsg = (x, ty) => { $("eaMsg").textContent = x; $("eaMsg").className = "msg" + (ty ? " " + ty : ""); };
       function openEditAddr(id) {
         const r = bal.redemptions.find(x => x.id === id);

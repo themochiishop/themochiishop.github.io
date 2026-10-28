@@ -4,6 +4,10 @@
 const DICT = {
   // ======================= English =======================
   en: {
+    "addr.pickStateFirst": "Choose a state first",
+    "addr.cityOther": "Other (type it in)",
+    "addr.cityOtherPh": "Enter your city / town",
+    "gift.showDetails": "Show delivery details ▾",
     "reason.redeemRefund": "Redemption cancelled, points returned: ",
     "addr.title": "📦 Shipping addresses",
     "addr.sub": "Physical rewards are sent here. The first one is your default (up to 5).",
@@ -361,6 +365,10 @@ const DICT = {
 
   // ======================= Bahasa Melayu =======================
   ms: {
+    "addr.pickStateFirst": "Pilih negeri dahulu",
+    "addr.cityOther": "Lain-lain (taip sendiri)",
+    "addr.cityOtherPh": "Masukkan bandar / pekan",
+    "gift.showDetails": "Lihat butiran penghantaran ▾",
     "reason.redeemRefund": "Penebusan dibatalkan, mata dikembalikan: ",
     "addr.title": "📦 Alamat penghantaran",
     "addr.sub": "Ganjaran fizikal dihantar ke sini. Alamat pertama ialah alamat utama (maksimum 5).",
@@ -718,6 +726,10 @@ const DICT = {
 
   // ======================= 中文 =======================
   zh: {
+    "addr.pickStateFirst": "请先选州属",
+    "addr.cityOther": "其他（自己填写）",
+    "addr.cityOtherPh": "请填写城市 / 市镇",
+    "gift.showDetails": "查看物流与收货详情 ▾",
     "reason.redeemRefund": "兑换取消退回：",
     "addr.title": "📦 收货地址",
     "addr.sub": "兑换实体奖品时寄到这里，第一个是默认地址（最多 5 个）",

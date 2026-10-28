@@ -771,3 +771,38 @@ select {
   .gift-photos img { width: 48px; height: 48px; }
   .rcv-prev { width: 80px; }
 }
+
+/* ---------- 🧾 兑换记录 v2 ---------- */
+.dash-head { padding-bottom: 10px; border-bottom: 1px dashed var(--line); margin-bottom: 4px; }
+.list li.redeem-li { display: block; padding: 14px 0; }
+.redeem-body { flex: 1; min-width: 0; }
+.redeem-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.redeem-top .title { min-width: 0; }
+.redeem-no {
+  flex-shrink: 0; font-size: .68rem; color: var(--muted); font-family: ui-monospace, Menlo, monospace;
+  background: var(--card2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; letter-spacing: .04em;
+}
+.redeem-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+.gift-item .gift-steps, .gift-item .gift-ship, .gift-item .gift-addr, .gift-item .gift-receipt,
+.gift-item .gift-problem, .gift-item .gift-more { margin-left: 0; }
+.ship-line { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.small-break { font-size: .74rem; overflow-wrap: anywhere; word-break: break-all; }
+.small { font-size: .76rem; }
+.track-link {
+  display: block; margin-top: 4px; font-size: .74rem; font-weight: 700; color: var(--accent);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none;
+}
+.track-link .url { font-weight: 400; color: var(--muted); margin-left: 4px; }
+.track-link.disabled { color: var(--muted); opacity: .5; cursor: not-allowed; }
+.gift-addr { overflow-wrap: anywhere; }
+.gift-addr .btn { margin-top: 6px; }
+.gift-more { margin-top: 6px; }
+.gift-more summary { font-size: .8rem; color: var(--accent); font-weight: 700; padding: 4px 0; }
+.redeem-li.flash { animation: flashBg 2.4s ease-out; border-radius: 12px; }
+@keyframes flashBg { 0%, 40% { background: rgba(255,111,174,.18); } 100% { background: transparent; } }
+.bell-detail { overflow-wrap: anywhere; word-break: break-word; font-size: .78rem; }
+@media (max-width: 480px) {
+  .gift-steps { margin-left: -4px; margin-right: -4px; }
+  .gift-ship, .gift-addr, .gift-receipt, .gift-problem { font-size: .78rem; padding: 8px 10px; }
+  .redeem-no { font-size: .62rem; }
+}

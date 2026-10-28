@@ -138,6 +138,52 @@ export const MY_STATES = [
 ];
 export const MAX_ADDRESSES = 5;
 
+// 各州属的城市（选了州属才出现；找不到可以选「其他」自己填）
+export const MY_CITIES = {
+  "Johor": ["Johor Bahru", "Iskandar Puteri", "Skudai", "Pasir Gudang", "Masai", "Ulu Tiram", "Senai", "Kulai", "Kota Tinggi", "Pontian", "Batu Pahat", "Muar", "Tangkak", "Kluang", "Simpang Renggam", "Yong Peng", "Segamat", "Labis", "Mersing", "Pagoh"],
+  "Kedah": ["Alor Setar", "Sungai Petani", "Kulim", "Langkawi", "Jitra", "Gurun", "Baling", "Pendang", "Yan", "Kuala Kedah", "Pokok Sena", "Bandar Baharu"],
+  "Kelantan": ["Kota Bharu", "Pasir Mas", "Tumpat", "Tanah Merah", "Machang", "Kuala Krai", "Gua Musang", "Pasir Puteh", "Bachok", "Jeli"],
+  "Melaka": ["Melaka", "Ayer Keroh", "Batu Berendam", "Bukit Beruang", "Alor Gajah", "Masjid Tanah", "Jasin", "Merlimau"],
+  "Negeri Sembilan": ["Seremban", "Nilai", "Port Dickson", "Mantin", "Rembau", "Kuala Pilah", "Tampin", "Bahau", "Gemas"],
+  "Pahang": ["Kuantan", "Temerloh", "Mentakab", "Bentong", "Raub", "Jerantut", "Pekan", "Kuala Lipis", "Maran", "Rompin", "Cameron Highlands", "Genting Highlands"],
+  "Perak": ["Ipoh", "Taiping", "Teluk Intan", "Sitiawan", "Lumut", "Manjung", "Kampar", "Batu Gajah", "Kuala Kangsar", "Seri Iskandar", "Tapah", "Tanjung Malim", "Slim River", "Parit Buntar", "Bagan Serai", "Gerik"],
+  "Perlis": ["Kangar", "Arau", "Padang Besar", "Kuala Perlis"],
+  "Pulau Pinang": ["George Town", "Air Itam", "Gelugor", "Bayan Lepas", "Balik Pulau", "Tanjung Bungah", "Butterworth", "Perai", "Seberang Jaya", "Bukit Mertajam", "Kepala Batas", "Nibong Tebal"],
+  "Sabah": ["Kota Kinabalu", "Penampang", "Putatan", "Papar", "Tuaran", "Sandakan", "Tawau", "Lahad Datu", "Semporna", "Keningau", "Kudat", "Beaufort", "Ranau"],
+  "Sarawak": ["Kuching", "Kota Samarahan", "Serian", "Bau", "Sri Aman", "Sibu", "Sarikei", "Kapit", "Mukah", "Bintulu", "Miri", "Limbang"],
+  "Terengganu": ["Kuala Terengganu", "Kemaman", "Chukai", "Dungun", "Marang", "Kuala Berang", "Jerteh", "Besut", "Setiu"],
+  "Selangor": ["Shah Alam", "Petaling Jaya", "Subang Jaya", "Puchong", "Klang", "Port Klang", "Kajang", "Bangi", "Semenyih", "Seri Kembangan", "Cyberjaya", "Sepang", "Ampang", "Cheras", "Selayang", "Batu Caves", "Rawang", "Sungai Buloh", "Kuala Selangor", "Banting", "Damansara"],
+  "W.P. Kuala Lumpur": ["Kuala Lumpur"],
+  "W.P. Labuan": ["Labuan"],
+  "W.P. Putrajaya": ["Putrajaya"],
+};
+
+// 邮编前两位 → 州属（帮会员自动选；少数交界地区会员可以自己改）
+export function stateFromPostcode(pc) {
+  const n = parseInt(String(pc || "").slice(0, 2), 10);
+  if (!/^\d{5}$/.test(String(pc || "")) || isNaN(n)) return "";
+  if (n <= 2) return "Perlis";
+  if (n <= 9) return "Kedah";
+  if (n <= 14) return "Pulau Pinang";
+  if (n <= 18) return "Kelantan";
+  if (n <= 24) return "Terengganu";
+  if (n <= 28) return "Pahang";
+  if (n <= 36) return "Perak";
+  if (n === 39) return "Pahang";
+  if (n <= 48) return "Selangor";
+  if (n <= 60) return "W.P. Kuala Lumpur";
+  if (n === 62) return "W.P. Putrajaya";
+  if (n <= 68) return "Selangor";
+  if (n === 69) return "Pahang";
+  if (n <= 73) return "Negeri Sembilan";
+  if (n <= 78) return "Melaka";
+  if (n <= 86) return "Johor";
+  if (n === 87) return "W.P. Labuan";
+  if (n <= 91) return "Sabah";
+  if (n <= 98) return "Sarawak";
+  return "";
+}
+
 // 检查地址；回传错误的 i18n key，没问题回传 ""
 export function addressError(a) {
   if (!a.name) return "addr.errName";
@@ -164,6 +210,12 @@ export function addressHTML(a) {
   if (!a) return "";
   return `<b>${esc(a.name)}</b> · ${esc(a.phone)}<br>${esc(a.line1)}${a.line2 ? ", " + esc(a.line2) : ""}<br>${esc(a.postcode)} ${esc(a.city)}, ${esc(a.state)}`;
 }
+
+// 兑换编号：#加上兑换 ID 前 6 码（前后台一样，方便核对）
+export function redeemCode(id) {
+  return "#" + String(id || "").slice(0, 6).toUpperCase();
+}
+export const DETAIL_COLLAPSE_DAYS = 3;   // 收货几天后，查询物流变灰、详情预设收起
 
 // 实体奖品进度：0 已申请 · 1 已通过 · 2 已发货 · 3 已签收 · 4 完成
 export const GIFT_STEPS = ["pending", "approved", "shipped", "received", "completed"];
