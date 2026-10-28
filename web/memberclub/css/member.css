@@ -806,3 +806,6 @@ select {
   .gift-ship, .gift-addr, .gift-receipt, .gift-problem { font-size: .78rem; padding: 8px 10px; }
   .redeem-no { font-size: .62rem; }
 }
+
+/* 🏷️ 内部会员标签 */
+.tag-internal { background: rgba(124,92,255,.22); color: #c4b5fd; font-size: .72rem; vertical-align: middle; }

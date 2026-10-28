@@ -10,7 +10,7 @@
   <header id="topbar"></header>
 
   <main class="page">
-    <h1 data-i18n="prof.title"></h1>
+    <h1><span data-i18n="prof.title"></span> <span id="internalTag" class="tag tag-internal hidden" data-i18n="tag.internal"></span></h1>
     <p class="muted" data-i18n="prof.sub"></p>
     <p id="pageError" class="msg err hidden"></p>
 
@@ -84,7 +84,7 @@
     import { doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, logout, t, normalizePhone, isValidPhone,
-      claimBonuses, toastBonuses, bonusPoints, bonusActive
+      claimBonuses, toastBonuses, bonusPoints, bonusActive, isInternalMember
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
     import { MAX_ADDRESSES } from "./js/common.js";
@@ -112,6 +112,7 @@
 
     requireMember((user, member) => {
       const ref = doc(db, "members", user.uid);
+      $("internalTag").classList.toggle("hidden", !isInternalMember(member));
       $("email").value = member.email || user.email || "";
       $("name").value = member.name || "";
       $("phone").value = member.phone || "";

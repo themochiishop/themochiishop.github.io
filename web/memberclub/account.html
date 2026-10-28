@@ -88,6 +88,7 @@
     requireMember(async (user, member) => {
       renderFaq($("faqTier"), "tier");
       $("hello").textContent = t("acc.hello", { name: member.name || t("acc.member") });
+      if (isInternalMember(member)) $("hello").insertAdjacentHTML("beforeend", ` <span class="tag tag-internal">${t("tag.internal")}</span>`);
       $("phoneCallout").classList.toggle("hidden", !!member.phone);
 
       // ---------- 会员等级 ----------
