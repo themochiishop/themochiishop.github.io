@@ -841,7 +841,7 @@ input.locked { opacity: .6; cursor: not-allowed; }
 .faq-a .pre { white-space: pre-wrap; }
 /* 💬 还有问题？联系卡片 */
 .contact-card { background: linear-gradient(135deg, rgba(255,111,174,.10), rgba(124,92,255,.10)), var(--card); border-color: rgba(255,111,174,.35); }
-.contact-head { margin-bottom: 14px; padding-left: 15px; }   /* 和下面按钮的图标左边对齐（按钮 padding 14 + 边框 1） */
+.contact-head { margin-bottom: 14px; padding-left: 20px; }   /* 和下面按钮的图标左边对齐（按钮 padding 14 + 边框 1） */
 .contact-head h2 { margin: 0 0 2px; font-size: 1.05rem; }
 .contact-head p { margin: 0; font-size: .84rem; }
 .contact-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
@@ -859,7 +859,7 @@ input.locked { opacity: .6; cursor: not-allowed; }
 @media (max-width: 640px) {
   .contact-tiles { grid-template-columns: 1fr; gap: 8px; }
   .contact-tile { padding: 10px 12px; }
-  .contact-head { padding-left: 13px; }
+  .contact-head { padding-left: 20px; }
 }
 
 /* 📄 分页 */
