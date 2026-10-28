@@ -17,8 +17,7 @@
     header .right { display: flex; gap: 8px; align-items: center; font-size: .82rem; color: #cfc6d4; }
     #who { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    .tabbar { display: flex; flex-wrap: wrap; gap: 8px; max-width: 1100px; margin: 0 auto; padding: 10px 16px; }    .tabbar::-webkit-scrollbar { display: none; }
-      .tab { flex: 0 0 auto; position: relative; display: flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 10px; border: 1px solid #ddd5e0; background: #fff; color: #2b2430; font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .15s; }
+    .tab { flex: 0 0 auto; position: relative; display: flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 10px; border: 1px solid #ddd5e0; background: #fff; color: #2b2430; font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .15s; }
     .tab:hover { border-color: #e0628a; }
     .tab.on { background: #1c1722; color: #fff; border-color: #1c1722; box-shadow: 0 6px 14px rgba(28,23,34,.25); }
     .tab .dot { position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; border-radius: 50%; background: #e11d48; border: 2px solid #f4f1f5; }
@@ -64,53 +63,34 @@
     #loginView .btn { width: 100%; margin-top: 18px; }
     #loginView label { text-align: left; }
 
-    @media (max-width: 600px) {
-            .tabbar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); }
-      .tabbar::-webkit-scrollbar { display: none; }
-      .card { padding: 18px 16px; }
-      .slide-item img { width: 84px; height: 60px; }
-      #who { display: none; }
-    }
-        /* ===== 标签栏:分两组 ===== */
-    .tabbar { display: block; max-width: 1100px; margin: 0 auto; padding: 8px 16px 10px; overflow: visible; -webkit-mask-image: none; mask-image: none; }
+    /* ===== 标签栏:分两组 ===== */
+    .tabbar { display: block; max-width: 1100px; margin: 0 auto; padding: 8px 16px 10px; overflow: visible; }
     .tabgroup { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
     .tabgroup + .tabgroup { border-top: 1px dashed #ddd5e0; margin-top: 6px; padding-top: 10px; }
     .tg-label { flex: 0 0 40px; font-size: .74rem; font-weight: 700; letter-spacing: 2px; color: #8b8190; }
     .tg-tabs { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
-    @media (max-width: 600px) {
-      .tabbar { overflow: visible; -webkit-mask-image: none; mask-image: none; }
-      .tabgroup { flex-direction: column; align-items: stretch; gap: 2px; }
-      .tg-label { flex: none; }
-      .tg-tabs { flex-wrap: nowrap; overflow-x: auto; padding: 6px 2px 4px; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 90%, transparent); mask-image: linear-gradient(90deg, #000 90%, transparent); }
-      .tg-tabs::-webkit-scrollbar { display: none; }
-    }
-        .period-bar { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .period-bar { display: flex; flex-wrap: wrap; gap: 8px; }
     .pbtn { padding: 8px 16px; border-radius: 999px; border: 1px solid #ddd5e0; background: #fff; color: #2b2430; font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
     .pbtn:hover { border-color: #e0628a; }
     .pbtn.on { background: #1c1722; color: #fff; border-color: #1c1722; }
-        .wgroup { margin-top: 16px; }
+
+    /* 中奖名单表格 */
+    .wgroup { margin-top: 16px; }
     .wg-h { font-size: .88rem; font-weight: 700; margin-bottom: 6px; }
-    .wcols, .wrow { display: grid; grid-template-columns: 1.2fr 1fr 1fr 34px; grid-template-areas: "p n o x"; gap: 6px; align-items: center; }
+    .wcols, .wrow { display: grid; grid-template-columns: 1.2fr 1fr 1fr 30px 30px 34px; grid-template-areas: "p n o u d x"; gap: 6px; align-items: center; }
     .wcols { font-size: .72rem; color: #8b8190; font-weight: 600; margin-bottom: 4px; }
     .wcols span:nth-child(1) { grid-area: p; } .wcols span:nth-child(2) { grid-area: n; } .wcols span:nth-child(3) { grid-area: o; }
     .wrow { margin-bottom: 6px; }
     .wrow input { padding: 9px 10px; font-size: .86rem; min-width: 0; }
-    .wrow .p { grid-area: p; } .wrow .n { grid-area: n; } .wrow .o { grid-area: o; }
+    .wrow .p { grid-area: p; } .wrow .n { grid-area: n; } .wrow .o { grid-area: o; } .wrow .u { grid-area: u; } .wrow .d { grid-area: d; }
     .wx { grid-area: x; width: 34px; height: 34px; border: 1px solid #e8b4ad; background: #fff; color: #c0392b; border-radius: 8px; cursor: pointer; font: inherit; }
-    .wg-ops { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
-    @media (max-width: 600px) {
-      .wcols { display: none; }
-      .wrow { grid-template-columns: 1fr 1fr 34px; grid-template-areas: "p p x" "n o x"; padding-bottom: 8px; border-bottom: 1px dashed #ebe3ee; }
-    }
-        .wcols, .wrow { grid-template-columns: 1.2fr 1fr 1fr 30px 30px 34px; grid-template-areas: "p n o u d x"; }
-    .wrow .u { grid-area: u; } .wrow .d { grid-area: d; }
     .wm { width: 30px; height: 34px; border: 1px solid #d8d0db; background: #fff; color: #2b2430; border-radius: 8px; cursor: pointer; font: inherit; padding: 0; }
     .wm:disabled { opacity: .35; cursor: default; }
-    @media (max-width: 600px) {
-      .wrow { grid-template-columns: 1fr 1fr 34px 34px 34px; grid-template-areas: "p p u d x" "n o u d x"; }
-      .wm { width: 34px; height: 100%; min-height: 34px; }
-    }
-           .prow { display: grid; grid-template-columns: 38px minmax(0, 1fr) 62px 26px 26px 26px; gap: 5px; align-items: center; margin-bottom: 5px; }
+    .wg-ops { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+
+    /* 奖品清单 */
+    .prow { display: grid; grid-template-columns: 38px minmax(0, 1fr) 62px 26px 26px 26px; gap: 5px; align-items: center; margin-bottom: 5px; }
     .pbox { position: relative; width: 38px; height: 38px; }
     .pth-b { width: 38px; height: 38px; border: 1px dashed #cfc6d4; background: #fff; border-radius: 6px; cursor: pointer; padding: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; color: #8b8190; font: inherit; font-size: .62rem; }
     .pth-b img { width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -118,15 +98,9 @@
     .prow .pn { padding: 7px 8px; font-size: .82rem; min-width: 0; }
     .prow .pq { padding: 7px 2px; font-size: .82rem; border: 1px solid #d8d0db; border-radius: 6px; background: #fff; width: 62px; }
     .prow .wm, .prow .wx { width: 26px; height: 32px; padding: 0; border-radius: 6px; }
-    @media (max-width: 600px) {
-      .prow { grid-template-columns: 38px 1fr 1fr 1fr 54px; grid-template-areas: "t n n n q" "t u d x2 ."; }
-      .prow .pbox { grid-area: t; }
-      .prow .pn { grid-area: n; }
-      .prow .pq { grid-area: q; width: 54px; }
-            .prow .u { grid-area: u; } .prow .d { grid-area: d; } .prow .x2 { grid-area: x2; }
-      .prow .u, .prow .d, .prow .x2 { width: 100%; }
-    }
-        .nv { border: 1px solid #e9e2e6; border-radius: 10px; padding: 10px; margin-bottom: 10px; background: #fcfbfc; }
+
+    /* 导航菜单 */
+    .nv { border: 1px solid #e9e2e6; border-radius: 10px; padding: 10px; margin-bottom: 10px; background: #fcfbfc; }
     .nv-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) minmax(0, 1.2fr) 30px 30px 34px; grid-template-areas: "c n h u d x"; gap: 6px; align-items: center; margin-bottom: 6px; }
     .nv-row input[type=text] { padding: 8px 10px; font-size: .85rem; min-width: 0; }
     .nv-row .c { grid-area: c; width: 18px; height: 18px; cursor: pointer; }
@@ -135,7 +109,22 @@
     .nv-sub { margin-left: 18px; padding-left: 10px; border-left: 2px solid #e0628a55; grid-template-areas: "c n h u d x" ". o o l l l"; }
     .nv-row .nt { grid-area: o; padding: 7px 10px; font-size: .8rem; }
     .nv-row .nl { grid-area: l; margin: 0; font-weight: 500; font-size: .76rem; display: flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; }
+
     @media (max-width: 600px) {
+      .card { padding: 18px 16px; }
+      .slide-item img { width: 84px; height: 60px; }
+      #who { display: none; }
+      .tabgroup { flex-direction: column; align-items: stretch; gap: 2px; }
+      .tg-label { flex: none; }
+      .tg-tabs { flex-wrap: nowrap; overflow-x: auto; padding: 6px 2px 4px; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 90%, transparent); mask-image: linear-gradient(90deg, #000 90%, transparent); }
+      .tg-tabs::-webkit-scrollbar { display: none; }
+      .wcols { display: none; }
+      .wrow { grid-template-columns: 1fr 1fr 34px 34px 34px; grid-template-areas: "p p u d x" "n o u d x"; padding-bottom: 8px; border-bottom: 1px dashed #ebe3ee; }
+      .wm { width: 34px; height: 100%; min-height: 34px; }
+      .prow { grid-template-columns: 38px 1fr 1fr 1fr 54px; grid-template-areas: "t n n n q" "t u d x2 ."; }
+      .prow .pbox { grid-area: t; } .prow .pn { grid-area: n; } .prow .pq { grid-area: q; width: 54px; }
+      .prow .u { grid-area: u; } .prow .d { grid-area: d; } .prow .x2 { grid-area: x2; }
+      .prow .u, .prow .d, .prow .x2 { width: 100%; }
       .nv-row { grid-template-columns: 22px minmax(0, 1fr) 30px 30px 34px; grid-template-areas: "c n n n n" "c h u d x"; }
       .nv-sub { margin-left: 8px; grid-template-areas: "c n n n n" "c h u d x" ". o o o o" ". l l l l"; }
     }
@@ -168,7 +157,7 @@
         <button class="btn ghost small" id="logoutBtn">退出</button>
       </div>
     </header>
-        <div class="tabbar" id="tabbar">
+    <div class="tabbar" id="tabbar">
       <div class="tabgroup">
         <div class="tg-label">内容</div>
         <div class="tg-tabs">
@@ -186,7 +175,7 @@
           <button class="tab" data-tab="contact">✉️ Contact Us</button>
           <button class="tab" data-tab="social">🔗 社交链接</button>
           <button class="tab" data-tab="nav">🧭 导航菜单</button>
-                    <button class="tab" data-tab="popup">📣 弹窗公告</button>
+          <button class="tab" data-tab="popup">📣 弹窗公告</button>
         </div>
       </div>
     </div>
@@ -261,7 +250,7 @@
     <!-- Figures Toy -->
     <div class="panel" id="panel-figures">
       <div class="panel-head"><h2>🧸 Figures Toy</h2><a class="btn ghost small" href="/figures-toy/" target="_blank" rel="noopener">查看页面 ↗</a></div>
-            <div class="card">
+      <div class="card">
         <h3>顶部横幅图 Banner</h3>
         <p class="hint">显示在图片墙上方的大图,适合放品牌介绍图。不上传则不显示。</p>
         <div class="slide-item">
@@ -286,7 +275,8 @@
         <div class="msg" id="figMsg"></div>
       </div>
     </div>
-       <!-- 每月抽奖 -->
+
+    <!-- 每月抽奖 -->
     <div class="panel" id="panel-draw">
       <div class="panel-head"><h2>🎁 每月抽奖</h2><a class="btn ghost small" href="/monthly-draw/" target="_blank" rel="noopener">查看页面 ↗</a></div>
 
@@ -325,8 +315,9 @@
           </div>
           <input type="file" id="drawFile" accept="image/*" hidden>
           <div class="msg" id="drawMsg"></div>
-                   <label style="margin-top:18px">奖品清单(缩略图 + 名称,可留空)</label>
-          <p class="small-note" style="margin-bottom:8px">点缩略图上传小图。名称后面写 x2 会显示成 ×2。点"批量选图"可以一次选多张图,每张自动建一行,文件名当作名称。名称框里可以粘贴多行文字,自动分成多行。</p>
+
+          <label style="margin-top:18px">奖品清单(缩略图 + 名称 + 数量,可留空)</label>
+          <p class="small-note" style="margin-bottom:8px">点缩略图上传小图。数量用右边的下拉选择(1~30)。点"批量选图"可以一次选多张图,每张自动建一行,文件名当作名称。名称框里可以粘贴多行文字,自动分成多行。</p>
           <div id="prizeRows"></div>
           <div class="row">
             <input type="file" id="prizeFiles" accept="image/*" multiple hidden>
@@ -336,7 +327,7 @@
           <div class="msg" id="prizeMsg"></div>
         </div>
 
-                     <div class="card">
+        <div class="card">
           <h3>中奖名单</h3>
           <p class="hint">按奖项分三栏,每行填 奖品名 / 名字 / 单号。可以直接从 Excel、Google 表格复制几列,粘贴到某一栏第一格,会自动分行分列。同一个奖品有多人时,名字之间用逗号隔开。网页上不会显示"大奖 / 中奖 / 小奖"这些字,只是把不同奖项之间隔开一点;哪一栏留空就不显示。</p>
 
@@ -361,11 +352,12 @@
 
           <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer;margin-top:16px"><input type="checkbox" id="drawMaskName"> 自动隐藏部分名字(例如 ab***fg)</label>
           <label style="display:flex;gap:8px;align-items:center;font-weight:500;cursor:pointer;margin-top:8px"><input type="checkbox" id="drawMaskOrder"> 自动隐藏部分订单号(例如 2510****A9X2)</label>
-                     <label for="drawTerms" style="margin-top:16px">领奖说明(显示在名单下方;每行一条,第 1 条配铃铛、第 2 条配日历、之后配对勾;留空 = 使用默认)</label>
+          <label for="drawTerms" style="margin-top:16px">领奖说明(显示在名单下方;每行一条,第 1 条配铃铛、第 2 条配日历、之后配对勾;留空 = 使用默认)</label>
           <textarea id="drawTerms" style="min-height:80px" placeholder="All winners will be notified.&#10;Prizes will be reserved for one month for claiming."></textarea>
         </div>
       </div>
     </div>
+
     <!-- About Us -->
     <div class="panel" id="panel-about">
       <div class="panel-head"><h2>💝 About Us</h2><a class="btn ghost small" href="/about-us/" target="_blank" rel="noopener">查看页面 ↗</a></div>
@@ -409,16 +401,19 @@
         <textarea id="contactNote" style="min-height:64px"></textarea>
       </div>
     </div>
+
     <!-- 导航菜单 -->
     <div class="panel" id="panel-nav">
       <div class="panel-head"><h2>🧭 导航菜单</h2><a class="btn ghost small" href="/" target="_blank" rel="noopener">查看网站 ↗</a></div>
       <div class="card">
-        <p class="hint">每个大块是一个主菜单,下面缩进的是它的子菜单(最多两层)。勾选 = 显示。链接以 / 开头是本站页面(例如 /about-us/),以 https:// 开头是外部网站(新窗口打开)。主菜单有子菜单时,它只负责展开、不跳转,链接可以留空。子菜单可以写一行说明,并可以勾选"红点 LIVE"。Monthly Draw 默认带两个子菜单,可以修改或删除。保存后所有页面的页头和页脚 Site Map 同时生效。</p>        <div id="navList"></div>
+        <p class="hint">每个大块是一个主菜单,下面缩进的是它的子菜单(最多两层)。勾选 = 显示。链接以 / 开头是本站页面(例如 /about-us/),以 https:// 开头是外部网站(新窗口打开)。主菜单有子菜单时,它只负责展开、不跳转,链接可以留空。子菜单可以写一行说明,并可以勾选"红点 LIVE"。Monthly Draw 默认带两个子菜单,可以修改或删除。保存后所有页面的页头和页脚 Site Map 同时生效。</p>
+        <div id="navList"></div>
         <datalist id="navPages">
           <option value="/"></option>
           <option value="/live-stream/"></option>
           <option value="/figures-toy/"></option>
           <option value="/monthly-draw/"></option>
+          <option value="/live-draw/"></option>
           <option value="/about-us/"></option>
           <option value="/contact-us/"></option>
         </datalist>
@@ -428,7 +423,9 @@
         </div>
       </div>
     </div>
-        <div class="panel" id="panel-popup">
+
+    <!-- 弹窗公告 -->
+    <div class="panel" id="panel-popup">
       <div class="panel-head"><h2>📣 弹窗公告</h2><a class="btn ghost small" href="/" target="_blank" rel="noopener">查看网站 ↗</a></div>
       <div class="card">
         <p class="hint">开启后，观众打开网站任何一页都会先看到这个弹窗。按钮链接以 / 开头是本站页面，以 https:// 开头会在新窗口打开。</p>
@@ -439,6 +436,7 @@
         <label for="popupLink">按钮链接</label><input type="text" id="popupLink" placeholder="https://www.themochiishop.com/live/">
       </div>
     </div>
+
     <!-- 社交链接 -->
     <div class="panel" id="panel-social">
       <div class="panel-head"><h2>🔗 社交链接</h2></div>
@@ -505,8 +503,9 @@
   };
   const MAX_SLIDES = 6, MAX_FIGS = 12;
   let slides = [], figs = [], about = { story: '', dream: '' };
-  let loading = false, dirty = false;
+  let loading = false, dirty = false, loadedOk = false;
   let keepUntil = 0, loadedPlatforms = '', keepUrls = null;
+
   /* ---------- 状态提示 ---------- */
   function showSave(text, ok) { const m = $('#saveMsg'); m.style.color = ''; m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = text; }
   function markDirty() {
@@ -515,7 +514,8 @@
     const m = $('#saveMsg'); m.className = 'msg'; m.style.color = '#b45309'; m.textContent = '● 有未保存的修改';
   }
   $('#editorView').addEventListener('input', markDirty);
-  $('#editorView').addEventListener('change', e => { if (e.target.type !== 'file') markDirty(); });  window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+  $('#editorView').addEventListener('change', e => { if (e.target.type !== 'file') markDirty(); });
+  window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
   /* ---------- 卡牌切换 ---------- */
   function openTab(name) {
@@ -557,7 +557,7 @@
 
   /* ---------- 读取 ---------- */
   async function load() {
-    loading = true;
+    loading = true; loadedOk = false;
     try {
       const snap = await get(ref(db, 'homepage'));
       const v = snap.val() || {};
@@ -565,24 +565,26 @@
       FIELDS.forEach(f => { $('#' + f).value = (cfg[f] !== undefined) ? cfg[f] : DEFAULTS[f]; });
 
       const lp = String(cfg.livePlatforms || '').split(',');
-            keepUntil = Number(cfg.liveUntil) || 0; loadedPlatforms = String(cfg.livePlatforms || '');
-            keepUrls = cfg.liveUrls || null;
+      keepUntil = Number(cfg.liveUntil) || 0; loadedPlatforms = String(cfg.livePlatforms || '');
+      keepUrls = cfg.liveUrls || null;
       ['shopee','tiktok','facebook'].forEach(k => { $('#liveP_' + k).checked = lp.includes(k); });
       updateLiveDot();
 
-            loadDraws(v);
-            loadNav(v.nav);
-            const pp = v.popup || {};
+      loadDraws(v);
+      loadNav(v.nav);
+
+      const pp = v.popup || {};
       $('#popupOn').checked = pp.on === true;
       $('#popupTitle').value = pp.title || '';
       $('#popupText').value = pp.text || '';
       $('#popupBtn').value = pp.btn || '';
       $('#popupLink').value = pp.link || '';
+
       const ab = v.about || {};
       about = { story: typeof ab.story === 'string' ? ab.story : '', dream: typeof ab.dream === 'string' ? ab.dream : '' };
       renderAbout();
 
-            banner = typeof v.figuresBanner === 'string' ? v.figuresBanner : '';
+      banner = typeof v.figuresBanner === 'string' ? v.figuresBanner : '';
       renderBanner();
       const fl = Array.isArray(v.figures) ? v.figures : Object.values(v.figures || {});
       figs = fl.filter(s => s && typeof s.src === 'string').map(s => ({ src: s.src, caption: s.caption || '' }));
@@ -593,8 +595,9 @@
       renderSlides();
 
       $('#saveMsg').textContent = '';
+      loadedOk = true;
     } catch (e) {
-      showSave('读取失败:' + e.message, false);
+      showSave('读取失败:' + e.message + '(为了安全,保存已锁定,请刷新页面)', false);
     } finally {
       loading = false; dirty = false;
     }
@@ -650,7 +653,7 @@
   }
 
   /* 通用:添加图片 */
-    function bindAdd(addSel, fileSel, msgSel, getArr, max, compressFn, rerender) {
+  function bindAdd(addSel, fileSel, msgSel, getArr, max, compressFn, rerender) {
     $(addSel).onclick = () => $(fileSel).click();
     $(fileSel).onchange = async e => {
       const files = [...e.target.files]; e.target.value = '';
@@ -670,13 +673,14 @@
       else { msg.className = 'msg ok'; msg.textContent = '已添加 ' + added + ' 张,记得点下方"保存到网站"。'; }
     };
   }
+
   /* ---------- 轮播图 ---------- */
   function renderSlides() { renderList('#slideList', '#slideInfo', '#addBtn', slides, MAX_SLIDES, renderSlides); }
-    bindAdd('#addBtn', '#fileInput', '#slideMsg', () => slides, MAX_SLIDES, f => compressImage(f, 1800, 0.82, 1300000), renderSlides);
+  bindAdd('#addBtn', '#fileInput', '#slideMsg', () => slides, MAX_SLIDES, f => compressImage(f, 1800, 0.82, 1300000), renderSlides);
 
   /* ---------- Figures Toy ---------- */
   function renderFigs() { renderList('#figList', '#figInfo', '#figAddBtn', figs, MAX_FIGS, renderFigs); }
-    bindAdd('#figAddBtn', '#figInput', '#figMsg', () => figs, MAX_FIGS, f => compressImage(f, 1000, 0.82, 270000), renderFigs);
+  bindAdd('#figAddBtn', '#figInput', '#figMsg', () => figs, MAX_FIGS, f => compressImage(f, 1000, 0.82, 270000), renderFigs);
 
   /* ---------- About Us ---------- */
   let aboutTarget = null;
@@ -704,6 +708,7 @@
       msg.className = 'msg ok'; msg.textContent = '已更新,记得点下方"保存到网站"。';
     } catch (err) { msg.className = 'msg err'; msg.textContent = err.message; }
   };
+
   /* ---------- Figures Toy 横幅 ---------- */
   let banner = '';
   function renderBanner() {
@@ -731,10 +736,11 @@
   let draws = [];
   let curDraw = -1;
   let drawLoadedIds = [];
-const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms' };
+  const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms' };
   const newDrawId = () => 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 
-  function renderPeriods() {    const bar = $('#periodBar'); bar.innerHTML = '';
+  function renderPeriods() {
+    const bar = $('#periodBar'); bar.innerHTML = '';
     draws.forEach((d, i) => {
       const b = document.createElement('button'); b.type = 'button';
       b.className = 'pbtn' + (i === curDraw ? ' on' : '');
@@ -750,9 +756,9 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
     $('#periodRight').disabled = !d || curDraw === draws.length - 1;
     if (d) {
       for (const k in DRAW_FIELDS) $('#' + DRAW_FIELDS[k]).value = d[k] || '';
-            WG.forEach(g => { wRows[g] = wParse(d[g]); while (wRows[g].length < 2) wRows[g].push(blank()); });
+      WG.forEach(g => { wRows[g] = wParse(d[g]); while (wRows[g].length < 2) wRows[g].push(blank()); });
       wRender();
-            renderPrizes();
+      renderPrizes();
       $('#drawMaskName').checked = d.maskName !== false;
       $('#drawMaskOrder').checked = d.maskOrder !== false;
       const im = $('#drawPrev');
@@ -774,7 +780,7 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
 
   $('#periodAdd').onclick = () => {
     const label = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
-       draws.unshift({ id: newDrawId(), month: label, intro: '', prizes: '', w1: '', w2: '', w3: '', image: '', maskName: true, maskOrder: true });
+    draws.unshift({ id: newDrawId(), month: label, intro: '', prizes: '', items: [], w1: '', w2: '', w3: '', terms: '', image: '', maskName: true, maskOrder: true });
     curDraw = 0; renderPeriods(); markDirty();
   };
   $('#periodDel').onclick = () => {
@@ -813,13 +819,13 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
     idx.forEach(it => {
       if (!it || !it.id) return;
       const d = data[it.id] || {};
-            draws.push({ id: it.id, month: d.month || it.month || '', intro: d.intro || '', prizes: d.prizes || '', w1: d.w1 || '', w2: d.w2 || d.winners || '', w3: d.w3 || '', terms: d.terms || '', image: typeof d.image === 'string' ? d.image : '', maskName: d.maskName !== false, maskOrder: d.maskOrder !== false });
+      draws.push({ id: it.id, month: d.month || it.month || '', intro: d.intro || '', prizes: d.prizes || '', w1: d.w1 || '', w2: d.w2 || d.winners || '', w3: d.w3 || '', terms: d.terms || '', image: typeof d.image === 'string' ? d.image : '', maskName: d.maskName !== false, maskOrder: d.maskOrder !== false });
     });
     if (!draws.length && v.draw && typeof v.draw === 'object') {
       const o = v.draw;
-           draws.push({ id: 'd1', month: o.month || 'Current', intro: o.intro || '', prizes: o.prizes || '', w1: '', w2: o.winners || '', w3: '', image: typeof o.image === 'string' ? o.image : '', maskName: o.mask !== false, maskOrder: true });
+      draws.push({ id: 'd1', month: o.month || 'Current', intro: o.intro || '', prizes: o.prizes || '', w1: '', w2: o.winners || '', w3: '', terms: '', image: typeof o.image === 'string' ? o.image : '', maskName: o.mask !== false, maskOrder: true });
     }
-        draws.forEach(dd => { dd.items = readItems((data[dd.id] || {}).prizeItems, dd.prizes); });
+    draws.forEach(dd => { dd.items = readItems((data[dd.id] || {}).prizeItems, dd.prizes); });
     drawLoadedIds = Object.keys(data);
     curDraw = draws.length ? 0 : -1;
     renderPeriods();
@@ -827,14 +833,14 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
   function validateDraws() {
     for (const d of draws) {
       if (!(d.month || '').trim()) return '每月抽奖:有一期没有填写期数 / 月份';
-                  if ((d.items || []).some(x => x.i && !x.n.trim())) return '每月抽奖:有奖品只有缩略图、没有名称(' + d.month + ')';
+      if ((d.items || []).some(x => x.i && !x.n.trim())) return '每月抽奖:有奖品只有缩略图、没有名称(' + d.month + ')';
     }
     const names = draws.map(d => d.month.trim().toLowerCase());
     if (new Set(names).size !== names.length) return '每月抽奖:有两期的名称重复了';
     return '';
   }
-  
-      /* ---------- 导航菜单(主菜单 + 子菜单) ---------- */
+
+  /* ---------- 导航菜单(主菜单 + 子菜单) ---------- */
   const MONTHLY_KIDS = [
     { label: 'Monthly Draw', href: '/monthly-draw/', note: "This month's prizes & winners", live: false, show: true },
     { label: 'Live Draw', href: '/live-draw/', note: 'Watch the draw live, in real time', live: true, show: true }
@@ -948,7 +954,8 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
     if (!navItems.some(x => x.show !== false)) return '导航菜单:至少要显示一项';
     return '';
   }
-    /* ---------- 中奖名单:三栏表格(奖品名 / 名字 / 单号) ---------- */
+
+  /* ---------- 中奖名单:三栏表格(奖品名 / 名字 / 单号) ---------- */
   const WG = ['w1', 'w2', 'w3'];
   const COLS = ['p', 'n', 'o'];
   const blank = () => ({ p: '', n: '', o: '' });
@@ -968,7 +975,7 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
       if (box) box.replaceChildren(...wRows[g].map((r, i) => wRow(g, r, i)));
     });
   }
-    function wRow(g, r, i) {
+  function wRow(g, r, i) {
     const row = document.createElement('div'); row.className = 'wrow';
     const mk = (k, ph) => {
       const inp = document.createElement('input'); inp.type = 'text'; inp.className = k; inp.placeholder = ph; inp.value = r[k]; inp.autocomplete = 'off';
@@ -1018,12 +1025,15 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
       wRows[g] = [blank(), blank()]; wSync(); wRender(); markDirty();
     };
   });
-    /* ---------- 奖品清单(缩略图 + 名称) ---------- */
+
+  /* ---------- 奖品清单(缩略图 + 名称 + 数量) ---------- */
   const readItems = (raw, text) => {
     const arr = Array.isArray(raw) ? raw : Object.values(raw || {});
     const split = n => { const m = String(n).trim().match(/^(.*?)\s*[x×]\s*(\d+)\s*$/i); return m && m[1] ? { n: m[1], q: Math.min(30, Number(m[2]) || 1) } : { n: String(n).trim(), q: 1 }; };
-    const ok = arr.filter(x => x && typeof x.n === 'string').map(x => { const s = Number(x.q) ? { n: x.n, q: Math.min(30, Number(x.q)) } : split(x.n); return { n: s.n, q: s.q, i: typeof x.i === 'string' ? x.i : '' }; });    if (ok.length) return ok;
-    return String(text || '').split(/\n+/).map(x => x.trim()).filter(Boolean).map(n => ({ ...split(n), i: '' }));  };
+    const ok = arr.filter(x => x && typeof x.n === 'string').map(x => { const s = Number(x.q) ? { n: x.n, q: Math.min(30, Number(x.q)) } : split(x.n); return { n: s.n, q: s.q, i: typeof x.i === 'string' ? x.i : '' }; });
+    if (ok.length) return ok;
+    return String(text || '').split(/\n+/).map(x => x.trim()).filter(Boolean).map(n => ({ ...split(n), i: '' }));
+  };
   const THUMB = f => compressImage(f, 240, 0.8, 40000);
   const fileName = n => String(n || '').replace(/\.[a-z0-9]+$/i, '').replace(/_+/g, ' ').trim();
   const pmsg = (t, ok = true) => { const m = $('#prizeMsg'); m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = t; };
@@ -1053,7 +1063,7 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
       box.appendChild(cx);
     }
 
-    const name = document.createElement('input'); name.type = 'text'; name.className = 'pn'; name.placeholder = '奖品名称,例如 Air Fryer x1';
+    const name = document.createElement('input'); name.type = 'text'; name.className = 'pn'; name.placeholder = '奖品名称,例如 Air Fryer';
     name.value = it.n; name.autocomplete = 'off';
     name.addEventListener('input', () => { it.n = name.value; });
     name.addEventListener('paste', e => {
@@ -1061,11 +1071,11 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
       if (!t || !/[\r\n]/.test(t)) return;
       e.preventDefault();
       const lines = t.replace(/\r/g, '').split('\n').map(x => x.split('\t')[0].trim()).filter(Boolean);
-      lines.forEach((l, k) => { if (k === 0) d.items[i].n = l; else d.items.splice(i + k, 0, { n: l, i: '' }); });
+      lines.forEach((l, k) => { if (k === 0) d.items[i].n = l; else d.items.splice(i + k, 0, { n: l, q: 1, i: '' }); });
       renderPrizes(); markDirty();
     });
 
-        const qty = document.createElement('select'); qty.className = 'pq'; qty.setAttribute('aria-label', '数量');
+    const qty = document.createElement('select'); qty.className = 'pq'; qty.setAttribute('aria-label', '数量');
     for (let k = 1; k <= 30; k++) { const o = document.createElement('option'); o.value = k; o.textContent = '×' + k; qty.appendChild(o); }
     qty.value = String(Math.min(30, Math.max(1, Number(it.q) || 1)));
     qty.addEventListener('change', () => { it.q = Number(qty.value); });
@@ -1078,11 +1088,12 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
     const x = document.createElement('button'); x.type = 'button'; x.className = 'wx x2'; x.textContent = '×'; x.setAttribute('aria-label', '删除这个奖品');
     x.onclick = () => { d.items.splice(i, 1); renderPrizes(); markDirty(); };
 
-    row.append(box, name, qty, mv('u', '↑', '上移', -1), mv('d', '↓', '下移', 1), x);    return row;
+    row.append(box, name, qty, mv('u', '↑', '上移', -1), mv('d', '↓', '下移', 1), x);
+    return row;
   }
   $('#prizeAdd').onclick = () => {
     const d = draws[curDraw]; if (!d) return;
-    (d.items = d.items || []).push({ n: '', i: '' });
+    (d.items = d.items || []).push({ n: '', q: 1, i: '' });
     renderPrizes(); markDirty();
     const ins = $('#prizeRows').querySelectorAll('.pn'); if (ins.length) ins[ins.length - 1].focus();
   };
@@ -1093,15 +1104,17 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
     if (!Array.isArray(d.items)) d.items = [];
     let ok = 0; const errs = [];
     for (const f of files) {
-      try { pmsg('正在处理 ' + f.name + ' ...'); d.items.push({ n: fileName(f.name), i: await THUMB(f) }); ok++; }
+      try { pmsg('正在处理 ' + f.name + ' ...'); d.items.push({ n: fileName(f.name), q: 1, i: await THUMB(f) }); ok++; }
       catch (err) { errs.push(f.name + ':' + err.message); }
     }
     renderPrizes(); markDirty();
     if (errs.length) pmsg((ok ? '已添加 ' + ok + ' 个。' : '') + errs.join(' '), false);
     else pmsg('已添加 ' + ok + ' 个,请检查名称,再点"保存到网站"。');
   };
+
   /* ---------- 保存 ---------- */
   $('#saveBtn').onclick = async () => {
+    if (!loadedOk) { showSave('页面内容没有成功读取,为了避免清空网站内容,已阻止保存。请刷新页面再试。', false); return; }
     const cfg = {};
     for (const f of FIELDS) {
       const v = $('#' + f).value.trim();
@@ -1115,34 +1128,37 @@ const DRAW_FIELDS = { month: 'drawMonth', intro: 'drawIntro', terms: 'drawTerms'
       if (f === 'announcement') cfg[f] = v;   // 允许留空 = 隐藏公告
       else if (v) cfg[f] = v;                  // 留空 = 使用页面默认
     }
-            const drawErr = validateDraws();
+    const drawErr = validateDraws();
     if (drawErr) { showSave(drawErr, false); openTab('draw'); return; }
     const livePs = ['shopee','tiktok','facebook'].filter(k => $('#liveP_' + k).checked);
     cfg.livePlatforms = livePs.join(',');
     cfg.liveStatus = livePs.length ? 'on' : 'off';
-        if (keepUntil && cfg.livePlatforms === loadedPlatforms) cfg.liveUntil = keepUntil;
-        if (keepUrls && cfg.livePlatforms === loadedPlatforms) cfg.liveUrls = keepUrls;
+    if (keepUntil && cfg.livePlatforms === loadedPlatforms) cfg.liveUntil = keepUntil;
+    if (keepUrls && cfg.livePlatforms === loadedPlatforms) cfg.liveUrls = keepUrls;
 
-        const navErr = validateNav();
+    const navErr = validateNav();
     if (navErr) { showSave(navErr, false); openTab('nav'); return; }
-        const popupLink = $('#popupLink').value.trim();
+    const popupLink = $('#popupLink').value.trim();
     if (popupLink && !/^(\/|https:\/\/)/i.test(popupLink)) { showSave('弹窗按钮链接必须以 / 或 https:// 开头', false); openTab('popup'); return; }
     const b = $('#saveBtn'); b.disabled = true; showSave('保存中...', true);
     try {
       await set(ref(db, 'homepage/config'), cfg);
       await set(ref(db, 'homepage/slides'), slides.length ? slides : null);
       await set(ref(db, 'homepage/figures'), figs.length ? figs : null);
-            await set(ref(db, 'homepage/figuresBanner'), banner || null);
+      await set(ref(db, 'homepage/figuresBanner'), banner || null);
       const abOut = {}; if (about.story) abOut.story = about.story; if (about.dream) abOut.dream = about.dream;
       await set(ref(db, 'homepage/about'), Object.keys(abOut).length ? abOut : null);
-                        await set(ref(db, 'homepage/nav'), navOut());, navItems.map(x => ({ label: x.label.trim(), href: x.href.trim(), show: x.show !== false })));
-            await set(ref(db, 'homepage/popup'), { on: $('#popupOn').checked, title: $('#popupTitle').value.trim(), text: $('#popupText').value.trim(), btn: $('#popupBtn').value.trim(), link: popupLink });
-                  const idsNow = new Set(draws.map(d => d.id));
+      await set(ref(db, 'homepage/nav'), navOut());
+      await set(ref(db, 'homepage/popup'), { on: $('#popupOn').checked, title: $('#popupTitle').value.trim(), text: $('#popupText').value.trim(), btn: $('#popupBtn').value.trim(), link: popupLink });
+
+      const idsNow = new Set(draws.map(d => d.id));
       await set(ref(db, 'homepage/drawIndex'), draws.length ? draws.map(d => ({ id: d.id, month: d.month.trim() })) : null);
       for (const d of draws) {
         const o = { month: d.month.trim(), maskName: d.maskName !== false, maskOrder: d.maskOrder !== false };
         ['intro', 'w1', 'w2', 'w3', 'terms'].forEach(k => { const t = (d[k] || '').trim(); if (t) o[k] = t; });
-        const pit = (d.items || []).filter(x => x.n.trim()).map(x => { const o2 = { n: x.n.trim() }; if (Number(x.q) > 1) o2.q = Math.min(30, Number(x.q)); if (x.i) o2.i = x.i; return o2; });        if (pit.length) o.prizeItems = pit;        if (d.image) o.image = d.image;
+        const pit = (d.items || []).filter(x => x.n.trim()).map(x => { const o2 = { n: x.n.trim() }; if (Number(x.q) > 1) o2.q = Math.min(30, Number(x.q)); if (x.i) o2.i = x.i; return o2; });
+        if (pit.length) o.prizeItems = pit;
+        if (d.image) o.image = d.image;
         await set(ref(db, 'homepage/drawData/' + d.id), o);
       }
       for (const id of drawLoadedIds) if (!idsNow.has(id)) await set(ref(db, 'homepage/drawData/' + id), null);
