@@ -662,3 +662,10 @@ footer .legal a:hover { color: #fff; text-decoration: underline; }
   -webkit-text-fill-color: initial;
   forced-color-adjust: none;
 }
+/* ===== 首页直播胶囊:红圈改成向外扩散的圆环 ===== */
+.wl-ico { position: relative; overflow: visible; animation: none; background: transparent; outline: 2px solid #e11d48; outline-offset: 2px; }
+.wl-ico img { border-radius: 50%; background: #fff; }
+.wl-ico::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid #e11d48; opacity: 0; pointer-events: none; animation: wlring 1.4s ease-out infinite; }
+@keyframes wlring { 0% { transform: scale(.88); opacity: .95; } 100% { transform: scale(1.55); opacity: 0; } }
+.wl-label::before { animation: wldot 1.2s ease-in-out infinite; }
+@keyframes wldot { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
