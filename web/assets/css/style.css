@@ -655,3 +655,10 @@ footer .legal a:hover { color: #fff; text-decoration: underline; }
   .nav ul.sub a small { display: block; margin-top: 2px; font-size: .74rem; line-height: 1.4; color: #9d93a4; letter-spacing: 0; }
   .nav ul.sub .sub-live { flex: 0 0 8px; width: 8px; height: 8px; border-radius: 50%; background: #e11d48; display: inline-block; }
 }
+/* ===== 页头 logo:不被强制深色模式反转 ===== */
+.brand img {
+  color-scheme: only light;
+  background-color: #fff7f9 !important;
+  -webkit-text-fill-color: initial;
+  forced-color-adjust: none;
+}
