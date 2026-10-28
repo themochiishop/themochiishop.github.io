@@ -89,9 +89,12 @@ function makeDropdown(x, here, kids) {
     if (c.note) { const n = document.createElement('small'); n.textContent = c.note; a.appendChild(n); }
     const s = document.createElement('li'); s.appendChild(a); sub.appendChild(s);
   });
-  btn.onclick = (e) => {
+   btn.onclick = (e) => {
     e.stopPropagation();
     const open = !li.classList.contains('open');
+    document.querySelectorAll('.nav li.has-sub.open').forEach(o => {
+      if (o !== li) { o.classList.remove('open'); const b = o.querySelector('.sub-toggle'); if (b) b.setAttribute('aria-expanded', 'false'); }
+    });
     li.classList.toggle('open', open);
     btn.setAttribute('aria-expanded', String(open));
   };
@@ -195,6 +198,9 @@ function renderLegal() {
   });
   last.appendChild(sp);
 }
+
+
+
 function render(list) {
   const here = norm(location.pathname);
   const items = withMonthly(list).filter(x => x.show !== false && (x.href || kidsOf(x).length));
@@ -234,6 +240,34 @@ function showPopup(p) {
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.getElementById('sitePopup')) close(); });
   document.body.appendChild(box);
 }
+/* ---------- 手机端:点菜单外面、点链接、按 Esc 自动收起 ---------- */
+(function () {
+  const btn = document.getElementById('menuBtn');
+  if (!menu || !btn) return;
+  const closeMenu = () => {
+    menu.classList.remove('open');
+    menu.querySelectorAll('li.has-sub.open').forEach(l => {
+      l.classList.remove('open');
+      const b = l.querySelector('.sub-toggle'); if (b) b.setAttribute('aria-expanded', 'false');
+    });
+    btn.setAttribute('aria-expanded', 'false');
+  };
+  btn.setAttribute('aria-expanded', 'false');
+  btn.addEventListener('click', () => {
+    setTimeout(() => btn.setAttribute('aria-expanded', menu.classList.contains('open') ? 'true' : 'false'), 0);
+  });
+  document.addEventListener('click', e => {
+    if (!menu.classList.contains('open')) return;
+    if (menu.contains(e.target) || btn.contains(e.target)) return;
+    closeMenu();
+  });
+  menu.addEventListener('click', e => {
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (a && !a.closest('button')) closeMenu();          // 点了任何链接就收起
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+  window.addEventListener('resize', () => { if (window.innerWidth > 760) closeMenu(); });
+})();
 /* 先用上次记住的菜单(没有就用默认),避免闪烁 */
 let cached = null;
 try { cached = clean(JSON.parse(localStorage.getItem(CACHE_KEY) || 'null')); } catch (e) {}
