@@ -146,7 +146,7 @@
               ? `<div class="track-link disabled">🔗 ${t("gift.track")}</div>`
               : `<a class="track-link" href="${esc(url)}" target="_blank" rel="noopener">🔗 ${t("gift.track")} <span class="url">${esc(url)}</span></a>`) : ""}
             ${sh.weightKg || (sh.dims && sh.dims.l) ? `<div class="muted small">📦 ${sh.weightKg ? esc(sh.weightKg) + " kg" : ""}${sh.dims && sh.dims.l ? ` · ${esc(sh.dims.l)}×${esc(sh.dims.w)}×${esc(sh.dims.h)} cm` : ""}</div>` : ""}
-            ${(sh.photos || []).length ? `<div class="gift-photos">${sh.photos.map(p => `<a href="${esc(p)}" target="_blank"><img src="${esc(p)}" alt="" loading="lazy"></a>`).join("")}</div>` : ""}
+            ${(sh.photos || []).length ? `<div class="gift-photos">${sh.photos.map(p => `<img src="${esc(p)}" alt="" loading="lazy" data-zoom>`).join("")}</div>` : ""}
             ${sh.note ? `<div class="small">💬 ${esc(sh.note)}</div>` : ""}
           </div>` : "";
         const problem = r.status === "problem" ? `<div class="gift-problem">⚠️ ${esc(t("gift.problem"))}${r.problemNote ? "：" + esc(r.problemNote) : ""}</div>` : "";
@@ -155,7 +155,7 @@
         const rc = r.receipt || {};
         const receipt = r.status === "completed" ? `
           <div class="gift-receipt">${r.autoCompleted ? "✅ " + esc(t("gift.autoDone")) : "✅ " + esc(t("gift.received", { d: fmtDate(doneAt) }))}
-            ${rc.photo ? `<div class="gift-photos"><img src="${esc(rc.photo)}" alt=""></div>` : ""}
+            ${rc.photo ? `<div class="gift-photos"><img src="${esc(rc.photo)}" alt="" data-zoom></div>` : ""}
             ${rc.comment ? `<div class="muted">「${esc(rc.comment)}」</div>` : ""}</div>` : "";
         const canEdit = ["pending", "approved", "problem"].includes(r.status);
         const details = `
@@ -300,6 +300,27 @@
 
       load();
     });
+  </script>
+  <!-- 🔍 看大图（照片是存在资料库里的 data 网址，不能开新分页，否则手机浏览器会当掉） -->
+  <div id="zoomBox" class="zoom-box hidden" role="dialog" aria-modal="true">
+    <button type="button" class="zoom-close" aria-label="close">✕</button>
+    <img id="zoomImg" alt="">
+  </div>
+  <script>
+    (() => {
+      const box = document.getElementById("zoomBox"), img = document.getElementById("zoomImg");
+      const close = () => { box.classList.add("hidden"); img.removeAttribute("src"); document.body.style.overflow = ""; };
+      document.addEventListener("click", e => {
+        const z = e.target.closest("img[data-zoom]");
+        if (z) {
+          e.preventDefault();
+          img.src = z.currentSrc || z.src;
+          box.classList.remove("hidden");
+          document.body.style.overflow = "hidden";
+        } else if (!box.classList.contains("hidden") && box.contains(e.target)) close();
+      });
+      document.addEventListener("keydown", e => { if (e.key === "Escape" && !box.classList.contains("hidden")) close(); });
+    })();
   </script>
 </body>
 </html>
