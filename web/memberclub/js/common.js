@@ -499,12 +499,20 @@ export async function claimBonuses(uid) {
 // ---------- 📣 关注我们（会员自己按「我已关注」领取，每个平台一次） ----------
 // 分数、开关、链接在后台「额外福利 → 关注我们」设定（settings/perks 的 follow_xxx）；没填链接的平台不显示
 // reason 要和 Firestore 规则 followOk 一致
+// 和主页 Stay Connected 一样的线条图标
+export const SOCIAL_ICONS = {
+  shopee: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12.5H6z"/><path d="M9 8V7a3 3 0 0 1 6 0v1"/><path d="M14.2 12.2c-.4-.6-1.2-.9-2.2-.9-1.2 0-2 .5-2 1.3s.7 1.1 2 1.4 2.1.6 2.1 1.5-.9 1.4-2.1 1.4c-1 0-1.9-.4-2.3-1"/></svg>',
+  tiktok: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3v11.2a3.8 3.8 0 1 1-3.8-3.8"/><path d="M14 3c.2 2.5 2 4.3 4.6 4.5"/></svg>',
+  instagram: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6"/></svg>',
+  facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3.5h-2.2A3.8 3.8 0 0 0 9 7.3V10H6.5v3.5H9V21h3.5v-7.5h2.7L16 10h-3.5V7.9c0-.8.4-1.4 1.3-1.4H15z"/></svg>',
+  whatsapp: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0-7.3 12.8l-1.2 4.2 4.3-1.2A8.5 8.5 0 1 0 12 3.5z"/><path d="M9.2 8.4c-.3.5-.3 1.3.3 2.3.9 1.6 2.4 3 4 3.6.9.3 1.5.2 1.8-.2l.5-.8-1.8-1-.8.7c-.8-.3-1.9-1.4-2.3-2.3l.7-.8-.9-1.9z"/></svg>',
+};
 export const FOLLOWS = [
-  { key: "follow_shopee",    icon: "🛍️", name: "Shopee",           points: 10, reason: "关注我们：Shopee" },
-  { key: "follow_tiktok",    icon: "🎵", name: "TikTok",           points: 10, reason: "关注我们：TikTok" },
-  { key: "follow_instagram", icon: "📸", name: "Instagram",        points: 10, reason: "关注我们：Instagram" },
-  { key: "follow_facebook",  icon: "👍", name: "Facebook",         points: 10, reason: "关注我们：Facebook" },
-  { key: "follow_whatsapp",  icon: "💬", name: "WhatsApp Channel", points: 10, reason: "关注我们：WhatsApp Channel" },
+  { key: "follow_shopee",    icon: SOCIAL_ICONS.shopee, name: "Shopee",           points: 10, reason: "关注我们：Shopee" },
+  { key: "follow_tiktok",    icon: SOCIAL_ICONS.tiktok, name: "TikTok",           points: 10, reason: "关注我们：TikTok" },
+  { key: "follow_instagram", icon: SOCIAL_ICONS.instagram, name: "Instagram",        points: 10, reason: "关注我们：Instagram" },
+  { key: "follow_facebook",  icon: SOCIAL_ICONS.facebook, name: "Facebook",         points: 10, reason: "关注我们：Facebook" },
+  { key: "follow_whatsapp",  icon: SOCIAL_ICONS.whatsapp, name: "WhatsApp Channel", points: 10, reason: "关注我们：WhatsApp Channel" },
 ];
 export function followList() {
   return FOLLOWS.map(f => {

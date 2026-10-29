@@ -44,7 +44,7 @@
     import {
       collection, getDocs, getDoc, doc
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-    import { requireMember, renderNav, esc, t, lang } from "./js/common.js";
+    import { requireMember, renderNav, esc, t, lang, SOCIAL_ICONS } from "./js/common.js";
     import { clubFaq } from "./js/faq.js";
 
     const $ = id => document.getElementById(id);
@@ -85,13 +85,13 @@
       const label = (obj, key) => (obj && (obj[lang] || obj.zh)) || t(key);
       const wa = (num, obj, key) => {
         num = String(num || "").replace(/\D/g, "");
-        return num ? tile("wa", `https://wa.me/${num}`, "💬", label(obj, key), "WhatsApp") : "";
+        return num ? tile("wa", `https://wa.me/${num}`, SOCIAL_ICONS.whatsapp, label(obj, key), "WhatsApp") : "";
       };
       const clubBtns = [wa(c.waClub, c.waClubLabel, "help.waClub")];
       const storeBtns = [
         wa(c.waStore ?? c.whatsapp, c.waStoreLabel, "help.waStore"),
-        safe(c.shopee) ? tile("shopee", c.shopee, "🛍️", "Shopee", t("help.chatShop")) : "",
-        safe(c.tiktok) ? tile("tiktok", c.tiktok, "🎵", "TikTok Shop", t("help.chatShop")) : "",
+        safe(c.shopee) ? tile("shopee", c.shopee, SOCIAL_ICONS.shopee, "Shopee", t("help.chatShop")) : "",
+        safe(c.tiktok) ? tile("tiktok", c.tiktok, SOCIAL_ICONS.tiktok, "TikTok Shop", t("help.chatShop")) : "",
       ];
       const btns = (both ? [...clubBtns, ...storeBtns] : tab === "club" ? clubBtns : storeBtns).filter(Boolean);
       $("contactBtns").innerHTML = btns.join("");
