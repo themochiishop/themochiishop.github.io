@@ -512,7 +512,7 @@ export const FOLLOWS = [
   { key: "follow_tiktok",    icon: SOCIAL_ICONS.tiktok, name: "TikTok",           points: 10, reason: "关注我们：TikTok" },
   { key: "follow_instagram", icon: SOCIAL_ICONS.instagram, name: "Instagram",        points: 10, reason: "关注我们：Instagram" },
   { key: "follow_facebook",  icon: SOCIAL_ICONS.facebook, name: "Facebook",         points: 10, reason: "关注我们：Facebook" },
-  { key: "follow_whatsapp",  icon: SOCIAL_ICONS.whatsapp, name: "WhatsApp Channel", points: 10, reason: "关注我们：WhatsApp Channel" },
+  { key: "follow_whatsapp",  icon: SOCIAL_ICONS.whatsapp, name: "WhatsApp", points: 10, reason: "关注我们：WhatsApp Channel" },
 ];
 export function followList() {
   return FOLLOWS.map(f => {
