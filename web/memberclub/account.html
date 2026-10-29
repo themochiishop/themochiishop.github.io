@@ -68,6 +68,14 @@
       <ul class="task-list" id="taskList"></ul>
     </div>
 
+    <!-- 📣 关注我们：各平台关注后自己领取 -->
+    <div class="card follow-card hidden" id="followCard">
+      <h2 data-i18n="follow.title"></h2>
+      <p class="muted task-sub" data-i18n="follow.sub"></p>
+      <ul class="follow-list" id="followList"></ul>
+      <p class="muted follow-hint" data-i18n="follow.hint"></p>
+    </div>
+
     <!-- 积分奖励常见问题：内容待全部功能确认后再补（暂时隐藏） -->
     <a class="help-link" href="help.html#tier"><span>❓</span><span data-i18n="help.linkMore"></span><span class="go">➔</span></a>
   </main>
@@ -78,7 +86,8 @@
     import {
       requireMember, renderNav, loadBalance, toDate, fmtDate, fmtMoney, esc, platformTag,
       TIERS, tierProgress, tierLabel, tierIconHTML, t, translateReason,
-      BONUSES, bonusPoints, bonusActive, activeBonuses, customPerks, EXPIRY_MONTHS, isInternalMember
+      BONUSES, bonusPoints, bonusActive, activeBonuses, customPerks, EXPIRY_MONTHS, isInternalMember,
+      followList, claimFollow, toast
     } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
@@ -120,7 +129,8 @@
       const now = new Date();
 
       // ---------- 已绑定账号 ----------
-      const bindings = bindSnap.docs.map(d => d.data());
+      const bindings = bindSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (toDate(a.createdAt) || 0) - (toDate(b.createdAt) || 0));
       const internal = isInternalMember(member);
       $("bindCallout").classList.toggle("hidden", bindings.length > 0 || internal);
 
@@ -167,6 +177,62 @@
               ? `<a class="task-pts" href="${esc(perkLink(p.link))}">${p.points ? t("notif.plus", { n: p.points }) : t("notif.open")} ➔</a>`
               : `<span class="task-pts">${p.points ? t("notif.plus", { n: p.points }) : ""}</span>`}
           </li>`).join("");
+      }
+
+      // ---------- 📣 关注我们 ----------
+      const follows = followList();
+      if (follows.length) {
+        const claimed = new Set(bal.ledger.map(x => x.reason));
+        const canClaim = bindings.length > 0 || internal;
+        const VISIT = "mcFollowVisit";
+        const visited = () => { try { return JSON.parse(sessionStorage.getItem(VISIT) || "[]"); } catch (e) { return []; } };
+        const renderFollows = () => {
+          const v = visited();
+          $("followList").innerHTML = follows.map(f => {
+            const ok = claimed.has(f.reason);
+            return `
+              <li class="follow-row${ok ? " done" : ""}">
+                <span class="follow-ico follow-${f.key.slice(7)}">${f.icon}</span>
+                <span class="follow-name"><b>${esc(f.name)}</b><small>${t("notif.plus", { n: f.points })}</small></span>
+                <span class="follow-act">
+                  ${ok ? `<span class="tag tag-ok">✓ ${t("follow.done")}</span>` : `
+                    <a class="btn btn-ghost btn-inline btn-xs" href="${esc(f.link)}" target="_blank" rel="noopener" data-go="${f.key}">${t("follow.go")}</a>
+                    ${canClaim
+                      ? `<button type="button" class="btn btn-primary btn-inline btn-xs" data-claim="${f.key}" ${v.includes(f.key) ? "" : "disabled"}>${t("follow.claim")}</button>`
+                      : `<small class="muted">${t("follow.needBind")}</small>`}`}
+                </span>
+              </li>`;
+          }).join("");
+        };
+        renderFollows();
+        $("followCard").classList.remove("hidden");
+        $("followList").addEventListener("click", async e => {
+          const go = e.target.closest("[data-go]");
+          if (go) {
+            // 先按「去关注」才能领取（只记在这个分页里）
+            try { const v = visited(); if (!v.includes(go.dataset.go)) sessionStorage.setItem(VISIT, JSON.stringify([...v, go.dataset.go])); } catch (err) {}
+            const b = $("followList").querySelector(`[data-claim="${go.dataset.go}"]`);
+            if (b) b.disabled = false;
+            return;
+          }
+          const btn = e.target.closest("[data-claim]");
+          if (!btn || btn.disabled) return;
+          btn.disabled = true;
+          const f = follows.find(x => x.key === btn.dataset.claim);
+          try {
+            const n = await claimFollow(user.uid, f.key, internal && !bindings.length ? null : bindings[0].id);
+            claimed.add(f.reason);
+            bal.spendable += n;
+            $("spendable").textContent = bal.spendable.toLocaleString();
+            toast("🎉 " + t("bonus.toast", { n, what: f.name }));
+            renderFollows();
+          } catch (err) {
+            console.warn("follow", err);
+            // 已经领过（规则挡住）也会到这里：重新整理就会显示已领取
+            toast(t("follow.fail"));
+            btn.disabled = false;
+          }
+        });
       }
     });
   </script>

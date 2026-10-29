@@ -496,6 +496,39 @@ export async function claimBonuses(uid) {
   return { done, claimed, member, binds };
 }
 
+// ---------- 📣 关注我们（会员自己按「我已关注」领取，每个平台一次） ----------
+// 分数、开关、链接在后台「额外福利 → 关注我们」设定（settings/perks 的 follow_xxx）；没填链接的平台不显示
+// reason 要和 Firestore 规则 followOk 一致
+export const FOLLOWS = [
+  { key: "follow_shopee",    icon: "🛍️", name: "Shopee",           points: 10, reason: "关注我们：Shopee" },
+  { key: "follow_tiktok",    icon: "🎵", name: "TikTok",           points: 10, reason: "关注我们：TikTok" },
+  { key: "follow_instagram", icon: "📸", name: "Instagram",        points: 10, reason: "关注我们：Instagram" },
+  { key: "follow_facebook",  icon: "👍", name: "Facebook",         points: 10, reason: "关注我们：Facebook" },
+  { key: "follow_whatsapp",  icon: "💬", name: "WhatsApp Channel", points: 10, reason: "关注我们：WhatsApp Channel" },
+];
+export function followList() {
+  return FOLLOWS.map(f => {
+    const c = (perkCfg && perkCfg[f.key]) || {};
+    const link = /^https:\/\//i.test(c.link || "") ? c.link : "";
+    return { ...f, link, points: typeof c.points === "number" ? c.points : f.points };
+  }).filter(f => f.link && bonusActive(f.key) && f.points > 0);
+}
+// 领取：内部会员不用绑定；一般会员要有至少一个绑定账号（bindingIds 放第一个绑定）
+export async function claimFollow(uid, key, bindingId) {
+  const f = followList().find(x => x.key === key);
+  if (!f) throw new Error("off");
+  await setDoc(doc(db, "pointsLedger", key + "_" + uid), {
+    uid,
+    delta: f.points,
+    reason: f.reason,
+    orderNo: null,
+    bindingIds: bindingId ? [bindingId] : [],
+    availableAt: serverTimestamp(),
+    createdAt: serverTimestamp()
+  });
+  return f.points;
+}
+
 // 🏷️ 内部会员（店主在后台标记，员工 / 测试用）
 export function isInternalMember(m) {
   return !!(m && m.internal && m.internal.on === true);

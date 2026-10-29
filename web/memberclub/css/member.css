@@ -887,3 +887,24 @@ input.locked { opacity: .6; cursor: not-allowed; }
 .zoom-box img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 10px; }
 .zoom-close { position: absolute; top: max(12px, env(safe-area-inset-top)); right: 12px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255,255,255,.15); color: #fff; font-size: 1.1rem; cursor: pointer; }
 .zoom-box.hidden { display: none; }
+
+/* 📣 关注我们 */
+.follow-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; }
+.follow-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--card2); border: 1px solid var(--line); }
+.follow-row.done { opacity: .6; }
+.follow-ico { flex: none; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-size: 1.05rem; }
+.follow-shopee { background: #ee4d2d; }
+.follow-tiktok { background: #111; box-shadow: inset 2px 0 0 #25f4ee, inset -2px 0 0 #fe2c55; }
+.follow-instagram { background: linear-gradient(45deg, #f9ce34, #ee2a7b, #6228d7); }
+.follow-facebook { background: #1877f2; }
+.follow-whatsapp { background: #25d366; }
+.follow-name { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.follow-name b { font-size: .92rem; }
+.follow-name small { color: var(--accent); font-weight: 700; font-size: .78rem; }
+.follow-act { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.follow-act .btn:disabled { opacity: .4; }
+.follow-hint { font-size: .78rem; margin-top: 10px; }
+@media (max-width: 640px) {
+  .follow-row { padding: 9px 10px; gap: 10px; }
+  .follow-act .btn { padding: 6px 10px; font-size: .78rem; }
+}

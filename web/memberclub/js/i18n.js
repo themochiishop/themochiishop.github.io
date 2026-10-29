@@ -4,6 +4,15 @@
 const DICT = {
   // ======================= English =======================
   en: {
+    "reason.follow": "Followed us on {p}",
+    "follow.title": "📣 Follow us",
+    "follow.sub": "Follow us on each platform and get points — once per platform.",
+    "follow.go": "Follow",
+    "follow.claim": "I've followed · claim",
+    "follow.done": "Claimed",
+    "follow.needBind": "Link an order first to claim",
+    "follow.hint": "Tap “Follow”, follow us there, then come back to claim.",
+    "follow.fail": "Couldn't claim, please try again later.",
     "help.pageInfo": "{a}–{b} of {n}",
     "help.chatShop": "Chat with the shop",
     "help.waClub": "Club tech support",
@@ -402,6 +411,15 @@ const DICT = {
 
   // ======================= Bahasa Melayu =======================
   ms: {
+    "reason.follow": "Ikuti kami di {p}",
+    "follow.title": "📣 Ikuti kami",
+    "follow.sub": "Ikuti kami di setiap platform dan dapatkan mata — sekali bagi setiap platform.",
+    "follow.go": "Ikuti",
+    "follow.claim": "Sudah ikuti · tuntut",
+    "follow.done": "Sudah dituntut",
+    "follow.needBind": "Pautkan pesanan dahulu untuk menuntut",
+    "follow.hint": "Tekan “Ikuti”, ikuti kami di sana, kemudian kembali untuk menuntut.",
+    "follow.fail": "Gagal menuntut, sila cuba lagi nanti.",
     "help.pageInfo": "{a}–{b} daripada {n}",
     "help.chatShop": "Sembang dengan kedai",
     "help.waClub": "Sokongan teknikal kelab",
@@ -800,6 +818,15 @@ const DICT = {
 
   // ======================= 中文 =======================
   zh: {
+    "reason.follow": "关注我们：{p}",
+    "follow.title": "📣 关注我们",
+    "follow.sub": "关注我们的各个平台就送积分，每个平台可领一次。",
+    "follow.go": "去关注",
+    "follow.claim": "我已关注，领取",
+    "follow.done": "已领取",
+    "follow.needBind": "先绑定订单才能领取",
+    "follow.hint": "先按「去关注」，在平台关注后回来领取。",
+    "follow.fail": "领取失败，请稍后再试。",
     "help.pageInfo": "第 {a}–{b} 题，共 {n} 题",
     "help.chatShop": "在平台聊天",
     "help.waClub": "俱乐部技术支援",
@@ -1298,5 +1325,6 @@ export function translateReason(reason) {
   if (r === "完善资料：WhatsApp 通知") return t("reason.profileWhatsapp");
   if (r === "完善资料：绑定第二个平台") return t("reason.profilePlatform2");
   if (r === "积分过期") return t("reason.expired");
+  if (r.startsWith("关注我们：")) return t("reason.follow", { p: r.slice(5) });
   return r;
 }
