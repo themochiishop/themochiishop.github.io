@@ -1,5 +1,5 @@
 /* =========================================================
-   The Mochii Shop — 全站样式(整理版) 
+   The Mochii Shop — 全站样式(整理版)
    分区:基础 / 页头 / 首页轮播 / 按钮 / 通用区块 / Latest Updates /
          社交栏 / 页脚 / 分页标题 / Contact / Live / Figures / About / 响应式
    ========================================================= */
@@ -669,12 +669,3 @@ footer .legal a:hover { color: #fff; text-decoration: underline; }
 @keyframes wlring { 0% { transform: scale(.88); opacity: .95; } 100% { transform: scale(1.55); opacity: 0; } }
 .wl-label::before { animation: wldot 1.2s ease-in-out infinite; }
 @keyframes wldot { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
-/* ===== 全站页脚:注册号与 (WhatsApp only) 小一号 ===== */
-footer .reg-no,
-footer .wa-only { font-size: .72rem; }
-
-/* ===== 全站页脚:邮箱链接不使用金色 ===== */
-footer a[href^="mailto:"],
-footer #fMail { color: inherit; }
-footer a[href^="mailto:"]:hover,
-footer #fMail:hover { color: #fff; text-decoration: underline; }
