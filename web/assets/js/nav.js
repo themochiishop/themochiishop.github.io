@@ -205,13 +205,13 @@ function renderFooterMarks() {
 
   // 注册号 (202503305565):首页在 <p><strong> 里 / 内页在 <strong id="fShop"> 里
   foot.querySelectorAll('strong, #fShop, p').forEach(el => {
-    if (el.querySelector('.reg-no')) return;             // 已处理过
-    if (!el.innerHTML.includes('202503305565')) return;  // 没这段就跳过
-    el.innerHTML = el.innerHTML.replace(
-      /\((202503305565)\)/g,
-      '<span class="reg-no">($1)</span>'
-    );
-  });
+  if (el.querySelector('.reg-no')) return;
+  if (!/202503305565/.test(el.textContent)) return;
+  el.innerHTML = el.innerHTML.replace(
+    /[（(]\s*202503305565\s*[)）]/g,
+    m => '<span class="reg-no">' + m + '</span>'
+  );
+});
 
   // (WhatsApp only):已有 .wa-only 的内页跳过,首页纯文本补上
   foot.querySelectorAll('p').forEach(el => {
