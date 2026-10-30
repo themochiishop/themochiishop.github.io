@@ -198,31 +198,7 @@ function renderLegal() {
   });
   last.appendChild(sp);
 }
-/* 全站页脚:注册号和 (WhatsApp only) 小一号(套 span,兼容两版页脚结构) */
-/* 全站页脚:注册号和 (WhatsApp only) 小一号(套 span,兼容两版页脚结构) */
-function renderFooterMarks() {
-  if (!foot) return;
 
-  // 注册号 (202503305565):首页在 <p><strong> 里 / 内页在 <strong id="fShop"> 里
-  foot.querySelectorAll('strong, #fShop, p').forEach(el => {
-  if (el.querySelector('.reg-no')) return;
-  if (!/202503305565/.test(el.textContent)) return;
-  el.innerHTML = el.innerHTML.replace(
-    /[（(]\s*202503305565\s*[)）]/g,
-    m => '<span class="reg-no">' + m + '</span>'
-  );
-});
-
-  // (WhatsApp only):已有 .wa-only 的内页跳过,首页纯文本补上
-  foot.querySelectorAll('p').forEach(el => {
-    if (el.querySelector('.wa-only')) return;
-    if (!el.innerHTML.includes('WhatsApp only')) return;
-    el.innerHTML = el.innerHTML.replace(
-      /\(WhatsApp only\)/g,
-      '<span class="wa-only">(WhatsApp only)</span>'
-    );
-  });
-}
 
 
 function render(list) {
@@ -233,7 +209,6 @@ function render(list) {
   renderCompanyTitle();
   renderDonate();
   renderLegal();
-  renderFooterMarks();
 }
 /* ---------- 弹窗公告(后台「📣 弹窗公告」设定) ---------- */
 function showPopup(p) {
