@@ -670,8 +670,9 @@ footer .legal a:hover { color: #fff; text-decoration: underline; }
 .wl-label::before { animation: wldot 1.2s ease-in-out infinite; }
 @keyframes wldot { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 /* ===== 页脚:注册号与 (WhatsApp only) 小一号 ===== */
-footer .reg-no,
-footer .wa-only { font-size: .72rem; }
+footer .reg-no, footer .wa-only {
+    font-size: .60rem;
+}
 
 /* ===== 页脚:邮箱链接不使用金色 ===== */
 footer a[href^="mailto:"] { color: inherit; }
