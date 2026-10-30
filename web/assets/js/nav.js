@@ -239,6 +239,7 @@ function render(list) {
   renderCompanyTitle();
   renderDonate();
   renderLegal();
+  renderFooterMarks();
 }
 /* ---------- 弹窗公告(后台「📣 弹窗公告」设定) ---------- */
 function showPopup(p) {
