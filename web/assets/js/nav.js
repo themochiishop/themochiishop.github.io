@@ -198,7 +198,37 @@ function renderLegal() {
   });
   last.appendChild(sp);
 }
+/* 全站页脚:注册号和 (WhatsApp only) 小一号(套 span,兼容两版页脚结构) */
+function renderFooterMarks() {
+  if (!foot) return;
 
+  // 注册号 (202503305565):首页纯文本 / 内页 #fShop 里的 <strong>
+  foot.querySelectorAll('#fShop, p').forEach(el => {
+    if (el.querySelector('.reg-no')) return;              // 已处理过
+    if (el.id === 'fShop' || el.closest('#fShop')) {
+      // 内页:#fShop 是 strong,包 span 只缩括号部分
+      el.innerHTML = el.innerHTML.replace(
+        /\((202503305565)\)/g,
+        '<span class="reg-no">($1)</span>'
+      );
+    } else {
+      // 首页:footer p 里的纯文本
+      el.innerHTML = el.innerHTML.replace(
+        /\((202503305565)\)/g,
+        '<span class="reg-no">($1)</span>'
+      );
+    }
+  });
+
+  // (WhatsApp only):已有 .wa-only 的内页跳过,首页纯文本补上
+  foot.querySelectorAll('p').forEach(el => {
+    if (el.querySelector('.wa-only')) return;             // 内页已有
+    el.innerHTML = el.innerHTML.replace(
+      /\(WhatsApp only\)/g,
+      '<span class="wa-only">(WhatsApp only)</span>'
+    );
+  });
+}
 
 
 function render(list) {
