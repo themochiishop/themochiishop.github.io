@@ -87,6 +87,12 @@ const FD = {
     "editProfile": "Edit profile",
     "share": "Share page",
     "copied": "Link copied ✅",
+    "statTier": "Tier",
+    "allPosts": "All posts",
+    "bioEmpty": "Add a short bio so others can get to know you ✏️",
+    "shareTitle": "Share this page",
+    "copyLink": "Copy link",
+    "shareVia": "Share…",
   },
   ms: {
     "pageTitle": "Mochii Feed · Mochii Club",
@@ -172,6 +178,12 @@ const FD = {
     "editProfile": "Sunting profil",
     "share": "Kongsi halaman",
     "copied": "Pautan disalin ✅",
+    "statTier": "Tahap",
+    "allPosts": "Semua siaran",
+    "bioEmpty": "Tambah bio ringkas supaya orang lain kenal anda ✏️",
+    "shareTitle": "Kongsi halaman ini",
+    "copyLink": "Salin pautan",
+    "shareVia": "Kongsi…",
   },
   zh: {
     "pageTitle": "Mochii Feed · Mochii Club",
@@ -257,6 +269,12 @@ const FD = {
     "editProfile": "编辑资料",
     "share": "分享主页",
     "copied": "链接已复制 ✅",
+    "statTier": "等级",
+    "allPosts": "全部帖子",
+    "bioEmpty": "写一句简介，让大家认识你 ✏️",
+    "shareTitle": "分享主页",
+    "copyLink": "复制链接",
+    "shareVia": "分享…",
   },
 };
 

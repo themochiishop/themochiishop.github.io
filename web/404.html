@@ -2,6 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <script>
+    // 🔗 会员主页短链接：/u/代码 → 会员俱乐部 Feed 的会员主页；/u/shop → 店铺主页
+    (function () {
+      var m = location.pathname.match(/^\/u\/([A-Za-z0-9_-]{4,40})\/?$/);
+      if (!m) return;
+      location.replace("/memberclub/feed.html" + (m[1] === "shop" ? "#shop" : "#c-" + m[1]));
+    })();
+  </script>
   <meta name="color-scheme" content="light">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Page not found - The Mochii Shop</title>
