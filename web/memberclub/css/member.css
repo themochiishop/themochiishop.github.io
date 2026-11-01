@@ -1,4 +1,6 @@
 /* ===== memberclub 会员俱乐部样式 ===== */
+/* 字体：英文 / 数字 / 马来文用 Inter，中文用思源黑体（Noto Sans SC）。@import 要放在最上面 */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400..800&family=Noto+Sans+SC:wght@400..800&display=swap");
 :root {
   color-scheme: dark;   /* 俱乐部本来就是深色主题：手机浏览器的「网页强制深色」不要再帮忙调色 */
   --bg: #0b1020;
@@ -16,9 +18,12 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+button, input, select, textarea { font-family: inherit; }   /* 按钮、输入框也用同一套字体 */
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "Inter", "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-feature-settings: "cv11", "ss01";   /* Inter：比较清楚的 a、1，数字更好认 */
+  -webkit-font-smoothing: antialiased;
   background: var(--bg);
   background-image: radial-gradient(circle at 15% 0%, rgba(255,111,174,.12), transparent 40%),
                     radial-gradient(circle at 85% 10%, rgba(124,92,255,.12), transparent 40%);
