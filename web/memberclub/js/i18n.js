@@ -4,6 +4,11 @@
 const DICT = {
   // ======================= English =======================
   en: {
+    "wa.askTitle": "💬 {tag}",
+    "wa.askLabel": "What would you like to ask? (optional)",
+    "wa.askPh": "e.g. I won last month but haven't seen my prize yet",
+    "wa.askNote": "Your member name and linked accounts are added automatically so we can look you up.",
+    "wa.askSend": "Send on WhatsApp ➔",
     "pzp.askTitle": "Still have questions about your prize?",
     "pzp.askSub": "Can't see your prize, or have a question about claiming or delivery? Message us directly.",
     "pzp.moreHelp": "More answers in the Help Centre ➔",
@@ -477,6 +482,11 @@ const DICT = {
 
   // ======================= Bahasa Melayu =======================
   ms: {
+    "wa.askTitle": "💬 {tag}",
+    "wa.askLabel": "Apa yang anda ingin tanya? (pilihan)",
+    "wa.askPh": "cth. Saya menang bulan lepas tetapi belum nampak hadiah",
+    "wa.askNote": "Nama ahli dan akaun yang dipautkan akan ditambah secara automatik supaya kami boleh semak.",
+    "wa.askSend": "Hantar di WhatsApp ➔",
     "pzp.askTitle": "Masih ada soalan tentang hadiah anda?",
     "pzp.askSub": "Tidak nampak hadiah anda, atau ada soalan tentang tuntutan atau penghantaran? Mesej kami terus.",
     "pzp.moreHelp": "Lebih banyak jawapan di Pusat Bantuan ➔",
@@ -950,6 +960,11 @@ const DICT = {
 
   // ======================= 中文 =======================
   zh: {
+    "wa.askTitle": "💬 {tag}",
+    "wa.askLabel": "你想问什么？（可以不填）",
+    "wa.askPh": "例如：我上个月中奖了，但还没看到奖品",
+    "wa.askNote": "会自动附上你的会员名字和绑定账号，方便我们查询。",
+    "wa.askSend": "发送到 WhatsApp ➔",
     "pzp.askTitle": "还有关于中奖的问题？",
     "pzp.askSub": "看不到奖品、领取或寄送有疑问，直接联系我们。",
     "pzp.moreHelp": "更多问题看帮助中心 ➔",

@@ -109,6 +109,9 @@ input[type=text], input[type=email], input[type=password], input[type=date], inp
   border: 1px solid var(--line); border-radius: 10px; outline: none;
 }
 input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,111,174,.2); }
+textarea { display: block; width: 100%; margin-top: 6px; padding: 11px 12px; font-size: 1rem; font-family: inherit; line-height: 1.5;
+  background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 10px; outline: none; resize: vertical; }
+textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,111,174,.2); }
 input[readonly] { opacity: .7; }
 input[type=date] { color-scheme: dark; }
 label small { display: block; margin-top: 6px; font-size: .78rem; }
@@ -976,3 +979,5 @@ input.locked { opacity: .6; cursor: not-allowed; }
 .pz-pending-list li:first-child { border-top: none; }
 .pz-pending-ico { font-size: 1.4rem; }
 .pz-more-help { display: inline-block; margin-top: 12px; font-size: .82rem; color: var(--accent); font-weight: 700; text-decoration: none; }
+/* 💬 WhatsApp 标签小视窗 */
+.wa-ask .wa-ask-note { font-size: .78rem; margin: 2px 0 14px; }

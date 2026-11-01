@@ -44,7 +44,7 @@
     import {
       collection, getDocs, getDoc, doc
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-    import { requireMember, renderNav, esc, t, lang, SOCIAL_ICONS } from "./js/common.js";
+    import { requireMember, renderNav, esc, t, lang, SOCIAL_ICONS, bindWaTags } from "./js/common.js";
     import { clubFaq } from "./js/faq.js";
 
     const $ = id => document.getElementById(id);
@@ -72,12 +72,15 @@
     }
 
     // 「负责处理」：按逗号 / 顿号拆成小标签；点标签 = 打开 WhatsApp，输入框已带上这个标签当开头
-    const tagText = x => lang === "zh" ? `【${x}】` : `[${x}] `;
+    // 点标签会先跳出小视窗（common.js 的 bindWaTags）；下面是没有 JavaScript 时的备用文字
+    const tagText = x => lang === "zh" ? `【${x}】\n你好，我想问关于${x}的问题 🙏`
+      : lang === "ms" ? `[${x}]\nHai, saya ada soalan tentang ${x} 🙏`
+      : `[${x}]\nHi, I have a question about ${x} 🙏`;
     const noteHTML = (txt, num) => {
       const items = String(txt || "").split(/[,，、;；]+/).map(x => x.trim()).filter(Boolean);
       if (!items.length) return "";
       return `<span class="cn">${items.map(x => num
-        ? `<a class="cn-tag" href="https://wa.me/${esc(num)}?text=${encodeURIComponent(tagText(x))}" target="_blank" rel="noopener">${esc(x)}</a>`
+        ? `<a class="cn-tag" data-tag="${esc(x)}" data-num="${esc(num)}" href="https://wa.me/${esc(num)}?text=${encodeURIComponent(tagText(x))}" target="_blank" rel="noopener">${esc(x)}</a>`
         : `<span class="cn-tag">${esc(x)}</span>`).join("")}</span>`;
     };
     // 有「负责处理」标签时：整个框是 div，空白处由 tile-link 打开对话，标签各自是链接（链接不能放在链接里）
@@ -190,7 +193,8 @@
       if (window.scrollY > top) window.scrollTo({ top, behavior: "smooth" });
     });
 
-    requireMember(async () => {
+    requireMember(async (user, member) => {
+      bindWaTags($("contactBtns"), user, member);
       club = clubFaq();
       render();
       try {

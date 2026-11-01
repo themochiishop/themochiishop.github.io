@@ -91,7 +91,7 @@
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
     import {
       requireMember, renderNav, esc, fmtDate, t, toDate, prizeDeadline, PRIZE_AUTO_COMPLETE_DAYS,
-      addressHTML, redeemCode, toast, lang, SOCIAL_ICONS
+      addressHTML, redeemCode, toast, lang, SOCIAL_ICONS, bindWaTags
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, addressCardHTML } from "./js/address.js";
     import { renderFaq } from "./js/faq.js";
@@ -146,14 +146,18 @@
     requireMember((user, member) => {
       const book = Array.isArray(member.addresses) ? member.addresses : [];
       renderFaq($("faqBox"), "prize");
+      bindWaTags($("pzContactBtns"), user, member);
 
       // 「负责处理」：按逗号 / 顿号拆成小标签；点标签 = 打开 WhatsApp，输入框已带上这个标签当开头
-      const tagText = x => lang === "zh" ? `【${x}】` : `[${x}] `;
+      // 点标签会先跳出小视窗（common.js 的 bindWaTags）；下面是没有 JavaScript 时的备用文字
+      const tagText = x => lang === "zh" ? `【${x}】\n你好，我想问关于${x}的问题 🙏`
+        : lang === "ms" ? `[${x}]\nHai, saya ada soalan tentang ${x} 🙏`
+        : `[${x}]\nHi, I have a question about ${x} 🙏`;
       const noteHTML = (txt, num) => {
         const items = String(txt || "").split(/[,，、;；]+/).map(x => x.trim()).filter(Boolean);
         if (!items.length) return "";
         return `<span class="cn">${items.map(x => num
-          ? `<a class="cn-tag" href="https://wa.me/${esc(num)}?text=${encodeURIComponent(tagText(x))}" target="_blank" rel="noopener">${esc(x)}</a>`
+          ? `<a class="cn-tag" data-tag="${esc(x)}" data-num="${esc(num)}" href="https://wa.me/${esc(num)}?text=${encodeURIComponent(tagText(x))}" target="_blank" rel="noopener">${esc(x)}</a>`
           : `<span class="cn-tag">${esc(x)}</span>`).join("")}</span>`;
       };
       // 💬 俱乐部 WhatsApp（后台「商店帮助 › 联系我们按钮」设定）

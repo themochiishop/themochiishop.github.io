@@ -948,3 +948,73 @@ export function initBell(user, member) {
   // 点「查看」：关掉通知面板（同一页的链接不会换页，面板会挡住内容）
   panel.addEventListener("click", e => { if (e.target.closest(".bell-link")) panel.classList.add("hidden"); });
 }
+
+// ---------- 💬 WhatsApp 标签：先在网站打问题，再打开 WhatsApp ----------
+// 手机 WhatsApp 会把光标放在最前面，所以由网站排好整段讯息：标签在第一行，再附会员名字和绑定账号
+// 用法：标签 <a class="cn-tag" data-tag="中奖领奖" data-num="60123…">，然后 bindWaTags(容器, user, member)
+let waAskEl = null, waAskCtx = null;
+const waAccounts = {};   // uid → 「Shopee alai_88 · TikTok alai.my」
+async function waAccountsLine(uid) {
+  if (waAccounts[uid] !== undefined) return waAccounts[uid];
+  try {
+    const snap = await getDocs(query(collection(db, "bindings"), where("uid", "==", uid)));
+    const list = snap.docs.map(d => d.data()).filter(b => b.username)
+      .map(b => `${platformLabel(b.platform)} ${b.username}`);
+    waAccounts[uid] = list.length > 3 ? list.slice(0, 3).join(" · ") + ` +${list.length - 3}` : list.join(" · ");
+  } catch (e) { waAccounts[uid] = ""; }
+  return waAccounts[uid];
+}
+function waAskModal() {
+  if (waAskEl) return waAskEl;
+  waAskEl = document.createElement("div");
+  waAskEl.className = "modal hidden";
+  waAskEl.setAttribute("role", "dialog");
+  waAskEl.setAttribute("aria-modal", "true");
+  waAskEl.innerHTML = `
+    <div class="modal-card wa-ask">
+      <button type="button" class="modal-x" data-close aria-label="close">✕</button>
+      <h2 id="waAskTitle"></h2>
+      <label><span>${esc(t("wa.askLabel"))}</span>
+        <textarea id="waAskText" rows="3" maxlength="500" placeholder="${esc(t("wa.askPh"))}"></textarea>
+      </label>
+      <p class="muted wa-ask-note">${esc(t("wa.askNote"))}</p>
+      <button type="button" class="btn btn-primary" id="waAskSend">${esc(t("wa.askSend"))}</button>
+    </div>`;
+  document.body.appendChild(waAskEl);
+  waAskEl.addEventListener("click", e => {
+    if (e.target === waAskEl || e.target.closest("[data-close]")) waAskEl.classList.add("hidden");
+  });
+  waAskEl.querySelector("#waAskSend").addEventListener("click", async () => {
+    const c = waAskCtx;
+    if (!c) return;
+    const zh = lang === "zh", ms = lang === "ms";
+    const L = zh ? { m: "会员", a: "账号", none: "未绑定" } : ms ? { m: "Ahli", a: "Akaun", none: "Belum dipautkan" } : { m: "Member", a: "Accounts", none: "Not linked" };
+    const accts = await waAccountsLine(c.uid);
+    const q = waAskEl.querySelector("#waAskText").value.trim();
+    const text = [zh ? `【${c.tag}】` : `[${c.tag}]`,
+      `${L.m}${zh ? "：" : ": "}${c.name}`,
+      `${L.a}${zh ? "：" : ": "}${accts || L.none}`,
+      q].filter(Boolean).join("\n");
+    window.open(`https://wa.me/${c.num}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+    waAskEl.classList.add("hidden");
+  });
+  return waAskEl;
+}
+export function bindWaTags(root, user, member) {
+  if (!root || root.dataset.waBound) return;
+  root.dataset.waBound = "1";
+  root.addEventListener("click", e => {
+    const a = e.target.closest("a.cn-tag[data-tag]");
+    if (!a) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const m = waAskModal();
+    waAskCtx = { tag: a.dataset.tag, num: String(a.dataset.num || "").replace(/\D/g, ""), uid: user.uid,
+      name: (member && member.name) || user.email || "" };
+    m.querySelector("#waAskTitle").textContent = t("wa.askTitle", { tag: a.dataset.tag });
+    m.querySelector("#waAskText").value = "";
+    m.classList.remove("hidden");
+    waAccountsLine(user.uid);   // 先在背景读绑定账号
+    setTimeout(() => m.querySelector("#waAskText").focus(), 50);
+  });
+}
