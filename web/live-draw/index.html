@@ -622,7 +622,7 @@
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', showTestRibbon); else showTestRibbon();
     }
     // ===== 🔐 登录：观众匿名只读；管理员控盘需用授权 Google 账号（写入权限由 Firebase 规则把关）=====
-    const ALLOWED_ADMIN_EMAILS = ['xiaomah09@gmail.com', 'mail@themochiishop.com'];
+    const ALLOWED_ADMIN_EMAILS = ['xiaomah09@gmail.com', 'mail@themochiishop.com', 'ivychongsingyee@gmail.com'];
     let __publicListenersStarted = false;
     function isAllowedAdmin(user) {
       return !!(user && !user.isAnonymous &&
