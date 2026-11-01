@@ -892,7 +892,7 @@ function buildEvents() {
     const at = toDate(c.createdAt);
     if (!at || c.authorUid === bell.uid) return;
     ev.push({ time: at, icon: "💬", title: ft(c.replyToUid === bell.uid ? "notifReplyYou" : "notifReplyPost", { name: c.authorName || "" }),
-      detail: String(c.text || "").slice(0, 80), link: "feed.html#p-" + c.postId });
+      detail: String(c.text || "").slice(0, 80), link: "feed.html#p-" + c.postId + "~" + c.id });   // ~回复ID：打开后跳到那条回复
   });
   return ev.filter(e => e.time <= now).sort((a, b) => b.time - a.time).slice(0, 50);
 }
