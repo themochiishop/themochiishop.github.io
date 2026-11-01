@@ -6,6 +6,7 @@ import {
   onSnapshot, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { t, applyI18n, langSwitchHTML, bindLangSwitch, translateReason, lang } from "./i18n.js";
+import { ft } from "./feed-i18n.js";
 
 export { t, applyI18n, translateReason, lang } from "./i18n.js";
 
@@ -739,7 +740,7 @@ function speedUpNav(el) {
 window.addEventListener("pageshow", () => document.body.classList.remove("navigating"));
 
 // ---------- 🔔 通知铃铛：积分进账、积分可用、兑换批准/拒绝 ----------
-const bell = { ledger: [], redemptions: [], announcements: [], bindLogs: [], prizes: [], seenAt: null, highlightSince: null };
+const bell = { ledger: [], redemptions: [], announcements: [], bindLogs: [], prizes: [], feed: [], seenAt: null, highlightSince: null };
 const ANNOUNCE_DAYS = 60; // 公告在铃铛里显示多少天
 
 function buildEvents() {
@@ -841,6 +842,14 @@ function buildEvents() {
       announce: true,
     });
   });
+  // 📰 Feed 投稿：审核通过、未通过
+  bell.feed.forEach(p => {
+    const at = toDate(p.reviewedAt);
+    if (!at) return;
+    if (p.status === "published") ev.push({ time: at, icon: "✨", title: ft("notifApproved"), detail: "", link: "feed.html" });
+    if (p.status === "rejected") ev.push({ time: at, icon: "↩️", title: ft("notifRejected"),
+      detail: p.rejectReason ? ft("reason", { r: p.rejectReason }) : "", link: "feed.html" });
+  });
   return ev.filter(e => e.time <= now).sort((a, b) => b.time - a.time).slice(0, 50);
 }
 
@@ -854,7 +863,7 @@ function safeLink(u) {
 }
 
 // 每种通知的颜色
-const BELL_TONE = { "🎉": "green", "✅": "green", "↩️": "red", "⌛": "orange", "⏳": "orange",
+const BELL_TONE = { "✨": "green", "🎉": "green", "✅": "green", "↩️": "red", "⌛": "orange", "⏳": "orange",
   "🎁": "pink", "❌": "red", "🔗": "blue", "✂️": "red", "📢": "purple", "🏆": "pink", "⏰": "orange", "🚚": "blue", "⚠️": "orange", "📦": "orange" };
 
 function renderBell() {
@@ -910,6 +919,9 @@ export function initBell(user, member) {
   onSnapshot(mine("redemptions"), s => { bell.redemptions = s.docs.map(d => ({ id: d.id, ...d.data() })); renderBell(); });
   onSnapshot(mine("prizeWins"), s => { bell.prizes = s.docs.map(d => ({ id: d.id, ...d.data() })); renderBell(); },
     err => console.warn("prizeWins", err));
+  onSnapshot(query(collection(db, "feedPosts"), where("authorUid", "==", user.uid)),
+    s => { bell.feed = s.docs.map(d => d.data()); renderBell(); },
+    err => console.warn("feedPosts", err));
   onSnapshot(mine("bindingLogs"), s => { bell.bindLogs = s.docs.map(d => d.data()); renderBell(); },
     err => console.warn("bindingLogs", err));
   const since = new Date(Date.now() - ANNOUNCE_DAYS * 86400000);

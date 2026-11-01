@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mochii Feed · Mochii Club</title>
+  <link rel="stylesheet" href="css/member.css">
+  <style>
+    /* ===== 沿用原本 Feed 的瀑布流卡片布局 ===== */
+    .feed-page { max-width: 860px; margin: 0 auto; padding: 14px 6px 90px; }
+    .feed-page h1 { font-size: 1.15rem; text-align: center; margin: 4px 0 12px; }
+    .feed-waterfall { column-count: 2; column-gap: 6px; width: 100%; }
+    @media (min-width: 768px) { .feed-waterfall { column-count: 3; column-gap: 10px; } }
+
+    .xhs-card {
+      background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.04);
+      display: flex; flex-direction: column; border: 1px solid #eee; cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease;
+      break-inside: avoid; -webkit-column-break-inside: avoid; margin-bottom: 6px; color: #333;
+    }
+    .xhs-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+    .slider-container { width: 100%; display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch; scrollbar-width: none; position: relative; }
+    .slider-container::-webkit-scrollbar { display: none; }
+    .slider-img { width: 100%; flex-shrink: 0; scroll-snap-align: start; height: auto; display: block; background: #f7f7f7; }
+    .xhs-content { padding: 8px 10px; font-size: .88rem; font-weight: 500; color: #222; line-height: 1.45;
+      white-space: pre-wrap; word-break: break-word; }
+    .xhs-footer { padding: 6px 8px; display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid #fafafa; gap: 4px; }
+    .xhs-author { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; }
+    .xhs-avatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .xhs-author-info { display: flex; flex-direction: column; min-width: 0; }
+    .xhs-name { font-size: .72rem; color: #333; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+    .xhs-time { font-size: .55rem; color: #aaa; letter-spacing: -.2px; margin-top: 1px; }
+    .xhs-like-btn { background: #fff0f2; border: none; cursor: pointer; display: flex; align-items: center; gap: 2px;
+      font-size: .72rem; color: #e63946; padding: 3px 6px; border-radius: 12px; font-weight: bold; flex-shrink: 0;
+      transition: transform .15s ease; }
+    .xhs-like-btn:active { transform: scale(1.15); }
+    .pagination-bar { display: flex; justify-content: center; align-items: center; gap: 12px; margin: 20px 0 30px; padding: 10px 0; }
+    .page-btn { padding: 6px 14px; background: #fff; border: 1px solid #ddd; border-radius: 20px; cursor: pointer;
+      font-size: .8rem; font-weight: 600; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,.03); transition: all .2s ease; }
+    .page-btn:hover:not(:disabled) { background: #f0f4f9; border-color: #0066cc; color: #0066cc; }
+    .page-btn:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+    .page-info { font-size: .82rem; color: var(--muted); font-weight: 500; }
+
+    /* ===== 新增的小东西 ===== */
+    .xhs-like-btn.liked { background: #e63946; color: #fff; }
+    .xhs-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .xhs-cmt { font-size: .68rem; color: #888; font-weight: 600; }
+    .letter-av { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center;
+      justify-content: center; color: #fff; font-size: .62rem; font-weight: 800; background: linear-gradient(135deg, #ff6fae, #7c5cff); }
+    .letter-av.t-silver { background: linear-gradient(135deg, #94a3b8, #64748b); }
+    .letter-av.t-gold { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .letter-av.t-diamond { background: linear-gradient(135deg, #22d3ee, #6366f1); }
+    .letter-av.t-black { background: linear-gradient(135deg, #111827, #4b5563); }
+    .name-row { display: flex; align-items: center; gap: 3px; min-width: 0; }
+    .tier-mark { font-size: .66rem; line-height: 1; flex-shrink: 0; }
+    .ttl { display: inline-block; font-size: .56rem; font-weight: 700; padding: 0 4px; border-radius: 3px; color: #fff;
+      line-height: 1.5; flex-shrink: 0; }
+    .lock-box { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: linear-gradient(135deg, #fde2ef, #e4defd); }
+    .lock-box img { width: 100%; height: 100%; object-fit: cover; filter: blur(14px); transform: scale(1.2); }
+    .lock-box .lock-on { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.45); background: rgba(15,23,42,.18); text-align: center; padding: 8px; }
+    .lock-on b { font-size: .82rem; }
+    .lock-on span { font-size: .68rem; opacity: .95; }
+    .lock-on .ic { font-size: 1.4rem; }
+
+    .feed-hint { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+      background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; margin: 0 4px 12px; font-size: .85rem; }
+    .feed-hint .btn { width: auto; padding: 6px 14px; font-size: .8rem; }
+    .my-posts { margin: 0 4px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; font-size: .85rem; }
+    .my-posts summary { cursor: pointer; font-weight: 700; }
+    .my-post { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+    .my-post:first-of-type { margin-top: 8px; }
+    .my-post .txt { color: var(--muted); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60vw; }
+
+    .fab { position: fixed; right: 18px; bottom: 22px; z-index: 20; border: 0; border-radius: 999px; padding: 12px 18px;
+      font-weight: 800; font-size: .95rem; color: #fff; cursor: pointer; box-shadow: 0 8px 22px rgba(255,111,174,.35);
+      background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+
+    /* 详情窗、发帖窗 */
+    .modal-card.wide { max-width: 560px; padding: 0; }
+    .detail-body { padding: 16px 18px 18px; }
+    .detail-text { white-space: pre-wrap; word-break: break-word; line-height: 1.55; margin: 10px 0 12px; }
+    .detail-slider .slider-img { max-height: 70vh; object-fit: contain; background: #000; }
+    .detail-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .detail-meta .who { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .detail-meta .xhs-avatar, .detail-meta .letter-av { width: 30px; height: 30px; font-size: .8rem; }
+    .detail-meta .nm { font-weight: 700; font-size: .9rem; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+    .detail-meta .tm { font-size: .72rem; color: var(--muted); }
+    .detail-meta .ttl { font-size: .66rem; padding: 1px 6px; }
+    .dots { display: flex; justify-content: center; gap: 5px; padding: 6px 0 0; }
+    .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
+    .dots i.on { background: var(--accent); }
+    .cmt-head { font-weight: 700; margin: 14px 0 6px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .cmt { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+    .cmt:last-child { border-bottom: 0; }
+    .cmt .letter-av, .cmt .xhs-avatar { width: 24px; height: 24px; font-size: .66rem; margin-top: 2px; }
+    .cmt-main { flex: 1; min-width: 0; }
+    .cmt-name { font-size: .8rem; font-weight: 700; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+    .cmt-text { font-size: .88rem; white-space: pre-wrap; word-break: break-word; }
+    .cmt-text .at { color: var(--accent); }
+    .cmt-foot { display: flex; gap: 12px; font-size: .72rem; color: var(--muted); margin-top: 2px; }
+    .cmt-foot button { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: .72rem; padding: 0; }
+    .cmt-foot button:hover { color: var(--text); }
+    .reply-box { position: sticky; bottom: 0; background: var(--card); padding-top: 10px; margin-top: 6px; }
+    .reply-to { font-size: .76rem; color: var(--accent); margin-bottom: 4px; display: flex; gap: 8px; }
+    .reply-to button { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: .76rem; }
+    .reply-row { display: flex; gap: 8px; align-items: flex-end; }
+    .reply-row textarea { flex: 1; min-height: 42px; margin: 0; }
+    .reply-row .btn { width: auto; padding: 10px 16px; }
+    .cant { font-size: .82rem; color: var(--muted); text-align: center; padding: 10px 0 4px; }
+    .post-pics { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; }
+    .post-pic { position: relative; width: 84px; height: 84px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+    .post-pic img { width: 100%; height: 100%; object-fit: cover; }
+    .post-pic button { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 50%; border: 0;
+      background: rgba(0,0,0,.65); color: #fff; cursor: pointer; font-size: .7rem; }
+    .post-add { width: 84px; height: 84px; border-radius: 10px; border: 2px dashed var(--line); background: transparent;
+      color: var(--muted); cursor: pointer; font-size: .8rem; }
+    .del-link { border: 0; background: none; color: var(--bad); cursor: pointer; font-size: .78rem; }
+  </style>
+</head>
+<body class="loading">
+  <header id="topbar"></header>
+
+  <main class="feed-page">
+    <h1 id="fTitle"></h1>
+    <div id="hint"></div>
+    <div id="myPosts"></div>
+
+    <div id="social-feed" class="feed-waterfall">
+      <div style="column-span: all; color: var(--muted); text-align: center; padding: 30px;" id="loadingText"></div>
+    </div>
+
+    <div class="pagination-bar" id="paginationControls" style="display: none;">
+      <button id="prevPageBtn" class="page-btn"></button>
+      <span id="pageIndicator" class="page-info"></span>
+      <button id="nextPageBtn" class="page-btn"></button>
+    </div>
+  </main>
+
+  <button type="button" id="fab" class="fab hidden"></button>
+
+  <!-- 帖子详情 -->
+  <div id="detail" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card wide">
+      <button type="button" class="modal-x" data-close aria-label="close" style="z-index:2">✕</button>
+      <div id="detailInner"></div>
+    </div>
+  </div>
+
+  <!-- 发帖 -->
+  <div id="composer" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button type="button" class="modal-x" data-close aria-label="close">✕</button>
+      <h2 id="cTitle"></h2>
+      <textarea id="cText" rows="5" maxlength="2000"></textarea>
+      <div class="post-pics" id="cPics"></div>
+      <input type="file" id="cFile" accept="image/*" multiple class="hidden">
+      <p class="muted" style="font-size:.76rem" id="cPicNote"></p>
+      <p class="muted" style="font-size:.8rem;margin:10px 0" id="cNote"></p>
+      <button type="button" class="btn btn-primary" id="cSend"></button>
+      <p id="cMsg" class="msg"></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { auth, db } from "./js/firebase-config.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import {
+      collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where, orderBy, limit, startAfter,
+      getCountFromServer, writeBatch, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import { renderNav, initBell, esc, toDate, toast, compressImage, isInternalMember, t, lang } from "./js/common.js";
+    import { applyI18n, langSwitchHTML, bindLangSwitch } from "./js/i18n.js";
+    import { ft } from "./js/feed-i18n.js";
+
+    const $ = id => document.getElementById(id);
+    const PAGE_SIZE = 10;
+    const MAX_PICS = 3;
+    const CLUB_LOGO = "img/member.jpg";
+    // 等级数字（要和 Firestore 规则的 fdRankOf 一致）
+    const RANK = { mochii: 0, silver: 1, gold: 2, diamond: 3, black: 4 };
+    const TIER_MARK = { silver: "🥈", gold: "🥇", diamond: "💎", black: "🖤" };
+    const tierName = r => r === 4 ? "Black Elite" : t("tier." + (Object.keys(RANK).find(k => RANK[k] === r) || "mochii"));
+
+    // 目前这个人
+    const me = { user: null, member: null, rank: -1, bound: false, internal: false, admin: false, title: "", perm: "none" };
+    let cfg = {};
+
+    // ---------- 文字 ----------
+    document.title = ft("pageTitle");
+    $("fTitle").textContent = ft("title");
+    $("loadingText").textContent = ft("loading");
+    $("prevPageBtn").textContent = ft("prev");
+    $("nextPageBtn").textContent = ft("next");
+    $("fab").textContent = "＋ " + ft("newPost");
+    $("cTitle").textContent = ft("postTitle");
+    $("cText").placeholder = ft("postPh");
+    $("cPicNote").textContent = ft("picNote");
+    $("cSend").textContent = ft("postBtn");
+
+    // ---------- 小工具 ----------
+    function fmtTime(ts) {
+      const d = toDate(ts);
+      if (!d) return "";
+      const p = n => String(n).padStart(2, "0");
+      return p(d.getMonth() + 1) + "/" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+    }
+    const safeImg = u => /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(u || "") || /^https:\/\//i.test(u || "") ? u : "";
+    function titleTag(id) {
+      const tt = (cfg.titles || {})[id];
+      if (!tt) return "";
+      return `<span class="ttl" style="background:${esc(/^#[0-9a-f]{6}$/i.test(tt.color || "") ? tt.color : "#64748b")}">${esc(tt[lang] || tt.zh || id)}</span>`;
+    }
+    function avatarHTML(p) {
+      if (safeImg(p.avatar)) return `<img class="xhs-avatar" src="${esc(p.avatar)}" alt="">`;
+      if (!p.authorTier) return `<img class="xhs-avatar" src="${CLUB_LOGO}" alt="">`;   // 店铺帖子没设头像：用俱乐部 logo
+      const ch = Array.from(String(p.authorName || "?").trim())[0] || "?";
+      return `<span class="letter-av t-${esc(p.authorTier)}">${esc(ch.toUpperCase())}</span>`;
+    }
+    function nameHTML(p) {
+      return `<span class="xhs-name">${esc(p.authorName || "")}</span>${TIER_MARK[p.authorTier] ? `<span class="tier-mark">${TIER_MARK[p.authorTier]}</span>` : ""}${titleTag(p.authorTitle)}`;
+    }
+    const canSee = p => me.rank >= (p.minRank ?? 0);
+    const isMod = () => me.admin || me.perm === "mod";
+    const canReply = () => !!me.member && !!me.member.name && (me.perm !== "none" || me.internal || me.bound) && me.rank >= (cfg.replyRank ?? 0);
+    const canPost = () => !!me.member && !!me.member.name && (me.perm !== "none" || ((me.internal || me.bound) && me.rank >= (cfg.postRank ?? 1)));
+    const autoPublish = () => me.admin || me.perm !== "none" || me.rank >= (cfg.autoRank ?? 2);
+    function sliderHTML(images, cls = "") {
+      const imgs = (images || []).map(safeImg).filter(Boolean).slice(0, 3);
+      return imgs.length ? `<div class="slider-container ${cls}">${imgs.map(u => `<img src="${esc(u)}" class="slider-img" alt="">`).join("")}</div>` : "";
+    }
+
+    // ---------- 判断身份 ----------
+    async function loadMe(user) {
+      me.user = user;
+      const [cfgSnap] = await Promise.all([getDoc(doc(db, "feedConfig", "main")).catch(() => null)]);
+      cfg = cfgSnap && cfgSnap.exists() ? cfgSnap.data() : {};
+      if (!user) return;
+      const [mSnap, club, adm, ttl] = await Promise.all([
+        getDoc(doc(db, "members", user.uid)).catch(() => null),
+        getDoc(doc(db, "settings", "club")).catch(() => null),
+        getDoc(doc(db, "admins", user.uid)).catch(() => null),
+        getDoc(doc(db, "feedTitles", user.uid)).catch(() => null),
+      ]);
+      me.admin = !!(adm && adm.exists());
+      const open = club && club.exists() && club.data().open === true;
+      if (!mSnap || !mSnap.exists() || (!open && !me.admin)) return;   // 不是会员，或俱乐部维修中：当访客
+      me.member = mSnap.data();
+      me.rank = RANK[me.member.tier || "mochii"] ?? 0;
+      me.internal = isInternalMember(me.member);
+      me.title = ttl && ttl.exists() ? (ttl.data().title || "") : "";
+      me.perm = me.title ? (((cfg.titles || {})[me.title] || {}).perm || "none") : "none";
+      if (!me.internal) me.bound = await ensurePass(user.uid);
+    }
+
+    // 绑定通行证：记下一个自己的绑定账号，让规则确认「已绑定订单」（别人看不到）
+    async function ensurePass(uid) {
+      try {
+        const pass = await getDoc(doc(db, "feedPass", uid));
+        if (pass.exists()) {
+          const b = await getDoc(doc(db, "bindings", pass.data().bindId)).catch(() => null);
+          if (b && b.exists() && b.data().uid === uid) return true;
+        }
+        const mine = await getDocs(query(collection(db, "bindings"), where("uid", "==", uid), limit(1)));
+        if (mine.empty) { if (pass.exists()) await deleteDoc(doc(db, "feedPass", uid)); return false; }
+        await setDoc(doc(db, "feedPass", uid), { bindId: mine.docs[0].id, at: serverTimestamp() });
+        return true;
+      } catch (e) { console.warn("feedPass", e); return false; }
+    }
+
+    // ---------- 顶部 ----------
+    function renderTop() {
+      if (me.member) { renderNav("feed"); initBell(me.user, me.member); return; }
+      applyI18n();
+      $("topbar").className = "topbar";
+      $("topbar").innerHTML = `
+        <div class="topbar-inner">
+          <a class="brand" href="index.html"><img class="brand-logo" src="img/member.jpg" alt=""><span>Mochii <b>Club</b></span></a>
+          <div class="topbar-tools">${langSwitchHTML()}</div>
+        </div>`;
+      bindLangSwitch($("topbar"));
+    }
+
+    function renderHint() {
+      let h = "";
+      if (!me.member) h = `<span>${esc(ft("hintGuest"))}</span><a class="btn btn-primary" href="index.html">${esc(ft("hintGuestBtn"))}</a>`;
+      else if (!me.member.name) h = `<span>${esc(ft("hintName"))}</span><a class="btn btn-ghost" href="profile.html">${esc(ft("hintNameBtn"))}</a>`;
+      else if (!me.bound && !me.internal && me.perm === "none") h = `<span>${esc(ft("hintBind"))}</span><a class="btn btn-primary" href="bind.html">${esc(ft("hintBindBtn"))}</a>`;
+      else if (!canPost()) h = `<span>${esc(ft("hintPost", { tier: tierName(cfg.postRank ?? 1) }))}</span><a class="btn btn-ghost" href="account.html">${esc(t("tier.explain"))}</a>`;
+      $("hint").innerHTML = h ? `<div class="feed-hint">${h}</div>` : "";
+      $("fab").classList.toggle("hidden", !canPost());
+    }
+
+    // ---------- 我的投稿（审核中、未通过） ----------
+    async function loadMyPosts() {
+      if (!me.member) return;
+      try {
+        const snap = await getDocs(query(collection(db, "feedPosts"), where("authorUid", "==", me.user.uid)));
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(p => p.status !== "published")
+          .sort((a, b) => (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0));
+        if (!list.length) { $("myPosts").innerHTML = ""; return; }
+        const np = list.filter(p => p.status === "pending").length, nr = list.length - np;
+        const texts = await Promise.all(list.map(p => getDoc(doc(db, "feedPosts", p.id, "content", "main")).then(s => s.exists() ? s.data().text : "").catch(() => "")));
+        $("myPosts").innerHTML = `<details class="my-posts"><summary>📝 ${esc(ft("myPosts"))} · ${[np ? ft("nPending", { n: np }) : "", nr ? ft("nRejected", { n: nr }) : ""].filter(Boolean).join(" · ")}</summary>
+          ${list.map((p, i) => `<div class="my-post"><div>
+              <span class="tag ${p.status === "pending" ? "tag-pending" : "tag-bad"}">${esc(ft(p.status === "pending" ? "stPending" : "stRejected"))}</span>
+              <span class="muted" style="font-size:.74rem">${fmtTime(p.createdAt)}</span>
+              <div class="txt">${esc(texts[i] || "🖼")}</div>
+              ${p.rejectReason ? `<div class="muted" style="font-size:.76rem">${esc(ft("reason", { r: p.rejectReason }))}</div>` : ""}
+            </div><button class="del-link" data-delmine="${esc(p.id)}">${esc(ft("delete"))}</button></div>`).join("")}
+        </details>`;
+        $("myPosts").querySelectorAll("[data-delmine]").forEach(b => b.onclick = async () => {
+          if (!confirm(ft("delPost"))) return;
+          try { await deletePost(b.dataset.delmine); loadMyPosts(); } catch (e) { toast(ft("fail") + e.message); }
+        });
+      } catch (e) { console.warn("myPosts", e); }
+    }
+
+    // ---------- 帖子列表（分页） ----------
+    let page = 1, totalPages = 1;
+    const cursors = [null];   // 每一页开始前的最后一篇
+    const base = () => query(collection(db, "feedPosts"), where("status", "==", "published"), orderBy("pinned", "desc"), orderBy("createdAt", "desc"));
+    let shown = [];           // 这一页的帖子
+
+    async function loadPage(n) {
+      const box = $("social-feed");
+      try {
+        if (n === 1) {
+          const c = await getCountFromServer(query(collection(db, "feedPosts"), where("status", "==", "published")));
+          totalPages = Math.max(1, Math.ceil(c.data().count / PAGE_SIZE));
+        }
+        const q = cursors[n - 1] ? query(base(), startAfter(cursors[n - 1]), limit(PAGE_SIZE)) : query(base(), limit(PAGE_SIZE));
+        const snap = await getDocs(q);
+        if (snap.docs.length) cursors[n] = snap.docs[snap.docs.length - 1];
+        page = n;
+        shown = await Promise.all(snap.docs.map(async d => {
+          const p = { id: d.id, ...d.data() };
+          const visible = canSee(p);
+          const [c, nc, nl, ml] = await Promise.all([
+            visible ? getDoc(doc(db, "feedPosts", p.id, "content", "main")).catch(() => null) : null,
+            visible ? getCountFromServer(collection(db, "feedPosts", p.id, "comments")).catch(() => null) : null,
+            visible ? getCountFromServer(collection(db, "feedPosts", p.id, "likes")).catch(() => null) : null,
+            visible && me.member ? getDoc(doc(db, "feedPosts", p.id, "likes", me.user.uid)).catch(() => null) : null,
+          ]);
+          p.visible = visible;
+          p.content = c && c.exists() ? c.data() : { text: "", images: [] };
+          p.nCmt = nc ? nc.data().count : 0;
+          p.nLike = nl ? nl.data().count : 0;
+          p.liked = !!(ml && ml.exists());
+          return p;
+        }));
+        render();
+      } catch (e) {
+        console.error(e);
+        box.innerHTML = `<div style="column-span:all;color:var(--bad);text-align:center;padding:30px">${esc(t("common.loadFail") + e.message)}</div>`;
+      }
+    }
+
+    function cardHTML(p) {
+      const top = p.visible
+        ? sliderHTML(p.content.images)
+        : `<div class="lock-box">${safeImg(p.thumb) ? `<img src="${esc(p.thumb)}" alt="">` : ""}
+             <div class="lock-on"><span class="ic">🔒</span><b>${esc(ft("rank" + Math.max(0, p.minRank)))}</b>
+             <span>${esc(ft(me.member ? "lockUp" : "lockGuest"))}</span></div></div>`;
+      const text = p.visible && p.content.text ? `<div class="xhs-content">${esc(p.content.text)}</div>` : "";
+      const right = p.visible ? `<div class="xhs-right">
+          ${p.nCmt ? `<span class="xhs-cmt">💬 ${p.nCmt}</span>` : ""}
+          <button class="xhs-like-btn${p.liked ? " liked" : ""}" data-like="${esc(p.id)}">${p.liked ? "❤️" : "🤍"} <span>${p.nLike}</span></button>
+        </div>` : "";
+      return `<div class="xhs-card" data-id="${esc(p.id)}">
+          ${top}${text}
+          <div class="xhs-footer">
+            <div class="xhs-author">${avatarHTML(p)}
+              <div class="xhs-author-info"><div class="name-row">${nameHTML(p)}</div>
+                <span class="xhs-time">${p.pinned ? "📌 " : ""}${fmtTime(p.createdAt)}</span></div>
+            </div>${right}
+          </div>
+        </div>`;
+    }
+
+    function render() {
+      const box = $("social-feed");
+      if (!shown.length) {
+        box.innerHTML = `<div style="column-span:all;color:var(--muted);text-align:center;padding:30px">${esc(ft("empty"))}</div>`;
+        $("paginationControls").style.display = "none";
+        return;
+      }
+      box.innerHTML = shown.map(cardHTML).join("");
+      $("paginationControls").style.display = totalPages > 1 ? "flex" : "none";
+      $("pageIndicator").textContent = ft("pageInfo", { c: page, t: totalPages });
+      $("prevPageBtn").disabled = page === 1;
+      $("nextPageBtn").disabled = page >= totalPages;
+    }
+
+    $("social-feed").addEventListener("click", e => {
+      const like = e.target.closest("[data-like]");
+      if (like) { e.stopPropagation(); toggleLike(like.dataset.like); return; }
+      const card = e.target.closest(".xhs-card");
+      if (!card) return;
+      const p = shown.find(x => x.id === card.dataset.id);
+      if (!p) return;
+      if (!p.visible) { if (!me.member) location.href = "index.html"; return; }
+      openDetail(p);
+    });
+    $("prevPageBtn").onclick = () => { if (page > 1) { loadPage(page - 1); window.scrollTo({ top: 0, behavior: "smooth" }); } };
+    $("nextPageBtn").onclick = () => { if (page < totalPages) { loadPage(page + 1); window.scrollTo({ top: 0, behavior: "smooth" }); } };
+
+    // ---------- 点赞（每人一次，再按取消） ----------
+    const liking = new Set();
+    async function toggleLike(id) {
+      if (!me.member) { toast(ft("needLogin")); return; }
+      const p = shown.find(x => x.id === id);
+      if (!p || liking.has(id)) return;
+      liking.add(id);
+      const ref = doc(db, "feedPosts", id, "likes", me.user.uid);
+      const was = p.liked;
+      p.liked = !was; p.nLike += was ? -1 : 1;
+      render(); if (openId === id) drawDetail(p);
+      try {
+        if (was) await deleteDoc(ref); else await setDoc(ref, { at: serverTimestamp() });
+      } catch (e) {
+        p.liked = was; p.nLike += was ? 1 : -1; render(); if (openId === id) drawDetail(p);
+        toast(ft("fail") + e.message);
+      } finally { liking.delete(id); }
+    }
+
+    // ---------- 帖子详情 + 回复 ----------
+    let openId = null, comments = [], replyTo = null;
+    function closeModal(id) { $(id).classList.add("hidden"); document.body.style.overflow = ""; if (id === "detail") openId = null; }
+    ["detail", "composer"].forEach(id => $(id).addEventListener("click", e => {
+      if (e.target === $(id) || e.target.closest("[data-close]")) closeModal(id);
+    }));
+
+    async function openDetail(p) {
+      openId = p.id; replyTo = null; comments = [];
+      $("detail").classList.remove("hidden"); document.body.style.overflow = "hidden";
+      drawDetail(p, true);
+      try {
+        const snap = await getDocs(query(collection(db, "feedPosts", p.id, "comments"), orderBy("createdAt", "asc")));
+        comments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch (e) { console.warn("comments", e); }
+      if (openId === p.id) drawDetail(p);
+    }
+
+    function drawDetail(p, loading = false) {
+      const nImg = (p.content.images || []).filter(safeImg).length;
+      const mine = me.user && p.authorUid === me.user.uid;
+      const keep = $("rText") ? $("rText").value : "";
+      $("detailInner").innerHTML = `
+        ${sliderHTML(p.content.images, "detail-slider")}
+        ${nImg > 1 ? `<div class="dots">${Array.from({ length: nImg }, (_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>` : ""}
+        <div class="detail-body">
+          <div class="detail-meta">
+            <div class="who">${avatarHTML(p)}<div><div class="nm">${nameHTML(p)}</div><div class="tm">${p.pinned ? esc(ft("pinned")) + " · " : ""}${fmtTime(p.createdAt)}</div></div></div>
+            <button class="xhs-like-btn${p.liked ? " liked" : ""}" data-dlike>${p.liked ? "❤️" : "🤍"} <span>${p.nLike}</span></button>
+          </div>
+          ${p.content.text ? `<div class="detail-text">${esc(p.content.text)}</div>` : ""}
+          ${mine || isMod() ? `<button class="del-link" data-dpost>🗑 ${esc(ft("delete"))}</button>` : ""}
+          <div class="cmt-head">💬 ${esc(ft("replies"))}${comments.length ? ` (${comments.length})` : ""}</div>
+          <div>${loading ? `<p class="muted" style="font-size:.85rem">${esc(ft("loading"))}</p>` : comments.length ? comments.map(c => `
+            <div class="cmt">${avatarHTML(c)}
+              <div class="cmt-main">
+                <div class="cmt-name">${nameHTML(c)}</div>
+                <div class="cmt-text">${c.replyTo && c.replyTo.name ? `<span class="at">@${esc(c.replyTo.name)}</span> ` : ""}${esc(c.text)}</div>
+                <div class="cmt-foot"><span>${fmtTime(c.createdAt)}</span>
+                  ${canReply() ? `<button data-rto="${esc(c.id)}">${esc(ft("reply"))}</button>` : ""}
+                  ${(me.user && c.authorUid === me.user.uid) || isMod() ? `<button data-cdel="${esc(c.id)}">${esc(ft("delete"))}</button>` : ""}
+                </div>
+              </div>
+            </div>`).join("") : `<p class="muted" style="font-size:.85rem">${esc(ft("noReplies"))}</p>`}</div>
+          <div class="reply-box">${replyBoxHTML()}</div>
+        </div>`;
+      if ($("rText")) $("rText").value = keep;
+      bindDetail(p);
+    }
+
+    function replyBoxHTML() {
+      if (!me.member) return `<div class="cant"><a href="index.html">${esc(ft("hintGuestBtn"))}</a></div>`;
+      if (!me.member.name) return `<div class="cant"><a href="profile.html">${esc(ft("hintName"))}</a></div>`;
+      if (!me.bound && !me.internal && me.perm === "none") return `<div class="cant"><a href="bind.html">${esc(ft("cantBind"))}</a></div>`;
+      if (!canReply()) return `<div class="cant">${esc(ft("cantTier", { tier: tierName(cfg.replyRank ?? 0) }))}</div>`;
+      return `${replyTo ? `<div class="reply-to">${esc(ft("replyTo", { name: replyTo.name }))}<button data-rcancel>${esc(ft("cancel"))}</button></div>` : ""}
+        <div class="reply-row"><textarea id="rText" rows="1" maxlength="500" placeholder="${esc(ft("replyPh"))}"></textarea>
+        <button class="btn btn-primary" id="rSend">${esc(ft("send"))}</button></div>`;
+    }
+
+    function bindDetail(p) {
+      const inner = $("detailInner");
+      const sl = inner.querySelector(".detail-slider");
+      if (sl) sl.addEventListener("scroll", () => {
+        const i = Math.round(sl.scrollLeft / sl.clientWidth);
+        inner.querySelectorAll(".dots i").forEach((d, k) => d.classList.toggle("on", k === i));
+      });
+      const dl = inner.querySelector("[data-dlike]");
+      if (dl) dl.onclick = () => toggleLike(p.id);
+      const dp = inner.querySelector("[data-dpost]");
+      if (dp) dp.onclick = async () => {
+        if (!confirm(ft("delPost"))) return;
+        try { await deletePost(p.id); closeModal("detail"); loadPage(1); }
+        catch (e) { toast(ft("fail") + e.message); }
+      };
+      inner.querySelectorAll("[data-rto]").forEach(b => b.onclick = () => {
+        const c = comments.find(x => x.id === b.dataset.rto);
+        replyTo = c ? { uid: c.authorUid, name: c.authorName || "" } : null;
+        drawDetail(p); $("rText") && $("rText").focus();
+      });
+      const rc = inner.querySelector("[data-rcancel]");
+      if (rc) rc.onclick = () => { replyTo = null; drawDetail(p); };
+      inner.querySelectorAll("[data-cdel]").forEach(b => b.onclick = async () => {
+        if (!confirm(ft("delCmt"))) return;
+        try {
+          await deleteDoc(doc(db, "feedPosts", p.id, "comments", b.dataset.cdel));
+          comments = comments.filter(x => x.id !== b.dataset.cdel);
+          p.nCmt = comments.length; drawDetail(p); render();
+        } catch (e) { toast(ft("fail") + e.message); }
+      });
+      const send = $("rSend");
+      if (send) send.onclick = async () => {
+        const text = $("rText").value.trim();
+        if (!text) return;
+        send.disabled = true;
+        const data = {
+          authorUid: me.user.uid, authorName: me.member.name || "", authorTier: me.member.tier || "mochii",
+          authorTitle: me.title, text, createdAt: serverTimestamp(),
+        };
+        if (replyTo) data.replyTo = replyTo;
+        try {
+          const ref = doc(collection(db, "feedPosts", p.id, "comments"));
+          await setDoc(ref, data);
+          comments.push({ id: ref.id, ...data, createdAt: new Date() });
+          p.nCmt = comments.length; replyTo = null;
+          $("rText").value = "";
+          drawDetail(p); render();
+        } catch (e) { toast(ft("fail") + e.message); send.disabled = false; }
+      };
+    }
+
+    async function deletePost(id) {
+      const batch = writeBatch(db);
+      batch.delete(doc(db, "feedPosts", id, "content", "main"));
+      batch.delete(doc(db, "feedPosts", id));
+      await batch.commit();
+    }
+
+    // ---------- 发帖 ----------
+    let pics = [];
+    function drawPics() {
+      $("cPics").innerHTML = pics.map((p, i) => `<div class="post-pic"><img src="${p.full}" alt=""><button type="button" data-rm="${i}">✕</button></div>`).join("")
+        + (pics.length < MAX_PICS ? `<button type="button" class="post-add" id="cAdd">${esc(ft("addPic"))}</button>` : "");
+      const add = $("cAdd"); if (add) add.onclick = () => $("cFile").click();
+      $("cPics").querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { pics.splice(+b.dataset.rm, 1); drawPics(); });
+    }
+    $("cFile").onchange = async e => {
+      const files = [...e.target.files].slice(0, MAX_PICS - pics.length);
+      e.target.value = "";
+      for (const f of files) { try { pics.push({ full: await compressImage(f, 960), file: f }); } catch (err) {} }
+      drawPics();
+    };
+    $("fab").onclick = () => {
+      $("cNote").textContent = ft(autoPublish() ? "postDirect" : "postReview");
+      $("cMsg").textContent = "";
+      drawPics();
+      $("composer").classList.remove("hidden"); document.body.style.overflow = "hidden";
+      $("cText").focus();
+    };
+    $("cSend").onclick = async () => {
+      const text = $("cText").value.trim();
+      const setMsg = (s, type) => { $("cMsg").textContent = s; $("cMsg").className = "msg " + (type || ""); };
+      if (!text && !pics.length) { setMsg(ft("needText"), "err"); return; }
+      $("cSend").disabled = true;
+      const direct = autoPublish();
+      try {
+        const ref = doc(collection(db, "feedPosts"));
+        const batch = writeBatch(db);
+        batch.set(ref, {
+          type: "normal", status: direct ? "published" : "pending", minRank: 0,
+          authorUid: me.user.uid, authorName: me.member.name || "", authorTier: me.member.tier || "mochii",
+          authorTitle: me.title, thumb: pics.length ? await compressImage(pics[0].file, 24) : "",
+          imageCount: pics.length, pinned: false, createdAt: serverTimestamp(),
+        });
+        batch.set(doc(db, "feedPosts", ref.id, "content", "main"), { text, images: pics.map(p => p.full) });
+        await batch.commit();
+        $("cText").value = ""; pics = [];
+        closeModal("composer");
+        toast(ft(direct ? "posted" : "sentReview"));
+        if (direct) loadPage(1); else loadMyPosts();
+      } catch (e) {
+        setMsg(ft("fail") + e.message + (/size|exceed|too large/i.test(e.message) ? " " + ft("tooBig") : ""), "err");
+      } finally { $("cSend").disabled = false; }
+    };
+
+    // ---------- 开始 ----------
+    let started = false;
+    onAuthStateChanged(auth, async user => {
+      if (started) return;   // 只在第一次判断身份；登入、登出都会换页
+      started = true;
+      try { await loadMe(user); } catch (e) { console.warn("loadMe", e); }
+      renderTop();
+      renderHint();
+      document.body.classList.remove("loading");
+      loadMyPosts();
+      loadPage(1);
+    });
+  </script>
+</body>
+</html>
