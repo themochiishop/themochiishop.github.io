@@ -102,7 +102,7 @@ a:hover { text-decoration: underline; }
 
 /* ---------- 表单 ---------- */
 label { display: block; font-size: .88rem; color: var(--muted); margin-bottom: 14px; }
-input[type=text], input[type=email], input[type=password], input[type=date], input[type=search], input:not([type]) {
+input[type=text], input[type=email], input[type=password], input[type=date], input[type=search], input[type=tel], input:not([type]) {
   display: block; width: 100%; margin-top: 6px;
   padding: 11px 12px; font-size: 1rem;
   background: var(--bg); color: var(--text);
@@ -911,3 +911,23 @@ input.locked { opacity: .6; cursor: not-allowed; }
 .follow-ico, .contact-tile .ci { background: transparent; border: 1px solid rgba(255,255,255,.35); color: #fff; transition: background .2s, border-color .2s; }
 .follow-ico svg, .contact-tile .ci svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .follow-row:hover .follow-ico, .contact-tile:hover .ci { background: var(--accent); border-color: var(--accent); }
+
+/* ---------- 🏆 中奖领取（我的兑换上方） ---------- */
+.prize-card { position: relative; border: 1px solid rgba(255,111,174,.45);
+  background: linear-gradient(160deg, rgba(255,111,174,.12), rgba(124,92,255,.08) 55%, var(--card)); }
+.prize-card.has-todo { box-shadow: 0 0 0 3px rgba(255,111,174,.15); }
+.prize-card .pz-sub { font-size: .85rem; margin: -4px 0 6px; }
+.pz-dlv { display: flex; gap: 10px; align-items: flex-start; margin-top: 10px; padding: 10px 12px;
+  border-radius: 10px; background: var(--card2); font-size: .85rem; line-height: 1.45; }
+.pz-dlv-ico { font-size: 1.25rem; line-height: 1; }
+.pz-dlv .muted { font-size: .78rem; }
+.pz-claim { width: 100%; animation: pzPulse 2s ease-in-out infinite; }
+@keyframes pzPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,111,174,.45); } 50% { box-shadow: 0 0 0 8px rgba(255,111,174,0); } }
+.pz-past { margin-top: 8px; }
+.pz-past summary { font-size: .82rem; color: var(--accent); font-weight: 700; padding: 6px 0; cursor: pointer; }
+.pz-past .pz-item { opacity: .8; }
+.prize-card .redeem-thumb[data-zoom] { cursor: zoom-in; }
+#pzModal .addr-list { margin-bottom: 10px; }
+@media (max-width: 480px) {
+  .pz-dlv { font-size: .8rem; padding: 8px 10px; }
+}

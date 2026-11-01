@@ -727,7 +727,7 @@ function speedUpNav(el) {
 window.addEventListener("pageshow", () => document.body.classList.remove("navigating"));
 
 // ---------- 🔔 通知铃铛：积分进账、积分可用、兑换批准/拒绝 ----------
-const bell = { ledger: [], redemptions: [], announcements: [], bindLogs: [], seenAt: null, highlightSince: null };
+const bell = { ledger: [], redemptions: [], announcements: [], bindLogs: [], prizes: [], seenAt: null, highlightSince: null };
 const ANNOUNCE_DAYS = 60; // 公告在铃铛里显示多少天
 
 function buildEvents() {
@@ -773,6 +773,18 @@ function buildEvents() {
       const remind = new Date(sh.getTime() + (AUTO_COMPLETE_DAYS - 2) * 86400000);
       ev.push({ time: remind, icon: "📦", title: t("notif.confirmSoon", v), detail: t("notif.confirmSoonDetail"), link: "rewards.html" });
     }
+  });
+  // 🏆 每月抽奖中奖：中奖、发货、取消
+  bell.prizes.forEach(p => {
+    const v = { name: p.prizeName };
+    const won = toDate(p.createdAt);
+    if (won) ev.push({ time: won, icon: "🏆", title: t("notif.prizeWon", v),
+      detail: p.status === "unclaimed" ? t("notif.prizeWonDetail") : "", link: "rewards.html#prizes" });
+    const sh = toDate(p.shippedAt);
+    if (sh) ev.push({ time: sh, icon: "🚚", title: t("notif.prizeShipped", v),
+      detail: p.shipping ? [p.shipping.carrierName, p.shipping.trackingNo].filter(Boolean).join(" · ") : "", link: "rewards.html#prizes" });
+    const cc = toDate(p.cancelledAt);
+    if (cc && p.status === "cancelled") ev.push({ time: cc, icon: "↩️", title: t("notif.prizeCancelled", v), detail: p.cancelNote || "", link: "rewards.html#prizes" });
   });
   // ⏳ 积分快过期：过期前 EXPIRY_WARN_DAYS 天提醒
   const reserved = bell.redemptions.filter(r => r.status === "pending").reduce((s, r) => s + (r.cost || 0), 0);
@@ -821,7 +833,7 @@ function safeLink(u) {
 
 // 每种通知的颜色
 const BELL_TONE = { "🎉": "green", "✅": "green", "↩️": "red", "⌛": "orange", "⏳": "orange",
-  "🎁": "pink", "❌": "red", "🔗": "blue", "✂️": "red", "📢": "purple", "🚚": "blue", "⚠️": "orange", "📦": "orange" };
+  "🎁": "pink", "❌": "red", "🔗": "blue", "✂️": "red", "📢": "purple", "🏆": "pink", "🚚": "blue", "⚠️": "orange", "📦": "orange" };
 
 function renderBell() {
   const badge = document.getElementById("bellBadge");
@@ -871,6 +883,8 @@ export function initBell(user, member) {
   const mine = c => query(collection(db, c), where("uid", "==", user.uid));
   onSnapshot(mine("pointsLedger"), s => { bell.ledger = s.docs.map(d => d.data()); renderBell(); });
   onSnapshot(mine("redemptions"), s => { bell.redemptions = s.docs.map(d => ({ id: d.id, ...d.data() })); renderBell(); });
+  onSnapshot(mine("prizeWins"), s => { bell.prizes = s.docs.map(d => ({ id: d.id, ...d.data() })); renderBell(); },
+    err => console.warn("prizeWins", err));
   onSnapshot(mine("bindingLogs"), s => { bell.bindLogs = s.docs.map(d => d.data()); renderBell(); },
     err => console.warn("bindingLogs", err));
   const since = new Date(Date.now() - ANNOUNCE_DAYS * 86400000);

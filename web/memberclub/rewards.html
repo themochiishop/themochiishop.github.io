@@ -29,6 +29,14 @@
 
     <a href="shop.html" class="btn btn-primary" style="margin-bottom:16px" data-i18n="rw.goShop"></a>
 
+    <!-- 🏆 中奖领取（后台「中奖奖品」添加后才出现） -->
+    <div class="card prize-card hidden" id="prizes">
+      <h2 class="dash-head" data-i18n="pz.title"></h2>
+      <p class="muted pz-sub" data-i18n="pz.sub"></p>
+      <ul id="prizeList" class="list"></ul>
+      <details id="prizePast" class="pz-past hidden"><summary></summary><ul class="list"></ul></details>
+    </div>
+
     <div class="card">
       <h2 class="dash-head" data-i18n="rw.mine"></h2>
       <ul id="myList" class="list"><li class="empty" data-i18n="common.loading"></li></ul>
@@ -53,6 +61,23 @@
     </div>
   </div>
 
+  <!-- 🎁 领取中奖奖品 -->
+  <div id="pzModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button type="button" class="modal-x" data-close aria-label="close">✕</button>
+      <h2 data-i18n="pz.claimTitle"></h2>
+      <div id="pzInfo"></div>
+      <div id="pzAddr" class="hidden">
+        <p class="muted" style="font-size:.85rem;margin:10px 0" data-i18n="pz.claimSeparate"></p>
+        <ul id="pzBook" class="addr-list"></ul>
+        <div id="pzFields"></div>
+      </div>
+      <p id="pzWithOrder" class="muted hidden" style="font-size:.85rem;margin:10px 0 14px" data-i18n="pz.claimWithOrder"></p>
+      <p id="pzMsg" class="msg"></p>
+      <button type="button" class="btn btn-primary" id="pzSubmit" data-i18n="pz.claimBtn"></button>
+    </div>
+  </div>
+
   <!-- 📍 修改这笔兑换的收货地址 -->
   <div id="eaModal" class="modal hidden" role="dialog" aria-modal="true">
     <div class="modal-card">
@@ -68,11 +93,11 @@
   <script type="module">
     import { db } from "./js/firebase-config.js";
     import {
-      doc, updateDoc, collection, getDocs, serverTimestamp
+      doc, updateDoc, collection, getDocs, serverTimestamp, query, where
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, esc, fmtDate, t, toDate,
-      giftStep, GIFT_STEPS, addressHTML, AUTO_COMPLETE_DAYS, compressImage, redeemCode, DETAIL_COLLAPSE_DAYS
+      giftStep, GIFT_STEPS, addressHTML, AUTO_COMPLETE_DAYS, compressImage, redeemCode, DETAIL_COLLAPSE_DAYS, toast
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, addressCardHTML } from "./js/address.js";
 
@@ -298,7 +323,155 @@
         } finally { $("rcvSubmit").disabled = false; }
       });
 
+      // ---------- 🏆 中奖领取 ----------
+      const PZ_STEPS = ["won", "claimed", "approved", "shipped", "received"];
+      const PZ_STEP = { unclaimed: 0, claimed: 1, approved: 2, shipped: 3, completed: 4 };
+      const PZ_TAG = { unclaimed: "tag-pending", claimed: "tag-pending", approved: "tag-ship", shipped: "tag-ship", completed: "tag-ok", cancelled: "" };
+      let prizes = [];
+
+      async function loadPrizes() {
+        try {
+          const s = await getDocs(query(collection(db, "prizeWins"), where("uid", "==", user.uid)));
+          prizes = s.docs.map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0));
+        } catch (e) { console.warn("prizeWins", e); prizes = []; }
+        renderPrizes();
+      }
+
+      function prizeLi(p) {
+        const step = PZ_STEP[p.status] ?? 0;
+        const sh = p.shipping || {};
+        const url = /^https:\/\//i.test(sh.trackingUrl || "") ? sh.trackingUrl : "";
+        const dates = [p.createdAt, p.claimedAt, p.approvedAt, p.shippedAt, p.completedAt].map(toDate);
+        const bar = p.status !== "unclaimed" && p.status !== "cancelled" ? `
+          <div class="gift-steps">
+            ${PZ_STEPS.map((k, i) => `
+              <div class="gstep${i <= step ? " done" : ""}${i === step ? " now" : ""}">
+                <span class="dot"></span>
+                <span class="lbl">${t("pz.step." + k)}</span>
+                <span class="dt">${i <= step && dates[i] ? fmtDate(dates[i]).slice(0, 5) : ""}</span>
+              </div>`).join("")}
+          </div>` : "";
+        const dlv = p.delivery === "separate" ? "separate" : "withOrder";
+        return `
+          <li id="p-${esc(p.id)}" class="redeem-li gift-item pz-item pz-${esc(p.status)}">
+            <div class="redeem-row">
+              ${p.prizeImage ? `<img class="redeem-thumb" src="${esc(p.prizeImage)}" alt="" loading="lazy" data-zoom>` : `<span class="redeem-thumb">🏆</span>`}
+              <div class="redeem-body">
+                <div class="redeem-top">
+                  <div class="title">${esc(p.prizeName)} <span class="tag ${PZ_TAG[p.status] || ""}">${t("pz.st." + p.status)}</span></div>
+                  <span class="redeem-no">${redeemCode(p.id)}</span>
+                </div>
+                <div class="meta">${p.drawMonth ? esc(t("pz.from", { m: p.drawMonth })) + " · " : ""}${fmtDate(toDate(p.createdAt))}</div>
+                ${p.note ? `<div class="meta">💬 ${esc(p.note)}</div>` : ""}
+              </div>
+            </div>
+            ${bar}
+            <div class="pz-dlv">
+              <span class="pz-dlv-ico">${dlv === "separate" ? "🚚" : "📦"}</span>
+              <div><b>${t("pz.dlv." + dlv)}</b><div class="muted">${t("pz.dlv." + dlv + "Sub")}</div></div>
+            </div>
+            ${sh.trackingNo && p.status !== "cancelled" ? `
+              <div class="gift-ship">
+                <div class="ship-line">🚚 <b>${esc(sh.carrierName || t("pz.tracking"))}</b>
+                  <span class="mono small-break">${esc(sh.trackingNo)}</span>
+                  <button class="btn btn-ghost btn-inline btn-xs" data-copy="${esc(sh.trackingNo)}">${t("rw.copy")}</button></div>
+                ${url && p.status !== "completed" ? `<a class="track-link" href="${esc(url)}" target="_blank" rel="noopener">🔗 ${t("gift.track")}</a>` : ""}
+              </div>` : ""}
+            ${p.address && p.status !== "cancelled" ? `<div class="gift-addr">📍 ${addressHTML(p.address)}</div>` : ""}
+            ${p.status === "cancelled" && p.cancelNote ? `<div class="meta">${esc(p.cancelNote)}</div>` : ""}
+            ${p.status === "unclaimed" ? `<button class="btn btn-primary gift-confirm pz-claim" data-claim="${esc(p.id)}">${t("pz.claim")}</button>` : ""}
+            ${p.status === "shipped" ? `<button class="btn btn-primary gift-confirm" data-got="${esc(p.id)}">${t("pz.receivedBtn")}</button>` : ""}
+          </li>`;
+      }
+
+      function renderPrizes() {
+        const active = prizes.filter(p => ["unclaimed", "claimed", "approved", "shipped"].includes(p.status));
+        const past = prizes.filter(p => p.status === "completed" || p.status === "cancelled");
+        $("prizes").classList.toggle("hidden", !prizes.length);
+        $("prizes").classList.toggle("has-todo", active.some(p => p.status === "unclaimed"));
+        $("prizeList").innerHTML = active.map(prizeLi).join("");
+        $("prizeList").classList.toggle("hidden", !active.length);
+        $("prizePast").classList.toggle("hidden", !past.length);
+        $("prizePast").querySelector("summary").textContent = t("pz.past", { n: past.length });
+        $("prizePast").querySelector("ul").innerHTML = past.map(prizeLi).join("");
+        if (location.hash === "#prizes" && prizes.length) {
+          setTimeout(() => $("prizes").scrollIntoView({ behavior: "smooth", block: "start" }), 200);
+          history.replaceState(null, "", location.pathname);
+        }
+      }
+
+      $("prizes").addEventListener("click", async e => {
+        const b = e.target.closest("button");
+        if (!b) return;
+        const { claim, got, copy: code } = b.dataset;
+        if (code) {
+          try { await navigator.clipboard.writeText(code); b.textContent = t("rw.copied"); setTimeout(() => b.textContent = t("rw.copy"), 1500); }
+          catch { prompt(t("rw.copyPrompt"), code); }
+        }
+        if (claim) openClaim(claim);
+        if (got) {
+          const p = prizes.find(x => x.id === got);
+          if (!p || !confirm(t("pz.receivedConfirm", { name: p.prizeName }))) return;
+          b.disabled = true;
+          try {
+            await updateDoc(doc(db, "prizeWins", got), { status: "completed", completedAt: serverTimestamp() });
+            await loadPrizes();
+          } catch (err) { alert(t("pz.fail") + err.message); b.disabled = false; }
+        }
+      });
+
+      // 领取：随单发送直接确认；单独包裹要选收货地址
+      let pzId = null;
+      $("pzFields").innerHTML = addressFormHTML();
+      bindAddressForm($("pzFields"));
+      const pzMsg = (x, ty) => { $("pzMsg").textContent = x; $("pzMsg").className = "msg" + (ty ? " " + ty : ""); };
+      function openClaim(id) {
+        const p = prizes.find(x => x.id === id);
+        if (!p) return;
+        pzId = id;
+        const sep = p.delivery === "separate";
+        $("pzInfo").innerHTML = `
+          <div class="redeem-row" style="margin-top:6px">
+            ${p.prizeImage ? `<img class="redeem-thumb" src="${esc(p.prizeImage)}" alt="">` : `<span class="redeem-thumb">🏆</span>`}
+            <div class="redeem-body"><div class="title">${esc(p.prizeName)}</div>
+              <div class="meta">${t("pz.dlv." + (sep ? "separate" : "withOrder"))}</div></div>
+          </div>`;
+        $("pzAddr").classList.toggle("hidden", !sep);
+        $("pzWithOrder").classList.toggle("hidden", sep);
+        if (sep) {
+          fillAddressForm($("pzFields"), book[0] || {});
+          $("pzBook").innerHTML = book.map((a, i) => addressCardHTML(a, i, {})).join("");
+          $("pzBook").classList.toggle("hidden", !book.length);
+        }
+        pzMsg("");
+        $("pzModal").classList.remove("hidden");
+      }
+      $("pzBook").addEventListener("click", e => {
+        const li = e.target.closest(".addr-item");
+        if (li) fillAddressForm($("pzFields"), book[+li.dataset.i]);
+      });
+      $("pzSubmit").addEventListener("click", async () => {
+        const p = prizes.find(x => x.id === pzId);
+        if (!p) return;
+        const data = { status: "claimed", claimedAt: serverTimestamp() };
+        if (p.delivery === "separate") {
+          const v = validateAddressForm($("pzFields"));
+          if (v.error) { pzMsg(v.error, "err"); return; }
+          data.address = v.address;
+        }
+        $("pzSubmit").disabled = true;
+        try {
+          await updateDoc(doc(db, "prizeWins", pzId), data);
+          $("pzModal").classList.add("hidden");
+          await loadPrizes();
+          toast(t("pz.claimed"));
+        } catch (err) { pzMsg(t("pz.fail") + err.message, "err"); }
+        finally { $("pzSubmit").disabled = false; }
+      });
+
       load();
+      loadPrizes();
     });
   </script>
   <!-- 🔍 看大图（照片是存在资料库里的 data 网址，不能开新分页，否则手机浏览器会当掉） -->
