@@ -209,6 +209,21 @@
     .post-add { width: 84px; height: 84px; border-radius: 10px; border: 2px dashed var(--line); background: transparent;
       color: var(--muted); cursor: pointer; font-size: .8rem; }
     .del-link { border: 0; background: none; color: var(--bad); cursor: pointer; font-size: .78rem; }
+    /* ⋯ 选单：编辑 / 删除（收起来，避免误触） */
+    .more-wrap { position: relative; display: inline-flex; }
+    .more-btn { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 4px 8px; border-radius: 8px; }
+    .more-btn:hover { background: var(--card2); color: var(--text); }
+    .cmt-foot .more-btn { font-size: .9rem; padding: 0 6px; }
+    .more-menu { position: absolute; right: 0; top: 100%; z-index: 5; min-width: 120px; background: var(--card); border: 1px solid var(--line);
+      border-radius: 10px; padding: 4px; box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+    .more-menu button { display: block; width: 100%; text-align: left; border: 0; background: none; color: var(--text); cursor: pointer;
+      font-size: .84rem; padding: 8px 10px; border-radius: 7px; }
+    .more-menu button:hover { background: var(--card2); }
+    .more-menu button.danger { color: var(--bad); }
+    .edited-tag { color: var(--muted); font-size: .72rem; }
+    .edit-box textarea { width: 100%; min-height: 90px; resize: vertical; }
+    .edit-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+    .edit-row .btn { padding: 6px 14px; font-size: .84rem; }
 
     .av-pick { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 10px 0 12px; }
     .av-pick button { border: 2px solid transparent; background: none; padding: 2px; border-radius: 50%; cursor: pointer; aspect-ratio: 1; }
@@ -303,7 +318,7 @@
     import { auth, db } from "./js/firebase-config.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
     import {
-      collection, collectionGroup, doc, getDoc, getDocs, setDoc, deleteDoc, query, where, orderBy, limit, startAfter,
+      collection, collectionGroup, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit, startAfter,
       getCountFromServer, writeBatch, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import { renderNav, initBell, esc, toDate, toast, compressImage, isInternalMember, t, lang, BLACK_CROWN } from "./js/common.js";
@@ -805,10 +820,31 @@
 
     // ---------- 帖子详情 + 回复 ----------
     let openId = null, openPost = null, comments = [], replyTo = null, focusCid = null;
+    let editing = null;   // 正在编辑：「post」或「c:回复ID」
+
+    // ⋯ 选单：作者本人可以编辑；作者、管理员、版主可以删除
+    const canEdit = p => !!me.user && (me.admin || p.authorUid === me.user.uid);
+    const canEditCmt = c => !!me.user && (me.admin || c.authorUid === me.user.uid);
+    function moreHTML(kind, id, edit, del) {
+      if (!edit && !del) return "";
+      return `<span class="more-wrap"><button class="more-btn" data-more="${kind}:${esc(id)}" aria-label="${esc(ft("more"))}" title="${esc(ft("more"))}">⋯</button>
+        <span class="more-menu hidden" data-menu="${kind}:${esc(id)}">
+          ${edit ? `<button data-mact="edit">✏️ ${esc(ft("editText"))}</button>` : ""}
+          ${del ? `<button data-mact="del" class="danger">🗑 ${esc(ft("delete"))}</button>` : ""}
+        </span></span>`;
+    }
+    function editBoxHTML(text) {
+      return `<div class="edit-box"><textarea id="editText" maxlength="${editing === "post" ? 2000 : 500}">${esc(text)}</textarea>
+        <div class="edit-row"><button class="btn btn-ghost" data-ecancel>${esc(ft("cancel"))}</button>
+        <button class="btn btn-primary" data-esave>${esc(ft("save"))}</button></div></div>`;
+    }
+    document.addEventListener("click", e => {   // 点外面就收起选单
+      if (!e.target.closest(".more-wrap")) document.querySelectorAll(".more-menu").forEach(m => m.classList.add("hidden"));
+    });
     function closeModal(id, keepHash) {
       $(id).classList.add("hidden"); document.body.style.overflow = "";
       if (id === "detail") {
-        openId = null; openPost = null; focusCid = null;
+        openId = null; openPost = null; focusCid = null; editing = null;
         if (!keepHash && /^#p-/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search + (view.mode === "user" ? "#u-" + view.uid : view.mode === "shop" ? "#shop" : ""));
       }
     }
@@ -817,7 +853,7 @@
     }));
 
     async function openDetail(p) {
-      openId = p.id; openPost = p; replyTo = null; comments = [];
+      openId = p.id; openPost = p; replyTo = null; comments = []; editing = null;
       $("detail").classList.remove("hidden"); document.body.style.overflow = "hidden";
       drawDetail(p, true);
       try {
@@ -844,11 +880,14 @@
           <div class="detail-meta">
             <div class="who" data-author="${esc(authorKey(p))}">${avatarOf(w)}<div>
               <div class="nm">${esc(w.name)} ${tierMark(w)}</div>
-              <div class="tm">${titleTag(w.title)}<span>${p.pinned ? esc(ft("pinned")) + " · " : ""}${fmtTime(p.createdAt)}</span></div></div></div>
-            <button class="xhs-like-btn${p.liked ? " liked" : ""}" data-dlike>${p.liked ? "❤️" : "🤍"} <span>${p.nLike}</span></button>
+              <div class="tm">${titleTag(w.title)}<span>${p.pinned ? esc(ft("pinned")) + " · " : ""}${fmtTime(p.createdAt)}${p.editedAt ? ` · <span class="edited-tag">${esc(ft("edited"))}</span>` : ""}</span></div></div></div>
+            <div style="display:flex;align-items:center;gap:4px">
+              <button class="xhs-like-btn${p.liked ? " liked" : ""}" data-dlike>${p.liked ? "❤️" : "🤍"} <span>${p.nLike}</span></button>
+              ${moreHTML("post", "", canEdit(p), mine || isMod())}
+            </div>
           </div>
-          ${p.content.text ? `<div class="detail-text">${esc(p.content.text)}</div>` : ""}
-          ${mine || isMod() ? `<button class="del-link" data-dpost>🗑 ${esc(ft("delete"))}</button>` : ""}
+          ${editing === "post" ? editBoxHTML(p.content.text || "")
+            : p.content.text ? `<div class="detail-text">${esc(p.content.text)}</div>` : ""}
           <div class="cmt-head">💬 ${esc(ft("replies"))}${comments.length ? ` (${comments.length})` : ""}</div>
           <div>${loading ? `<p class="muted" style="font-size:.85rem">${esc(ft("loading"))}</p>` : comments.length ? comments.map(c => {
             const cw = who(c);
@@ -856,10 +895,11 @@
             <div class="cmt${c.id === focusCid ? " cmt-focus" : ""}" data-cid="${esc(c.id)}"><span data-author="${esc(authorKey(c))}">${avatarOf(cw)}</span>
               <div class="cmt-main">
                 <div class="cmt-name" data-author="${esc(authorKey(c))}">${esc(cw.name)} ${tierMark(cw)} ${titleTag(cw.title)}</div>
-                <div class="cmt-text">${c.replyTo && c.replyTo.name ? `<span class="at">@${esc(c.replyTo.name)}</span> ` : ""}${esc(c.text)}</div>
-                <div class="cmt-foot"><span>${fmtTime(c.createdAt)}</span>
+                ${editing === "c:" + c.id ? editBoxHTML(c.text || "")
+                  : `<div class="cmt-text">${c.replyTo && c.replyTo.name ? `<span class="at">@${esc(c.replyTo.name)}</span> ` : ""}${esc(c.text)}</div>`}
+                <div class="cmt-foot"><span>${fmtTime(c.createdAt)}${c.editedAt ? ` · ${esc(ft("edited"))}` : ""}</span>
                   ${canReply() ? `<button data-rto="${esc(c.id)}">${esc(ft("reply"))}</button>` : ""}
-                  ${(me.user && c.authorUid === me.user.uid) || isMod() ? `<button data-cdel="${esc(c.id)}">${esc(ft("delete"))}</button>` : ""}
+                  ${moreHTML("cmt", c.id, canEditCmt(c), (me.user && c.authorUid === me.user.uid) || isMod())}
                 </div>
               </div>
             </div>`; }).join("") : `<p class="muted" style="font-size:.85rem">${esc(ft("noReplies"))}</p>`}</div>
@@ -884,11 +924,76 @@
       inner.querySelectorAll("[data-author]").forEach(el => el.onclick = () => { closeModal("detail", true); goAuthor(el.dataset.author); });
       const dl = inner.querySelector("[data-dlike]");
       if (dl) dl.onclick = () => toggleLike(p.id);
-      const dp = inner.querySelector("[data-dpost]");
-      if (dp) dp.onclick = async () => {
-        if (!confirm(ft("delPost"))) return;
-        try { await deletePost(p.id); closeModal("detail"); cursors.length = 1; loadPage(1); }
-        catch (e) { toast(ft("fail") + e.message); }
+      // ⋯ 选单
+      inner.querySelectorAll("[data-more]").forEach(b => b.onclick = e => {
+        e.stopPropagation();
+        const menu = inner.querySelector(`[data-menu="${CSS.escape(b.dataset.more)}"]`);
+        const was = menu.classList.contains("hidden");
+        inner.querySelectorAll(".more-menu").forEach(m => m.classList.add("hidden"));
+        if (was) menu.classList.remove("hidden");
+      });
+      inner.querySelectorAll("[data-menu]").forEach(menu => {
+        const [kind, cid] = menu.dataset.menu.split(":");
+        menu.querySelectorAll("[data-mact]").forEach(b => b.onclick = async e => {
+          e.stopPropagation();
+          menu.classList.add("hidden");
+          if (b.dataset.mact === "edit") {
+            editing = kind === "post" ? "post" : "c:" + cid;
+            drawDetail(p);
+            const ta = $("editText"); if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+            return;
+          }
+          if (kind === "post") {
+            if (!confirm(ft("delPost"))) return;
+            try { await deletePost(p.id); closeModal("detail"); cursors.length = 1; loadPage(1); }
+            catch (err) { toast(ft("fail") + err.message); }
+          } else {
+            if (!confirm(ft("delCmt"))) return;
+            try {
+              await deleteDoc(doc(db, "feedPosts", p.id, "comments", cid));
+              comments = comments.filter(x => x.id !== cid);
+              p.nCmt = comments.length; drawDetail(p); render();
+            } catch (err) { toast(ft("fail") + err.message); }
+          }
+        });
+      });
+      // 编辑：取消 / 保存
+      const ec = inner.querySelector("[data-ecancel]");
+      if (ec) ec.onclick = () => { editing = null; drawDetail(p); };
+      const es = inner.querySelector("[data-esave]");
+      if (es) es.onclick = async () => {
+        const text = $("editText").value.trim();
+        es.disabled = true;
+        try {
+          if (editing === "post") {
+            if (!text && !(p.content.images || []).length) { toast(ft("editEmpty")); es.disabled = false; return; }
+            // 需要审核的会员改了已公开（或被退回）的帖子 → 回到待审核
+            const mineNow = p.authorUid === me.user.uid;
+            const back = mineNow && !autoPublish() && p.status !== "pending";
+            const batch = writeBatch(db);
+            batch.update(doc(db, "feedPosts", p.id), back ? { editedAt: serverTimestamp(), status: "pending" } : { editedAt: serverTimestamp() });
+            batch.update(doc(db, "feedPosts", p.id, "content", "main"), { text: text.slice(0, 2000) });
+            await batch.commit();
+            p.content.text = text; p.editedAt = new Date(); editing = null;
+            if (back) {
+              p.status = "pending";
+              toast(ft("editReview"));
+              closeModal("detail"); cursors.length = 1; loadPage(1); loadMyPosts();
+              return;
+            }
+            toast(ft("editSaved"));
+            drawDetail(p); render();
+          } else {
+            if (!text) { toast(ft("editEmpty")); es.disabled = false; return; }
+            const cid = editing.slice(2);
+            await updateDoc(doc(db, "feedPosts", p.id, "comments", cid), { text: text.slice(0, 500), editedAt: serverTimestamp() });
+            const c = comments.find(x => x.id === cid);
+            if (c) { c.text = text; c.editedAt = new Date(); }
+            editing = null;
+            toast(ft("editSaved"));
+            drawDetail(p);
+          }
+        } catch (err) { toast(ft("fail") + err.message); es.disabled = false; }
       };
       inner.querySelectorAll("[data-rto]").forEach(b => b.onclick = () => {
         const c = comments.find(x => x.id === b.dataset.rto);
@@ -897,14 +1002,6 @@
       });
       const rc = inner.querySelector("[data-rcancel]");
       if (rc) rc.onclick = () => { replyTo = null; drawDetail(p); };
-      inner.querySelectorAll("[data-cdel]").forEach(b => b.onclick = async () => {
-        if (!confirm(ft("delCmt"))) return;
-        try {
-          await deleteDoc(doc(db, "feedPosts", p.id, "comments", b.dataset.cdel));
-          comments = comments.filter(x => x.id !== b.dataset.cdel);
-          p.nCmt = comments.length; drawDetail(p); render();
-        } catch (e) { toast(ft("fail") + e.message); }
-      });
       const send = $("rSend");
       if (send) send.onclick = async () => {
         const text = $("rText").value.trim();
