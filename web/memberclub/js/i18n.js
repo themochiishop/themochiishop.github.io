@@ -4,6 +4,12 @@
 const DICT = {
   // ======================= English =======================
   en: {
+    "pz.deadline": "Please claim by {d}",
+    "pz.expiredNote": "Not claimed before the deadline",
+    "pz.autoNote": "Tap “I've received it” once it arrives; otherwise it completes automatically on {d}",
+    "notif.prizeExpiring": "Your prize is expiring soon: {name}",
+    "notif.prizeExpired": "Prize expired (not claimed): {name}",
+    "notif.prizeAutoDone": "Prize completed automatically: {name}",
     "notif.prizeApproved": "Prize claim approved: {name}",
     "notif.prizeApprovedOrder": "It will ship together with your order",
     "notif.prizeApprovedSep": "We'll ship it to you soon",
@@ -447,6 +453,12 @@ const DICT = {
 
   // ======================= Bahasa Melayu =======================
   ms: {
+    "pz.deadline": "Sila tuntut sebelum {d}",
+    "pz.expiredNote": "Tidak dituntut sebelum tarikh akhir",
+    "pz.autoNote": "Ketik “Saya sudah terima” apabila tiba; jika tidak, ia selesai secara automatik pada {d}",
+    "notif.prizeExpiring": "Hadiah anda akan tamat tempoh: {name}",
+    "notif.prizeExpired": "Hadiah tamat tempoh (tidak dituntut): {name}",
+    "notif.prizeAutoDone": "Hadiah selesai secara automatik: {name}",
     "notif.prizeApproved": "Tuntutan hadiah diluluskan: {name}",
     "notif.prizeApprovedOrder": "Ia akan dihantar bersama pesanan anda",
     "notif.prizeApprovedSep": "Kami akan menghantarnya tidak lama lagi",
@@ -890,6 +902,12 @@ const DICT = {
 
   // ======================= 中文 =======================
   zh: {
+    "pz.deadline": "请在 {d} 前领取",
+    "pz.expiredNote": "超过领取期限，奖品已作废",
+    "pz.autoNote": "收到后请按「确认收到」；否则 {d} 会自动完成",
+    "notif.prizeExpiring": "奖品快过期了：{name}",
+    "notif.prizeExpired": "奖品已过期（未领取）：{name}",
+    "notif.prizeAutoDone": "奖品已自动完成：{name}",
     "notif.prizeApproved": "奖品审核通过：{name}",
     "notif.prizeApprovedOrder": "将与您的订单一起寄出",
     "notif.prizeApprovedSep": "我们会尽快为您寄出",

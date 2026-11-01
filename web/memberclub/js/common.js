@@ -130,6 +130,18 @@ export function compressImage(file, max = 720) {
 }
 
 // ---------- 📦 实体奖品：收货地址、运输公司、进度 ----------
+// 🏆 中奖奖品（和 Apps Script prize-watch.gs、后台 prizes.html 一致）
+export const PRIZE_CLAIM_DAYS = 30;          // 中奖后几天内要领取（后台没设定期限时用）
+export const PRIZE_AUTO_COMPLETE_DAYS = 14;  // 发货后几天自动完成
+export const PRIZE_REMIND_DAYS = 7;          // 期限前几天提醒
+export function prizeDeadline(p) {
+  const end = toDate(p.expiresAt);
+  if (end) return end;
+  const c = toDate(p.createdAt);
+  if (!c) return null;
+  const d = new Date(c); d.setDate(d.getDate() + PRIZE_CLAIM_DAYS); d.setHours(23, 59, 59, 0);
+  return d;
+}
 export const AUTO_COMPLETE_DAYS = 14;   // 发货后几天没确认就自动完成（和 Apps Script 的 MS_AUTO_COMPLETE_DAYS 一致）
 export const MY_STATES = [
   "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", "Pahang", "Perak", "Perlis",
@@ -787,7 +799,14 @@ function buildEvents() {
     if (sh) ev.push({ time: sh, icon: "🚚", title: t("notif.prizeShipped", v),
       detail: p.shipping ? [p.shipping.carrierName, p.shipping.trackingNo].filter(Boolean).join(" · ") : "", link: "rewards.html#prizes" });
     const cc = toDate(p.cancelledAt);
-    if (cc && p.status === "cancelled") ev.push({ time: cc, icon: "↩️", title: t("notif.prizeCancelled", v), detail: p.cancelNote || "", link: "rewards.html#prizes" });
+    if (cc && p.status === "cancelled") ev.push({ time: cc, icon: p.autoExpired ? "⌛" : "↩️",
+      title: t(p.autoExpired ? "notif.prizeExpired" : "notif.prizeCancelled", v),
+      detail: p.autoExpired ? "" : p.cancelNote || "", link: "rewards.html#prizes" });
+    const end = p.status === "unclaimed" ? prizeDeadline(p) : null;
+    if (end && end > now) ev.push({ time: new Date(end.getTime() - PRIZE_REMIND_DAYS * 86400000), icon: "⏰",
+      title: t("notif.prizeExpiring", v), detail: t("pz.deadline", { d: fmtDate(end) }), link: "rewards.html#prizes" });
+    const done = toDate(p.completedAt);
+    if (done && p.autoCompleted) ev.push({ time: done, icon: "✅", title: t("notif.prizeAutoDone", v), detail: "", link: "rewards.html#prizes" });
   });
   // ⏳ 积分快过期：过期前 EXPIRY_WARN_DAYS 天提醒
   const reserved = bell.redemptions.filter(r => r.status === "pending").reduce((s, r) => s + (r.cost || 0), 0);
@@ -836,7 +855,7 @@ function safeLink(u) {
 
 // 每种通知的颜色
 const BELL_TONE = { "🎉": "green", "✅": "green", "↩️": "red", "⌛": "orange", "⏳": "orange",
-  "🎁": "pink", "❌": "red", "🔗": "blue", "✂️": "red", "📢": "purple", "🏆": "pink", "🚚": "blue", "⚠️": "orange", "📦": "orange" };
+  "🎁": "pink", "❌": "red", "🔗": "blue", "✂️": "red", "📢": "purple", "🏆": "pink", "⏰": "orange", "🚚": "blue", "⚠️": "orange", "📦": "orange" };
 
 function renderBell() {
   const badge = document.getElementById("bellBadge");

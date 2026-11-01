@@ -940,3 +940,5 @@ input.locked { opacity: .6; cursor: not-allowed; }
 .home-pz-go { flex-shrink: 0; color: var(--accent); font-weight: 700; }
 .home-pz-go.btn { color: #fff; animation: pzPulse 2s ease-in-out infinite; }
 .home-prize { margin-bottom: 16px; }
+.pz-deadline { margin-top: 8px; font-size: .8rem; color: var(--muted); }
+.pz-deadline.soon { color: var(--warn); font-weight: 700; }

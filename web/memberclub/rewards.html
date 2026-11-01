@@ -96,7 +96,7 @@
       doc, updateDoc, collection, getDocs, serverTimestamp, query, where, onSnapshot
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
-      requireMember, renderNav, loadBalance, esc, fmtDate, t, toDate,
+      requireMember, renderNav, loadBalance, esc, fmtDate, t, toDate, prizeDeadline, PRIZE_AUTO_COMPLETE_DAYS,
       giftStep, GIFT_STEPS, addressHTML, AUTO_COMPLETE_DAYS, compressImage, redeemCode, DETAIL_COLLAPSE_DAYS, toast
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, addressCardHTML } from "./js/address.js";
@@ -361,6 +361,8 @@
               </div>`).join("")}
           </div>` : "";
         const dlv = p.delivery === "separate" ? "separate" : "withOrder";
+        const deadline = prizeDeadline(p);
+        const left = deadline ? (deadline - Date.now()) / 86400000 : 99;
         return `
           <li id="p-${esc(p.id)}" class="redeem-li gift-item pz-item pz-${esc(p.status)}">
             <div class="redeem-row">
@@ -387,8 +389,12 @@
                 ${url && p.status !== "completed" ? `<a class="track-link" href="${esc(url)}" target="_blank" rel="noopener">🔗 ${t("gift.track")}</a>` : ""}
                 ${(sh.photos || []).length ? `<div class="gift-photos">${sh.photos.map(x => `<img src="${esc(x)}" alt="" loading="lazy" data-zoom>`).join("")}</div>` : ""}
               </div>` : ""}
-            ${p.address && p.status !== "cancelled" ? `<div class="gift-addr">📍 ${addressHTML(p.address)}</div>` : ""}
-            ${p.status === "cancelled" && p.cancelNote ? `<div class="meta">${esc(p.cancelNote)}</div>` : ""}
+            ${p.address && p.status !== "cancelled" ? `<div class="gift-addr">📍 ${addressHTML(p.address)}
+              ${dlv === "separate" && (p.status === "claimed" || p.status === "approved") ? `<div><button class="btn btn-ghost btn-inline btn-xs" data-pzaddr="${esc(p.id)}">${t("addr.edit")}</button></div>` : ""}</div>` : ""}
+            ${p.status === "unclaimed" && deadline ? `<div class="pz-deadline${left <= 7 ? " soon" : ""}">⏰ ${esc(t("pz.deadline", { d: fmtDate(deadline) }))}</div>` : ""}
+            ${p.status === "shipped" && toDate(p.shippedAt) ? `<div class="muted gift-auto">${esc(t("pz.autoNote", { d: fmtDate(new Date(toDate(p.shippedAt).getTime() + PRIZE_AUTO_COMPLETE_DAYS * 86400000)) }))}</div>` : ""}
+            ${p.status === "completed" && p.autoCompleted ? `<div class="muted gift-auto">✅ ${esc(t("gift.autoDone"))}</div>` : ""}
+            ${p.status === "cancelled" ? (p.autoExpired ? `<div class="meta">⏰ ${esc(t("pz.expiredNote"))}</div>` : p.cancelNote ? `<div class="meta">${esc(p.cancelNote)}</div>` : "") : ""}
             ${p.status === "unclaimed" ? `<button class="btn btn-primary gift-confirm pz-claim" data-claim="${esc(p.id)}">${t("pz.claim")}</button>` : ""}
             ${p.status === "shipped" ? `<button class="btn btn-primary gift-confirm" data-got="${esc(p.id)}">${t("pz.receivedBtn")}</button>` : ""}
           </li>`;
@@ -413,7 +419,8 @@
       $("prizes").addEventListener("click", async e => {
         const b = e.target.closest("button");
         if (!b) return;
-        const { claim, got, copy: code } = b.dataset;
+        const { claim, got, copy: code, pzaddr } = b.dataset;
+        if (pzaddr) openClaim(pzaddr, true);
         if (code) {
           try { await navigator.clipboard.writeText(code); b.textContent = t("rw.copied"); setTimeout(() => b.textContent = t("rw.copy"), 1500); }
           catch { prompt(t("rw.copyPrompt"), code); }
@@ -430,14 +437,17 @@
       });
 
       // 领取：随单发送直接确认；单独包裹要选收货地址
-      let pzId = null;
+      let pzId = null, pzEdit = false;
       $("pzFields").innerHTML = addressFormHTML();
       bindAddressForm($("pzFields"));
       const pzMsg = (x, ty) => { $("pzMsg").textContent = x; $("pzMsg").className = "msg" + (ty ? " " + ty : ""); };
-      function openClaim(id) {
+      function openClaim(id, edit = false) {
         const p = prizes.find(x => x.id === id);
         if (!p) return;
-        pzId = id;
+        pzId = id; pzEdit = edit;
+        // 修改地址也用同一个视窗（标题、按钮换字）
+        $("pzModal").querySelector("h2").textContent = t(edit ? "gift.editAddr" : "pz.claimTitle");
+        $("pzSubmit").textContent = t(edit ? "prof.save" : "pz.claimBtn");
         const sep = p.delivery === "separate";
         $("pzInfo").innerHTML = `
           <div class="redeem-row" style="margin-top:6px">
@@ -448,7 +458,7 @@
         $("pzAddr").classList.toggle("hidden", !sep);
         $("pzWithOrder").classList.toggle("hidden", sep);
         if (sep) {
-          fillAddressForm($("pzFields"), book[0] || {});
+          fillAddressForm($("pzFields"), (edit && p.address) || book[0] || {});
           $("pzBook").innerHTML = book.map((a, i) => addressCardHTML(a, i, {})).join("");
           $("pzBook").classList.toggle("hidden", !book.length);
         }
@@ -462,7 +472,7 @@
       $("pzSubmit").addEventListener("click", async () => {
         const p = prizes.find(x => x.id === pzId);
         if (!p) return;
-        const data = { status: "claimed", claimedAt: serverTimestamp() };
+        const data = pzEdit ? { addressUpdatedAt: serverTimestamp() } : { status: "claimed", claimedAt: serverTimestamp() };
         if (p.delivery === "separate") {
           const v = validateAddressForm($("pzFields"));
           if (v.error) { pzMsg(v.error, "err"); return; }
@@ -472,7 +482,7 @@
         try {
           await updateDoc(doc(db, "prizeWins", pzId), data);
           $("pzModal").classList.add("hidden");
-          toast(t("pz.claimed"));
+          if (!pzEdit) toast(t("pz.claimed"));
         } catch (err) { pzMsg(t("pz.fail") + err.message, "err"); }
         finally { $("pzSubmit").disabled = false; }
       });

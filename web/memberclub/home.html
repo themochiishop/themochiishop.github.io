@@ -22,7 +22,7 @@
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, tierProgress, tierLabel, tierIconHTML,
-      toDate, fmtDate, fmtMoney, esc, platformTag, t, lang, endState, isInternalMember, redeemCode
+      toDate, fmtDate, fmtMoney, esc, platformTag, t, lang, endState, isInternalMember, redeemCode, prizeDeadline
     } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
@@ -223,6 +223,7 @@
                   <div class="redeem-body">
                     <div class="title">${esc(p.prizeName)} <span class="tag ${PZ_TAG[p.status]}">${t("pz.st." + p.status)}</span></div>
                     <div class="meta">${dlv === "separate" ? "🚚" : "📦"} ${t("pz.dlv." + dlv)}${p.drawMonth ? " · " + esc(p.drawMonth) : ""}</div>
+                    ${p.status === "unclaimed" && prizeDeadline(p) ? `<div class="meta pz-deadline${prizeDeadline(p) - Date.now() <= 7 * 86400000 ? " soon" : ""}" style="margin-top:2px">⏰ ${esc(t("pz.deadline", { d: fmtDate(prizeDeadline(p)) }))}</div>` : ""}
                   </div>
                   <span class="home-pz-go ${p.status === "unclaimed" ? "btn btn-primary btn-inline btn-xs" : ""}">${p.status === "unclaimed" ? t("pz.claim") : "➔"}</span>
                 </a></li>`;
