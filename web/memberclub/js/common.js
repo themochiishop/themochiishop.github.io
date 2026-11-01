@@ -775,7 +775,7 @@ function speedUpNav(el) {
 window.addEventListener("pageshow", () => document.body.classList.remove("navigating"));
 
 // ---------- 🔔 通知铃铛：积分进账、积分可用、兑换批准/拒绝 ----------
-const bell = { ledger: [], redemptions: [], announcements: [], bindLogs: [], prizes: [], feed: [], replies: [], uid: "", member: null, seenAt: null, highlightSince: null };
+const bell = { ledger: [], redemptions: [], announcements: [], bindLogs: [], prizes: [], feed: [], replies: [], reports: [], uid: "", member: null, seenAt: null, highlightSince: null };
 const ANNOUNCE_DAYS = 60; // 公告在铃铛里显示多少天
 
 function buildEvents() {
@@ -907,6 +907,13 @@ function buildEvents() {
       });
     }
   }
+  // 🚩 我检举的内容处理好了（被检举的人不通知）
+  bell.reports.forEach(r => {
+    const at = toDate(r.decidedAt);
+    if (!at || (r.status !== "approved" && r.status !== "dismissed")) return;
+    ev.push({ time: at, icon: "🚩", title: ft(r.status === "approved" ? "notifReportOk" : "notifReportNo"),
+      detail: String(r.text || "").slice(0, 60), link: "" });
+  });
   // 💬 有人回复我的帖子、或回复我（自己的回复不通知）
   bell.replies.forEach(c => {
     const at = toDate(c.createdAt);
@@ -999,6 +1006,9 @@ export function initBell(user, member) {
     query(collectionGroup(db, "comments"), where(f, "==", user.uid), where("createdAt", ">=", replySince), orderBy("createdAt", "desc"), limit(20)),
     onRep(i ? "b" : "a"), err => console.warn("replies", err)));
   initFeedDot(user);
+  onSnapshot(query(collection(db, "feedReports"), where("reporterUid", "==", user.uid)),
+    s => { bell.reports = s.docs.map(d => d.data()); renderBell(); },
+    err => console.warn("feedReports", err));
   onSnapshot(query(collection(db, "feedPosts"), where("authorUid", "==", user.uid)),
     s => { bell.feed = s.docs.map(d => d.data()); renderBell(); },
     err => console.warn("feedPosts", err));
