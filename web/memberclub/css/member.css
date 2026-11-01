@@ -852,6 +852,7 @@ input.locked { opacity: .6; cursor: not-allowed; }
 .contact-tile .ct { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .contact-tile .ct b { font-size: .92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .contact-tile .ct small { color: var(--muted); font-size: .76rem; }
+.contact-tile .ct .cn { margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--line); color: var(--text); font-size: .78rem; line-height: 1.45; opacity: .85; }
 .contact-tile .go { color: var(--accent); }
 @media (max-width: 640px) {
   .contact-tiles { grid-template-columns: 1fr; gap: 8px; }
