@@ -77,7 +77,7 @@
           // 右边 Feed 框（文字、链接在后台「首页设定」设定）
           const feed = cfg.feed || {};
           const fl = loc(feed);
-          const feedHref = safeLink(feed.link);
+          const feedHref = feed.link === undefined ? "feed.html" : safeLink(feed.link);   // 后台没设定过：预设导向 Mochii Feed
           const feedBox = feed.on === false ? "" : `
             <${feedHref ? `a href="${esc(feedHref)}"` : "div"} class="home-feed${feedHref ? "" : " no-link"}">
               <div class="feed-title">${esc(fl.title || feed.title || t("home.feedTitle"))}</div>

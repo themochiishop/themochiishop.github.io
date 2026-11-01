@@ -19,24 +19,30 @@
     .folder-sub { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--line); }
     .folder-sub h3 { font-size: .95rem; margin-bottom: 8px; }
     .bday-locked { font-size: 1.05rem; font-weight: 700; }
-    /* 🔗 已绑定账号：一个账号一张小卡，左边是平台颜色 */
-    .acct-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-    .acct-head h3 { font-size: .95rem; }
-    .acct-head .muted { font-size: .78rem; }
-    .acct-cards { list-style: none; display: grid; gap: 10px; margin-top: 10px; }
+    /* 🔗 关联平台 */
+    .bind-once { background: rgba(255,111,174,.08); border: 1px solid rgba(255,111,174,.3); border-radius: 12px; padding: 10px 14px; font-size: .84rem; line-height: 1.55; }
+    .bind-once b { color: var(--accent); }
+    .acct-sum { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 14px; background: var(--card2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; text-align: center; }
+    .acct-sum div { padding: 10px 4px; }
+    .acct-sum div + div { border-left: 1px solid var(--line); }
+    .acct-sum b { display: block; font-size: 1.15rem; }
+    .acct-sum span { color: var(--muted); font-size: .72rem; }
+    .acct-plats { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+    .acct-plats:empty { display: none; }
+    .acct-cards { list-style: none; display: grid; gap: 8px; margin-top: 12px; }
     .acct-cards > li.empty { color: var(--muted); font-size: .88rem; padding: 10px 0; }
-    .acct-card { position: relative; background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px 12px 18px; overflow: hidden; }
-    .acct-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--accent); }
+    .acct-card { position: relative; background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px 10px 16px; overflow: hidden; }
+    .acct-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent); }
     .acct-card.p-shopee::before { background: #ee4d2d; }
     .acct-card.p-tiktok::before { background: linear-gradient(#25f4ee, #fe2c55); }
     .acct-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
-    .acct-user { font-weight: 800; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
-    .acct-meta { color: var(--muted); font-size: .76rem; margin-top: 3px; }
-    .acct-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
-    .acct-chips span { background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 6px 4px; text-align: center; font-size: .74rem; color: var(--muted); }
-    .acct-chips b { display: block; color: var(--text); font-size: .95rem; }
-    .acct-last { color: var(--muted); font-size: .74rem; margin-top: 8px; }
-    .acct-none { color: var(--muted); font-size: .8rem; margin-top: 8px; }
+    .acct-user { font-weight: 800; font-size: .98rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+    .acct-ok { color: var(--ok); font-size: .74rem; font-weight: 700; white-space: nowrap; }
+    .acct-line { margin-top: 6px; font-size: .86rem; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+    .acct-line b { font-weight: 800; }
+    .acct-line .money { font-size: .78rem; color: var(--muted); }
+    .acct-line .dot { color: var(--muted); }
+    .acct-meta { color: var(--muted); font-size: .72rem; margin-top: 4px; }
     .removed-box { margin-top: 14px; }
     .removed-box summary { cursor: pointer; color: var(--muted); font-size: .85rem; font-weight: 700; }
     .acct-cards.removed .acct-card { opacity: .6; }
@@ -103,12 +109,13 @@
 
       <!-- ② 账号绑定（原本的 bind.html） -->
       <div class="folder-body hidden" id="tab-bind">
-        <p class="muted" style="font-size:.85rem;margin:0 0 14px" data-i18n="bind.sub"></p>
-        <div class="acct-head">
-          <h3 data-i18n="acc.bound"></h3>
-          <span class="muted" id="bindPlatforms"></span>
+        <div class="bind-once" data-i18n-html="bind.once"></div>
+        <div class="acct-sum">
+          <div><b id="sumAcc">–</b><span data-i18n="bind.statAccounts"></span></div>
+          <div><b id="sumOrd">–</b><span data-i18n="bind.statOrders"></span></div>
+          <div><b id="sumPts">–</b><span data-i18n="bind.statPoints"></span></div>
         </div>
-        <p class="muted bind-summary" id="bindSummary"></p>
+        <div class="acct-plats" id="bindPlatforms"></div>
         <ul id="bindList" class="acct-cards"><li class="empty" data-i18n="common.loading"></li></ul>
         <details id="removedBox" class="removed-box hidden">
           <summary><span data-i18n="bind.removedTitle"></span> (<span id="removedCount">0</span>)</summary>
@@ -116,10 +123,11 @@
         </details>
 
         <div class="folder-sub">
-          <h3 data-i18n="bind.new"></h3>
+          <h3 data-i18n="bind.newTitle"></h3>
           <form id="bindForm">
             <label><span data-i18n="bind.orderLabel"></span>
               <input id="orderNo" required autocomplete="off" data-i18n-ph="bind.orderPh">
+              <small class="muted" data-i18n-html="bind.anyOrder"></small>
               <div id="platformHint" class="platform-hint muted"></div>
             </label>
             <label><span data-i18n="bind.userLabel"></span>
@@ -219,27 +227,24 @@
           const st = stats[b.id] || empty;
           return { o: s.o + st.orders, p: s.p + st.points };
         }, { o: 0, p: 0 });
-        $("bindSummary").textContent = rows.length
-          ? t("bind.summary", { n: rows.length, o: tot.o, p: tot.p.toLocaleString() }) : "";
+        $("sumAcc").textContent = rows.length;
+        $("sumOrd").textContent = tot.o.toLocaleString();
+        $("sumPts").textContent = tot.p.toLocaleString();
         const per = {};
         rows.forEach(b => { per[b.platform] = (per[b.platform] || 0) + 1; });
-        $("bindPlatforms").textContent = Object.entries(per).map(([p, n]) => platformLabel(p) + " " + n).join(" · ");
+        $("bindPlatforms").innerHTML = Object.entries(per).map(([p, n]) => `${platformTag(p).replace("</span>", " " + n + "</span>")}`).join("");
 
         $("bindList").innerHTML = rows.length ? rows.map(b => {
           const st = stats[b.id] || empty;
           const how = b.verifyOrder === "admin" ? t("bind.viaAdmin") : t("bind.viaOrder", { no: maskOrderNo(b.verifyOrder) });
+          const meta = [t("bind.linkedOn", { d: fmtDate(toDate(b.createdAt)) }), st.last ? t("bind.lastOrder", { d: fmtDate(st.last) }) : ""].filter(Boolean).join(" · ");
           return `
-          <li class="acct-card p-${esc(b.platform)}">
-            <div class="acct-top">${platformTag(b.platform)}<span class="acct-user">${esc(b.username)}</span><span class="tag tag-ok">${t("bind.verified")}</span></div>
-            <div class="acct-meta">${t("bind.linkedOn", { d: fmtDate(toDate(b.createdAt)) })} · ${esc(how)}</div>
-            ${st.orders ? `
-            <div class="acct-chips">
-              <span>🧾<b>${st.orders}</b>${esc(t("bind.chipOrders", { n: "" }).trim())}</span>
-              <span>💰<b>${esc(fmtMoney(st.spend))}</b></span>
-              <span>⭐<b>${st.points.toLocaleString()}</b>${esc(t("bind.chipPoints", { n: "" }).trim())}</span>
-            </div>
-            ${st.last ? `<div class="acct-last">${esc(t("bind.lastOrder", { d: fmtDate(st.last) }))}</div>` : ""}`
-            : `<div class="acct-none">${esc(t("bind.noOrders"))}</div>`}
+          <li class="acct-card p-${esc(b.platform)}" title="${esc(how)}">
+            <div class="acct-top">${platformTag(b.platform)}<span class="acct-user">${esc(b.username)}</span><span class="acct-ok">✓ ${t("bind.verified")}</span></div>
+            <div class="acct-line">${st.orders
+              ? `🧾 <b>${esc(t("bind.chipOrders", { n: st.orders }))}</b><span class="dot">·</span><span class="money">${esc(fmtMoney(st.spend))}</span><span class="dot">·</span>⭐ <b>${esc(t("bind.chipPoints", { n: st.points.toLocaleString() }))}</b>`
+              : `<span class="muted" style="font-size:.8rem">${esc(t("bind.noOrders"))}</span>`}</div>
+            <div class="acct-meta">${esc(meta)}</div>
           </li>`;
         }).join("") : `<li class="empty">${t("bind.none")}</li>`;
 
@@ -251,7 +256,7 @@
         $("removedCount").textContent = removed.length;
         $("removedList").innerHTML = removed.map(l => `
           <li class="acct-card">
-            <div class="acct-top">${platformTag(l.platform)}<span class="acct-user">${esc(l.username)}</span><span class="tag tag-bad">${t("bind.removed")}</span></div>
+            <div class="acct-top">${platformTag(l.platform)}<span class="acct-user">${esc(l.username)}</span><span class="acct-ok" style="color:var(--bad)">${t("bind.removed")}</span></div>
             <div class="acct-meta">${t("bind.linkedOn", { d: fmtDate(toDate(l.boundAt)) })} · ${t("bind.removedOn", { d: fmtDate(toDate(l.at)) })}</div>
           </li>`).join("");
       }

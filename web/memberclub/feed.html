@@ -91,11 +91,11 @@
     /* 会员主页：等级封面图 + 头像外框跟着等级变色；电脑左右排、手机置中 */
     .prof-back { display: inline-block; margin: 0 4px 10px; font-size: .85rem; color: var(--muted); cursor: pointer; background: none; border: 0; }
     .prof-back:hover { color: var(--text); }
-    .prof { background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; margin: 0 4px 18px; text-align: center; padding-bottom: 18px;
+    .prof { position: relative; background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; margin: 0 4px 18px; text-align: center; padding-bottom: 18px;
       --ring: #ff6fae; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
     .prof.t-silver { --ring: #e2e8f0; } .prof.t-gold { --ring: #f5c542; } .prof.t-diamond { --ring: #67e8f9; }
     .prof.t-black { --ring: #d4af37; } .prof.t-shop { --ring: #fff; }
-    .prof-cover { height: 140px; position: relative; background: #7c5cff center / cover no-repeat; }
+    .prof-cover { height: 140px; position: relative; background: #7c5cff right center / cover no-repeat; }   /* 手机：对准右边的猫咪，头像刚好在猫咪里 */
     .prof-cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(19,26,46,.55)); }
     .prof-tier { position: absolute; right: 14px; top: 12px; z-index: 1; font-size: .7rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
       color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.5); background: rgba(0,0,0,.18); padding: 3px 10px; border-radius: 999px; backdrop-filter: blur(4px); }
@@ -109,11 +109,11 @@
     .prof-line { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
     .tier-pill { display: inline-flex; align-items: center; gap: 5px; font-size: .76rem; font-weight: 800; padding: 3px 11px; border-radius: 999px;
       border: 1px solid var(--ring); color: var(--text); background: rgba(255,255,255,.04); }
-    .prof-id { color: var(--muted); font-size: .78rem; }
+    .bio-lbl { color: var(--muted); font-size: .76rem; font-weight: 700; margin-right: 4px; }
     .prof-bio { font-size: .9rem; margin: 12px auto 0; max-width: 460px; white-space: pre-wrap; word-break: break-word; line-height: 1.55; }
     .prof-bio.empty { color: var(--muted); font-style: italic; cursor: pointer; border: 1px dashed var(--line); border-radius: 10px; padding: 8px 12px; display: inline-block; }
     .prof-bio.empty:hover { border-color: var(--accent); color: var(--text); }
-    .prof-stats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 16px auto 0; max-width: 460px; background: var(--card2);
+    .prof-stats { text-align: center; display: grid; grid-template-columns: repeat(3, 1fr); margin: 16px auto 0; max-width: 460px; background: var(--card2);
       border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
     .prof-stats div { padding: 10px 4px; }
     .prof-stats div + div { border-left: 1px solid var(--line); }
@@ -124,19 +124,20 @@
     .posts-head { display: flex; align-items: center; gap: 10px; margin: 0 4px 12px; color: var(--muted); font-size: .82rem; font-weight: 700; }
     .posts-head::after { content: ""; flex: 1; height: 1px; background: var(--line); }
     @media (min-width: 720px) {
-      .prof-cover { height: 210px; }
-      .prof { text-align: left; padding-bottom: 20px; }
-      .prof-main { display: grid; grid-template-columns: auto 1fr auto; gap: 0 22px; align-items: end; padding: 0 26px; }
-      .prof-av { margin-top: -62px; justify-content: flex-start; }
-      .prof-av > .av, .prof-av > .xhs-avatar { width: 124px; height: 124px; font-size: 2.6rem; }
+      .prof-cover { height: 210px; background-position: center; }
+      .prof { text-align: left; padding-bottom: 22px; }
+      .prof-main { display: grid; grid-template-columns: 1fr 270px; gap: 0 26px; align-items: start; padding: 0 26px; }
+      /* 头像对准封面右边的猫咪头，像被猫咪框住 */
+      .prof-main { position: static; }
+      .prof-av { position: absolute; top: 96px; left: calc(68.3% - 64px); margin: 0; justify-content: center; }
+      .prof-av > .av, .prof-av > .xhs-avatar { width: 128px; height: 128px; font-size: 2.6rem; }
       .prof-av > .av.preset { font-size: 3.6rem; }
-      .prof-info { padding-top: 12px; min-width: 0; }
+      .prof-info { padding-top: 18px; min-width: 0; grid-column: 1; grid-row: 1; }
       .prof-name, .prof-line { justify-content: flex-start; }
-      .prof-name { margin-top: 0; }
-      .prof-bio { margin: 10px 0 0; max-width: none; }
-      .prof-side { padding-top: 12px; min-width: 250px; }
-      .prof-stats { margin: 0; }
-      .prof-acts { justify-content: stretch; }
+      .prof-name { margin-top: 0; font-size: 1.45rem; }
+      .prof-bio { margin: 12px 0 0; max-width: none; }
+      .prof-side { padding-top: 46px; grid-column: 2; grid-row: 1; }
+      .prof-stats { margin: 0; max-width: none; }
       .prof-acts .btn { max-width: none; }
     }
 
@@ -564,7 +565,7 @@
     }
 
     const COVERS = ["mochii", "silver", "gold", "diamond", "black", "shop"];
-    const coverOf = key => `img/covers/${COVERS.includes(key) ? key : "mochii"}.svg`;
+    const coverOf = key => `img/covers/${COVERS.includes(key) ? key : "mochii"}.webp`;
     let profW = null;   // 目前主页的人（分享卡用）
 
     async function renderProfileHead() {
@@ -587,7 +588,7 @@
       const tierName = w.shop ? "Official" : w.tier === "black" ? "Black Elite" : t("tier." + w.tier);
       const tierIcon = w.shop ? "🏪" : (TIER_MARK[w.tier] || "🎀");
       document.title = (mine ? ft("myPage") : ft("pageOf", { name: w.name })) + " · Mochii Club";
-      const bio = w.bio ? `<div class="prof-bio">${esc(w.bio)}</div>`
+      const bio = w.bio ? `<div class="prof-bio"><span class="bio-lbl">${esc(ft("bioLbl"))}</span>${esc(w.bio)}</div>`
         : mine ? `<div class="prof-bio empty" id="profBioEmpty">${esc(ft("bioEmpty"))}</div>` : "";
       box.innerHTML = `${mine && location.hash === "#me" ? "" : `<button class="prof-back" id="profBack">${esc(ft("back"))}</button>`}
         <div class="prof t-${esc(key)}">
@@ -598,7 +599,6 @@
               <div class="prof-name">${esc(w.name)} ${titleTag(w.title)}</div>
               <div class="prof-line">
                 <span class="tier-pill">${tierIcon} ${esc(tierName)}</span>
-                <span class="prof-id">${esc(ft(w.shop ? "shopOfficial" : "clubMember"))}</span>
               </div>
               ${bio}
             </div>
