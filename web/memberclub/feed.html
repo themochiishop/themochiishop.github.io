@@ -182,6 +182,8 @@
     .cmt-head { font-weight: 700; margin: 14px 0 6px; padding-top: 12px; border-top: 1px solid var(--line); }
     .cmt { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
     .cmt:last-child { border-bottom: 0; }
+    /* 从铃铛点进来的那一条回复 */
+    .cmt.cmt-focus { background: rgba(255,111,174,.14); border-radius: 10px; padding-left: 8px; padding-right: 8px; transition: background 1.2s ease; }
     .cmt .av, .cmt .xhs-avatar { width: 26px; height: 26px; font-size: .68rem; margin-top: 2px; cursor: pointer; }
     .cmt .av.preset { font-size: .85rem; }
     .cmt-main { flex: 1; min-width: 0; }
@@ -801,11 +803,11 @@
     }
 
     // ---------- 帖子详情 + 回复 ----------
-    let openId = null, openPost = null, comments = [], replyTo = null;
+    let openId = null, openPost = null, comments = [], replyTo = null, focusCid = null;
     function closeModal(id, keepHash) {
       $(id).classList.add("hidden"); document.body.style.overflow = "";
       if (id === "detail") {
-        openId = null; openPost = null;
+        openId = null; openPost = null; focusCid = null;
         if (!keepHash && /^#p-/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search + (view.mode === "user" ? "#u-" + view.uid : view.mode === "shop" ? "#shop" : ""));
       }
     }
@@ -822,7 +824,13 @@
         comments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         await loadProfiles(comments.filter(c => c.authorTier).map(c => c.authorUid));
       } catch (e) { console.warn("comments", e); }
-      if (openId === p.id) drawDetail(p);
+      if (openId === p.id) { drawDetail(p); scrollToFocus(); }
+    }
+    // 铃铛「有人回复你」点进来：捲到那条回复并标出来
+    function scrollToFocus() {
+      if (!focusCid) return;
+      const el = $("detailInner").querySelector(`.cmt[data-cid="${CSS.escape(focusCid)}"]`);
+      if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
     }
 
     function drawDetail(p, loading = false) {
@@ -844,7 +852,7 @@
           <div>${loading ? `<p class="muted" style="font-size:.85rem">${esc(ft("loading"))}</p>` : comments.length ? comments.map(c => {
             const cw = who(c);
             return `
-            <div class="cmt"><span data-author="${esc(authorKey(c))}">${avatarOf(cw)}</span>
+            <div class="cmt${c.id === focusCid ? " cmt-focus" : ""}" data-cid="${esc(c.id)}"><span data-author="${esc(authorKey(c))}">${avatarOf(cw)}</span>
               <div class="cmt-main">
                 <div class="cmt-name" data-author="${esc(authorKey(c))}">${esc(cw.name)} ${tierMark(cw)} ${titleTag(cw.title)}</div>
                 <div class="cmt-text">${c.replyTo && c.replyTo.name ? `<span class="at">@${esc(c.replyTo.name)}</span> ` : ""}${esc(c.text)}</div>
@@ -919,8 +927,10 @@
 
     // 从铃铛点进来（feed.html#p-帖子ID）：直接打开那篇
     async function openFromHash() {
-      const m = location.hash.match(/^#p-([\w-]+)$/);
-      if (!m || openId === m[1]) return;
+      const m = location.hash.match(/^#p-([\w-]+?)(?:~([\w-]+))?$/);
+      if (!m) return;
+      focusCid = m[2] || null;
+      if (openId === m[1]) { drawDetail(openPost); scrollToFocus(); return; }
       let p = shown.find(x => x.id === m[1]);
       if (!p) {
         try {
