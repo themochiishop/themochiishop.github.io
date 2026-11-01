@@ -673,3 +673,6 @@ footer .legal a:hover { color: #fff; text-decoration: underline; }
 footer .ft-sm { font-size: .85em; }
 footer a[href^="mailto:"] { color: inherit; }
 footer a[href^="mailto:"]:hover { color: #fff; text-decoration: underline; }
+/* ===== 奖品缩略图:可点击放大 ===== */
+.prize-list .pth.zoom { cursor: zoom-in; transition: transform .2s, box-shadow .2s; }
+.prize-list .pth.zoom:hover, .prize-list .pth.zoom:focus-visible { transform: scale(1.1); box-shadow: 0 4px 12px rgba(28,23,34,.25); outline: none; }
