@@ -90,7 +90,7 @@
               <div style="flex:1;min-width:0">
                 <div class="sub">${esc(t("acc.hello", { name: member.name || t("acc.member") }))}</div>
                 <div class="pts-big">${esc(t("unit.pts", { n: bal.spendable.toLocaleString() }))}</div>
-                <div class="sub">${tp.tier.icon ? tp.tier.icon + " " : ""}${esc(tierLabel(tp.tier))}${bal.pending ? " · " + esc(t("home.pending", { n: bal.pending.toLocaleString() })) : ""}</div>
+                <div class="sub">${tp.tier.id !== "mochii" ? tierIconHTML(tp.tier) + " " : ""}${esc(tierLabel(tp.tier))}${bal.pending ? " · " + esc(t("home.pending", { n: bal.pending.toLocaleString() })) : ""}</div>
               </div>
               <span class="home-hero-go">➔</span>
             </a>

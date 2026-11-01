@@ -1,6 +1,6 @@
 // 常见问题（三语）。数字（等级门槛、福利分数、有效期）会自动带入目前的设定
 import {
-  TIERS, tierLabel, activeBonuses, bonusPoints, customPerks, EXPIRY_MONTHS, esc, t, lang
+  TIERS, tierLabel, tierIconHTML, BLACK_CROWN, activeBonuses, bonusPoints, customPerks, EXPIRY_MONTHS, esc, t, lang
 } from "./common.js";
 
 const PENDING_DAYS = 14; // 待确认天数（和 Google 表格同步脚本的 MS_PENDING_DAYS 一致）
@@ -8,9 +8,9 @@ const PENDING_DAYS = 14; // 待确认天数（和 Google 表格同步脚本的 M
 // ---------- 带入目前设定的清单 ----------
 function tierList(L) {
   return "<ul>" + TIERS.map(x => {
-    const name = (x.icon ? x.icon + " " : "") + tierLabel(x);
+    const ico = x.id === "mochii" ? "" : tierIconHTML(x) + " ";
     const spend = x.invite ? L.tierInvite : x.minSpend ? L.tierSpend(x.minSpend) : L.tierFree;
-    return `<li><b>${esc(name)}</b>${L.colon}${spend} · ${L.tierPerk(x.multiplier, x.birthday)}</li>`;
+    return `<li><b>${ico}${esc(tierLabel(x))}</b>${L.colon}${spend} · ${L.tierPerk(x.multiplier, x.birthday)}</li>`;
   }).join("") + "</ul>";
 }
 function perkList(L) {
@@ -31,7 +31,7 @@ const TEXT = {
     tier: [
       ["会员等级怎么计算？", L => `按<b>最近 365 天的有效消费</b>计算，所有绑定账号的消费会合并，取消和退货的订单不算。等级每小时自动更新一次。${tierList(L)}`],
       ["等级会下降吗？", () => `升级后，新等级<b>有效 12 个月</b>，期间不会降级。到期时看近一年的消费：达到该等级门槛的<b>一半</b>，就自动再续 12 个月；不到一半，<b>只会降一级</b>（例如金卡变银卡），不会一下子掉回 Mochii 会员。到期前 30 天，铃铛会提醒你还差多少可以保级。你达到过的最高等级会一直显示在等级页。`],
-      ["Black Elite 是什么？", () => `🖤 Black Elite 是 Mochii Member Club 最高的身份，采<b>邀请制</b>，由我们邀请长期支持的会员加入，没有有效期。享有积分 ×2、生日礼 888 分，以及专属的会员封面。`],
+      ["Black Elite 是什么？", () => `${BLACK_CROWN} Black Elite 是 Mochii Member Club 最高的身份，采<b>邀请制</b>，由我们邀请长期支持的会员加入，没有有效期。享有积分 ×2、生日礼 888 分，以及专属的会员封面。`],
       ["升级后，积分加成从什么时候开始？", () => `升级后的<b>新订单</b>才按新等级的加成计算，已经计过分的订单不会重算。绑定账号时补算的过往订单，按绑定当时的等级计算。`],
       ["生日礼怎么领？", () => `生日月份内系统自动发放，<b>每年一次</b>，积分马上可用，分数按领取时的等级。领取条件：已设定生日、已绑定购物账号，并至少有一笔有效订单。生日只能设定一次，如需更正请联系我们。`],
       ["额外福利是什么？", L => `完成指定任务就送积分。每项每人只能领一次，都需要先绑定购物账号，领到后积分马上可用，铃铛也会通知你：${perkList(L)}`],
@@ -101,7 +101,7 @@ const TEXT = {
     tier: [
       ["How is my tier calculated?", L => `By your <b>valid spending in the last 365 days</b>, combined across all your linked accounts. Cancelled and returned orders don't count. Tiers update every hour.${tierList(L)}`],
       ["Can my tier go down?", () => `After an upgrade, your new tier <b>lasts 12 months</b> and won't drop during that time. When it ends, we look at your last 12 months of spending: reach <b>half</b> of your tier's level and it renews for another 12 months; otherwise you move down <b>one tier only</b> (e.g. Gold to Silver), never straight back to Mochii Member. The bell reminds you 30 days before it ends, with how much more you need. Your highest tier ever stays on your tier page.`],
-      ["What is Black Elite?", () => `🖤 Black Elite is the highest status in Mochii Member Club. It's <b>by invitation</b> — we invite our most loyal members — and it doesn't expire. It comes with points ×2, an 888-point birthday gift and an exclusive profile cover.`],
+      ["What is Black Elite?", () => `${BLACK_CROWN} Black Elite is the highest status in Mochii Member Club. It's <b>by invitation</b> — we invite our most loyal members — and it doesn't expire. It comes with points ×2, an 888-point birthday gift and an exclusive profile cover.`],
       ["When does my points bonus start after upgrading?", () => `Your new tier's bonus applies to <b>new orders</b> after the upgrade. Orders that already earned points aren't recalculated. Past orders added when you link an account use your tier at that time.`],
       ["How do I get my birthday gift?", () => `It's given automatically in your birthday month, <b>once a year</b>, and can be used straight away. The amount depends on your tier at that time. To qualify, set your birthday, link a shopping account and have at least one valid order. Your birthday can only be set once — contact us if it needs correcting.`],
       ["What are extra perks?", L => `Bonus points for completing simple tasks. Each one can be received once per member, needs a linked shopping account, and can be used right away — you'll also get a 🔔 notification:${perkList(L)}`],
@@ -171,7 +171,7 @@ const TEXT = {
     tier: [
       ["Bagaimana tahap ahli dikira?", L => `Berdasarkan <b>perbelanjaan sah dalam 365 hari lepas</b>, digabungkan bagi semua akaun yang dipautkan. Pesanan yang dibatalkan dan dipulangkan tidak dikira. Tahap dikemas kini setiap jam.${tierList(L)}`],
       ["Bolehkah tahap saya turun?", () => `Selepas naik tahap, tahap baharu anda <b>sah 12 bulan</b> dan tidak akan turun dalam tempoh itu. Apabila tamat, kami lihat perbelanjaan 12 bulan lepas: capai <b>separuh</b> daripada syarat tahap anda dan ia disambung 12 bulan lagi; jika tidak, anda turun <b>satu tahap sahaja</b> (cth. Emas ke Perak), tidak terus ke Ahli Mochii. Loceng akan mengingatkan anda 30 hari sebelum tamat, berserta jumlah yang diperlukan. Tahap tertinggi anda akan sentiasa dipaparkan di halaman tahap.`],
-      ["Apakah Black Elite?", () => `🖤 Black Elite ialah status tertinggi dalam Mochii Member Club. Ia <b>melalui jemputan</b> — kami menjemput ahli yang paling setia — dan tiada tarikh tamat. Ia memberi mata ×2, hadiah hari jadi 888 mata dan kulit profil eksklusif.`],
+      ["Apakah Black Elite?", () => `${BLACK_CROWN} Black Elite ialah status tertinggi dalam Mochii Member Club. Ia <b>melalui jemputan</b> — kami menjemput ahli yang paling setia — dan tiada tarikh tamat. Ia memberi mata ×2, hadiah hari jadi 888 mata dan kulit profil eksklusif.`],
       ["Bilakah bonus mata bermula selepas naik tahap?", () => `Bonus tahap baharu terpakai pada <b>pesanan baharu</b> selepas naik tahap. Pesanan yang sudah dapat mata tidak dikira semula. Pesanan lama yang ditambah semasa memautkan akaun menggunakan tahap anda pada masa itu.`],
       ["Bagaimana mendapatkan hadiah hari jadi?", () => `Diberi secara automatik dalam bulan hari jadi anda, <b>sekali setahun</b>, dan boleh terus digunakan. Jumlahnya ikut tahap anda pada masa itu. Syarat: tetapkan hari jadi, pautkan akaun beli-belah dan ada sekurang-kurangnya satu pesanan sah. Hari jadi hanya boleh ditetapkan sekali — hubungi kami jika perlu dibetulkan.`],
       ["Apakah ganjaran tambahan?", L => `Mata bonus untuk tugasan mudah. Setiap satu hanya boleh diterima sekali bagi setiap ahli, memerlukan akaun beli-belah yang dipautkan, dan boleh terus digunakan — anda juga akan menerima 🔔 pemberitahuan:${perkList(L)}`],

@@ -61,7 +61,7 @@ export const TIERS = [
   { id: "silver",  icon: "🥈", minSpend: 300,  multiplier: 1.2, birthday: 128 },
   { id: "gold",    icon: "🥇", minSpend: 800,  multiplier: 1.5, birthday: 188 },
   { id: "diamond", icon: "💎", minSpend: 2000, multiplier: 2,   birthday: 288 },
-  { id: "black",   icon: "🖤", minSpend: null, multiplier: 2,   birthday: 888, invite: true },  // 邀请制：后台「会员详情」开通
+  { id: "black",   icon: "♛", minSpend: null, multiplier: 2,   birthday: 888, invite: true },  // 邀请制：后台「会员详情」开通
 ];
 // 保级规则（必须和 Google 表格同步脚本的 MS_TIER_VALID_MONTHS / MS_TIER_KEEP_RATIO 一致）
 export const TIER_VALID_MONTHS = 12;
@@ -69,10 +69,12 @@ export const TIER_KEEP_RATIO = 0.5;
 export const TIER_REMIND_DAYS = 30;   // 到期前几天开始提醒
 export const tierById = id => TIERS.find(x => x.id === id) || TIERS[0];
 
-// 等级图标：Mochii 会员用会员俱乐部 logo，其他等级用 emoji
+// 🖤 Black Elite 的黑金皇冠（SVG，跟着文字大小）
+export const BLACK_CROWN = `<svg class="crown-bk" viewBox="0 0 24 24" width="1.1em" height="1.1em" aria-hidden="true"><path d="M3 8.5l4.6 4.2L12 5.5l4.4 7.2L21 8.5 19 18H5z" fill="#141414" stroke="#d4af37" stroke-width="1.6" stroke-linejoin="round"/><rect x="5" y="18.6" width="14" height="2.4" rx="1" fill="#d4af37"/><circle cx="3" cy="8" r="1.5" fill="#f3d27a"/><circle cx="12" cy="4.6" r="1.5" fill="#f3d27a"/><circle cx="21" cy="8" r="1.5" fill="#f3d27a"/><circle cx="12" cy="13.4" r="1.5" fill="#d4af37"/></svg>`;
+// 等级图标：Mochii 会员用会员俱乐部 logo，Black Elite 用黑金皇冠，其他等级用 emoji
 export function tierIconHTML(tier) {
-  return tier.id === "mochii"
-    ? `<img class="tier-logo" src="img/member.jpg" alt="">`
+  return tier.id === "mochii" ? `<img class="tier-logo" src="img/member.jpg" alt="">`
+    : tier.id === "black" ? BLACK_CROWN
     : tier.icon;
 }
 export function tierLabel(tier) {

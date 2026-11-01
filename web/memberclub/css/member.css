@@ -989,6 +989,7 @@ a.feed-btn:hover { text-decoration: none; }
 .feed-dot { min-width: 10px; width: 10px; height: 10px; padding: 0; top: -1px; right: -1px; border: 2px solid var(--bg); }
 
 /* ---------- 🖤 Black Elite + 保级 ---------- */
+.crown-bk { display: inline-block; vertical-align: -.18em; filter: drop-shadow(0 0 3px rgba(212,175,55,.45)); }
 .tier-black .tier-name { color: #d4af37; }
 .tier-black .tier-icon { filter: drop-shadow(0 0 6px rgba(212,175,55,.5)); }
 .tier-keep { background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
