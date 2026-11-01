@@ -71,18 +71,26 @@
       return store.map(x => ({ q: x.q, a: x.a, cat: x.cat, html: false }));
     }
 
-    // 「负责处理」：按逗号 / 顿号拆成小标签，每一项完整换行
-    const noteHTML = txt => {
+    // 「负责处理」：按逗号 / 顿号拆成小标签；点标签 = 打开 WhatsApp，输入框已带上这个标签当开头
+    const tagText = x => lang === "zh" ? `【${x}】` : `[${x}] `;
+    const noteHTML = (txt, num) => {
       const items = String(txt || "").split(/[,，、;；]+/).map(x => x.trim()).filter(Boolean);
       if (!items.length) return "";
-      return `<span class="cn">${items.map(x => `<span class="cn-tag">${esc(x)}</span>`).join("")}</span>`;
+      return `<span class="cn">${items.map(x => num
+        ? `<a class="cn-tag" href="https://wa.me/${esc(num)}?text=${encodeURIComponent(tagText(x))}" target="_blank" rel="noopener">${esc(x)}</a>`
+        : `<span class="cn-tag">${esc(x)}</span>`).join("")}</span>`;
     };
-    const tile = (cls, href, icon, title, sub, note) => `
-      <a class="contact-tile ${cls}" href="${esc(href)}" target="_blank" rel="noopener">
+    // 有「负责处理」标签时：整个框是 div，空白处由 tile-link 打开对话，标签各自是链接（链接不能放在链接里）
+    const tile = (cls, href, icon, title, sub, note, num) => {
+      const tags = noteHTML(note, num);
+      const inner = `
         <span class="ci">${icon}</span>
-        <span class="ct"><b>${esc(title)}</b><small>${esc(sub)}</small>${noteHTML(note)}</span>
-        <span class="go" aria-hidden="true">➔</span>
-      </a>`;
+        <span class="ct"><b>${esc(title)}</b><small>${esc(sub)}</small>${tags}</span>
+        <span class="go" aria-hidden="true">➔</span>`;
+      return tags
+        ? `<div class="contact-tile has-tags ${cls}"><a class="tile-link" href="${esc(href)}" target="_blank" rel="noopener" aria-label="${esc(title)}"></a>${inner}</div>`
+        : `<a class="contact-tile ${cls}" href="${esc(href)}" target="_blank" rel="noopener">${inner}</a>`;
+    };
 
     // 💬 联系按钮：俱乐部分页显示「俱乐部技术支援」，商店分页显示「客服 + Shopee + TikTok」
     function renderContacts(both) {
@@ -93,7 +101,7 @@
       const note = obj => (obj && (obj[lang] || obj.zh)) || "";
       const wa = (num, obj, key, noteObj) => {
         num = String(num || "").replace(/\D/g, "");
-        return num ? tile("wa", `https://wa.me/${num}`, SOCIAL_ICONS.whatsapp, label(obj, key), "WhatsApp", note(noteObj)) : "";
+        return num ? tile("wa", `https://wa.me/${num}`, SOCIAL_ICONS.whatsapp, label(obj, key), "WhatsApp", note(noteObj), num) : "";
       };
       const clubBtns = [wa(c.waClub, c.waClubLabel, "help.waClub", c.waClubNote)];
       const storeBtns = [

@@ -147,11 +147,14 @@
       const book = Array.isArray(member.addresses) ? member.addresses : [];
       renderFaq($("faqBox"), "prize");
 
-      // 「负责处理」：按逗号 / 顿号拆成小标签，每一项完整换行
-      const noteHTML = txt => {
+      // 「负责处理」：按逗号 / 顿号拆成小标签；点标签 = 打开 WhatsApp，输入框已带上这个标签当开头
+      const tagText = x => lang === "zh" ? `【${x}】` : `[${x}] `;
+      const noteHTML = (txt, num) => {
         const items = String(txt || "").split(/[,，、;；]+/).map(x => x.trim()).filter(Boolean);
         if (!items.length) return "";
-        return `<span class="cn">${items.map(x => `<span class="cn-tag">${esc(x)}</span>`).join("")}</span>`;
+        return `<span class="cn">${items.map(x => num
+          ? `<a class="cn-tag" href="https://wa.me/${esc(num)}?text=${encodeURIComponent(tagText(x))}" target="_blank" rel="noopener">${esc(x)}</a>`
+          : `<span class="cn-tag">${esc(x)}</span>`).join("")}</span>`;
       };
       // 💬 俱乐部 WhatsApp（后台「商店帮助 › 联系我们按钮」设定）
       getDoc(doc(db, "settings", "help")).then(hs => {
@@ -160,12 +163,14 @@
         if (!num) return;
         const pick = o => (o && (o[lang] || o.zh)) || "";
         const note = pick(c.waClubNote);
-        $("pzContactBtns").innerHTML = `
-          <a class="contact-tile wa" href="https://wa.me/${esc(num)}" target="_blank" rel="noopener">
+        const title = pick(c.waClubLabel) || t("help.waClub"), tags = noteHTML(note, num);
+        const inner = `
             <span class="ci">${SOCIAL_ICONS.whatsapp}</span>
-            <span class="ct"><b>${esc(pick(c.waClubLabel) || t("help.waClub"))}</b><small>WhatsApp</small>${noteHTML(note)}</span>
-            <span class="go" aria-hidden="true">➔</span>
-          </a>`;
+            <span class="ct"><b>${esc(title)}</b><small>WhatsApp</small>${tags}</span>
+            <span class="go" aria-hidden="true">➔</span>`;
+        $("pzContactBtns").innerHTML = tags
+          ? `<div class="contact-tile has-tags wa"><a class="tile-link" href="https://wa.me/${esc(num)}" target="_blank" rel="noopener" aria-label="${esc(title)}"></a>${inner}</div>`
+          : `<a class="contact-tile wa" href="https://wa.me/${esc(num)}" target="_blank" rel="noopener">${inner}</a>`;
         $("pzContact").classList.remove("hidden");
       }).catch(e => console.warn("help contacts", e));
 

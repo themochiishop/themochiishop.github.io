@@ -856,6 +856,11 @@ input.locked { opacity: .6; cursor: not-allowed; }
 .contact-tile .ct .cn-tag { font-size: .62rem; line-height: 1.3; padding: 2px 8px; border-radius: 3px; max-width: 100%;
   background: rgba(120,120,120,.12); border: 1px solid rgba(255,111,174,.3); color: var(--text); }
 .contact-tile .go { color: var(--accent); }
+/* 有标签的联系框：空白处打开对话，标签各自带开头文字 */
+.contact-tile.has-tags { position: relative; }
+.contact-tile.has-tags .tile-link { position: absolute; inset: 0; border-radius: inherit; z-index: 1; }
+.contact-tile a.cn-tag { position: relative; z-index: 2; text-decoration: none; cursor: pointer; }
+.contact-tile a.cn-tag:hover { border-color: var(--accent); }
 @media (max-width: 640px) {
   .contact-tiles { grid-template-columns: 1fr; gap: 8px; }
   .contact-tile { padding: 10px 12px; }
