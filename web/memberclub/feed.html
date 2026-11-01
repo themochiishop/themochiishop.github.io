@@ -33,7 +33,7 @@
       white-space: pre-wrap; word-break: break-word; }
     .xhs-footer { padding: 6px 8px; display: flex; align-items: center; justify-content: space-between;
       border-top: 1px solid #fafafa; gap: 6px; }
-    .xhs-author { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; cursor: pointer; }
+    .xhs-author { display: flex; align-items: center; gap: 5px; flex: 0 1 auto; min-width: 0; cursor: pointer; }   /* 不撑满：空白处点了是打开帖子，不是进会员主页 */
     .xhs-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
     .xhs-author-info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
     .xhs-card, .xhs-card .xhs-content { color: #222; }
@@ -188,7 +188,8 @@
     .cmt .av, .cmt .xhs-avatar { width: 26px; height: 26px; font-size: .68rem; margin-top: 2px; cursor: pointer; }
     .cmt .av.preset { font-size: .85rem; }
     .cmt-main { flex: 1; min-width: 0; }
-    .cmt-name { font-size: .8rem; font-weight: 700; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; cursor: pointer; }
+    .cmt-name { font-size: .8rem; font-weight: 700; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+    .cmt-who { display: inline-flex; gap: 4px; align-items: center; cursor: pointer; }   /* 只有名字和头像能点进会员主页，空白处不会 */
     .cmt-text { font-size: .88rem; white-space: pre-wrap; word-break: break-word; }
     .cmt-text .at { color: var(--accent); }
     .cmt-foot { display: flex; gap: 12px; font-size: .72rem; color: var(--muted); margin-top: 2px; }
@@ -894,7 +895,7 @@
             return `
             <div class="cmt${c.id === focusCid ? " cmt-focus" : ""}" data-cid="${esc(c.id)}"><span data-author="${esc(authorKey(c))}">${avatarOf(cw)}</span>
               <div class="cmt-main">
-                <div class="cmt-name" data-author="${esc(authorKey(c))}">${esc(cw.name)} ${tierMark(cw)} ${titleTag(cw.title)}</div>
+                <div class="cmt-name"><span class="cmt-who" data-author="${esc(authorKey(c))}">${esc(cw.name)} ${tierMark(cw)}</span> ${titleTag(cw.title)}</div>
                 ${editing === "c:" + c.id ? editBoxHTML(c.text || "")
                   : `<div class="cmt-text">${c.replyTo && c.replyTo.name ? `<span class="at">@${esc(c.replyTo.name)}</span> ` : ""}${esc(c.text)}</div>`}
                 <div class="cmt-foot"><span>${fmtTime(c.createdAt)}${c.editedAt ? ` · ${esc(ft("edited"))}` : ""}</span>
