@@ -371,12 +371,13 @@
               <span class="pz-dlv-ico">${dlv === "separate" ? "🚚" : "📦"}</span>
               <div><b>${t("pz.dlv." + dlv)}</b><div class="muted">${t("pz.dlv." + dlv + "Sub")}</div></div>
             </div>
-            ${sh.trackingNo && p.status !== "cancelled" ? `
+            ${(sh.trackingNo || (sh.photos || []).length) && p.status !== "cancelled" ? `
               <div class="gift-ship">
-                <div class="ship-line">🚚 <b>${esc(sh.carrierName || t("pz.tracking"))}</b>
+                ${sh.trackingNo ? `<div class="ship-line">🚚 <b>${esc(sh.carrierName || t("pz.tracking"))}</b>
                   <span class="mono small-break">${esc(sh.trackingNo)}</span>
-                  <button class="btn btn-ghost btn-inline btn-xs" data-copy="${esc(sh.trackingNo)}">${t("rw.copy")}</button></div>
+                  <button class="btn btn-ghost btn-inline btn-xs" data-copy="${esc(sh.trackingNo)}">${t("rw.copy")}</button></div>` : ""}
                 ${url && p.status !== "completed" ? `<a class="track-link" href="${esc(url)}" target="_blank" rel="noopener">🔗 ${t("gift.track")}</a>` : ""}
+                ${(sh.photos || []).length ? `<div class="gift-photos">${sh.photos.map(x => `<img src="${esc(x)}" alt="" loading="lazy" data-zoom>`).join("")}</div>` : ""}
               </div>` : ""}
             ${p.address && p.status !== "cancelled" ? `<div class="gift-addr">📍 ${addressHTML(p.address)}</div>` : ""}
             ${p.status === "cancelled" && p.cancelNote ? `<div class="meta">${esc(p.cancelNote)}</div>` : ""}
