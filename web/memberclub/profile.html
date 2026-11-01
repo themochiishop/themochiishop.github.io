@@ -20,7 +20,15 @@
     .folder-sub h3 { font-size: .95rem; margin-bottom: 8px; }
     .bday-locked { font-size: 1.05rem; font-weight: 700; }
     /* 🔗 关联平台 */
-    .bind-once { background: rgba(255,111,174,.08); border: 1px solid rgba(255,111,174,.3); border-radius: 12px; padding: 10px 14px; font-size: .84rem; line-height: 1.55; }
+    .bind-once { background: rgba(255,111,174,.08); border: 1px solid rgba(255,111,174,.3); border-radius: 12px; padding: 10px 14px; font-size: .84rem; line-height: 1.55; margin: 12px 0 14px; }
+    .bind-new { margin-top: 16px; border: 1px dashed var(--line); border-radius: 12px; padding: 0 14px; }
+    .bind-new[open] { border-style: solid; padding-bottom: 14px; }
+    .bind-new summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 12px 0; font-weight: 800; font-size: .92rem; }
+    .bind-new summary::-webkit-details-marker { display: none; }
+    .bind-new .plus { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-size: .9rem; }
+    .bind-new .chev { margin-left: auto; color: var(--muted); transition: transform .2s; }
+    .bind-new[open] .chev { transform: rotate(180deg); }
     .bind-once b { color: var(--accent); }
     .acct-sum { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 14px; background: var(--card2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; text-align: center; }
     .acct-sum div { padding: 10px 4px; }
@@ -109,7 +117,6 @@
 
       <!-- ② 账号绑定（原本的 bind.html） -->
       <div class="folder-body hidden" id="tab-bind">
-        <div class="bind-once" data-i18n-html="bind.once"></div>
         <div class="acct-sum">
           <div><b id="sumAcc">–</b><span data-i18n="bind.statAccounts"></span></div>
           <div><b id="sumOrd">–</b><span data-i18n="bind.statOrders"></span></div>
@@ -122,8 +129,10 @@
           <ul id="removedList" class="acct-cards removed"></ul>
         </details>
 
-        <div class="folder-sub">
-          <h3 data-i18n="bind.newTitle"></h3>
+        <!-- ＋ 关联新的平台账号：默认收起（还没绑定任何账号时自动展开） -->
+        <details class="bind-new" id="bindNewBox">
+          <summary><span class="plus">＋</span><span data-i18n="bind.newTitle"></span><span class="chev">▾</span></summary>
+          <div class="bind-once" data-i18n-html="bind.once"></div>
           <form id="bindForm">
             <label><span data-i18n="bind.orderLabel"></span>
               <input id="orderNo" required autocomplete="off" data-i18n-ph="bind.orderPh">
@@ -137,7 +146,7 @@
             <button type="submit" class="btn btn-primary" id="bindSubmit" data-i18n="bind.submit"></button>
           </form>
           <p id="bindMsg" class="msg"></p>
-        </div>
+        </details>
         <a class="help-link" href="help.html#bind" style="margin:16px 0 0"><span>❓</span><span data-i18n="help.linkMore"></span><span class="go">➔</span></a>
       </div>
 
@@ -228,6 +237,7 @@
           return { o: s.o + st.orders, p: s.p + st.points };
         }, { o: 0, p: 0 });
         $("sumAcc").textContent = rows.length;
+        if (!rows.length) $("bindNewBox").open = true;
         $("sumOrd").textContent = tot.o.toLocaleString();
         $("sumPts").textContent = tot.p.toLocaleString();
         const per = {};

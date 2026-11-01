@@ -95,11 +95,11 @@
       --ring: #ff6fae; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
     .prof.t-silver { --ring: #e2e8f0; } .prof.t-gold { --ring: #f5c542; } .prof.t-diamond { --ring: #67e8f9; }
     .prof.t-black { --ring: #d4af37; } .prof.t-shop { --ring: #fff; }
-    .prof-cover { height: 140px; position: relative; background: #7c5cff right center / cover no-repeat; }   /* 手机：对准右边的猫咪，头像刚好在猫咪里 */
+    .prof-cover { aspect-ratio: 12 / 5; position: relative; background: #7c5cff var(--cover-m) center / cover no-repeat; }   /* 手机：手机版封面，字标在左、猫咪在右 */
     .prof-cover::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, rgba(19,26,46,.55)); }
     .prof-tier { position: absolute; right: 14px; top: 12px; z-index: 1; font-size: .7rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
       color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.5); background: rgba(0,0,0,.18); padding: 3px 10px; border-radius: 999px; backdrop-filter: blur(4px); }
-    .prof-main { position: relative; padding: 0 16px; }
+    .prof-main { position: relative; padding: 0 16px; display: flow-root; }   /* flow-root：头像往上压封面时，整块不会跟着往上跑 */
     .prof-av { display: flex; justify-content: center; margin-top: -50px; position: relative; z-index: 1; }
     .prof-av > .av, .prof-av > .xhs-avatar { width: 100px; height: 100px; font-size: 2.2rem; border: 4px solid var(--ring);
       box-shadow: 0 0 0 4px var(--card), 0 10px 26px rgba(0,0,0,.4); }
@@ -119,12 +119,17 @@
     .prof-stats div + div { border-left: 1px solid var(--line); }
     .prof-stats b { display: block; font-size: 1.15rem; line-height: 1.3; }
     .prof-stats span { color: var(--muted); font-size: .74rem; }
-    .prof-acts { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
+    .prof-acts { display: none; gap: 8px; justify-content: center; margin-top: 14px; }
+    .prof-icons { position: absolute; top: 10px; right: 12px; display: flex; gap: 8px; z-index: 2; }
+    .prof-icons button { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: var(--card2);
+      color: var(--text); font-size: 1rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+    .prof-icons button:hover { border-color: var(--accent); }
+    .prof-icons button.pri { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: 0; color: #fff; }
     .prof-acts .btn { width: auto; flex: 1; max-width: 200px; padding: 9px 12px; font-size: .84rem; }
     .posts-head { display: flex; align-items: center; gap: 10px; margin: 0 4px 12px; color: var(--muted); font-size: .82rem; font-weight: 700; }
     .posts-head::after { content: ""; flex: 1; height: 1px; background: var(--line); }
     @media (min-width: 720px) {
-      .prof-cover { height: 210px; background-position: center; }
+      .prof-cover { aspect-ratio: auto; height: 210px; background-image: var(--cover); }
       .prof { text-align: left; padding-bottom: 22px; }
       .prof-main { display: grid; grid-template-columns: 1fr 270px; gap: 0 26px; align-items: start; padding: 0 26px; }
       /* 头像对准封面右边的猫咪头，像被猫咪框住 */
@@ -138,12 +143,14 @@
       .prof-bio { margin: 12px 0 0; max-width: none; }
       .prof-side { padding-top: 46px; grid-column: 2; grid-row: 1; }
       .prof-stats { margin: 0; max-width: none; }
+      .prof-acts { display: flex; }
       .prof-acts .btn { max-width: none; }
+      .prof-icons { display: none; }
     }
 
     /* 分享卡 */
     .share-card { padding: 0; overflow: hidden; text-align: center; max-width: 380px; }
-    .share-card .sc-cover { height: 96px; background: #7c5cff center / cover no-repeat; }
+    .share-card .sc-cover { aspect-ratio: 12 / 5; background: #7c5cff center / cover no-repeat; }
     .share-card .sc-av { display: flex; justify-content: center; margin-top: -40px; }
     .share-card .sc-av > .av, .share-card .sc-av > .xhs-avatar { width: 80px; height: 80px; font-size: 1.8rem; border: 3px solid var(--ring, #ff6fae); box-shadow: 0 0 0 3px var(--card); }
     .share-card .sc-av > .av.preset { font-size: 2.4rem; }
@@ -565,7 +572,7 @@
     }
 
     const COVERS = ["mochii", "silver", "gold", "diamond", "black", "shop"];
-    const coverOf = key => `img/covers/${COVERS.includes(key) ? key : "mochii"}.webp`;
+    const coverOf = (key, mobile) => `img/covers/${COVERS.includes(key) ? key : "mochii"}${mobile ? "-m" : ""}.webp`;
     let profW = null;   // 目前主页的人（分享卡用）
 
     async function renderProfileHead() {
@@ -592,8 +599,12 @@
         : mine ? `<div class="prof-bio empty" id="profBioEmpty">${esc(ft("bioEmpty"))}</div>` : "";
       box.innerHTML = `${mine && location.hash === "#me" ? "" : `<button class="prof-back" id="profBack">${esc(ft("back"))}</button>`}
         <div class="prof t-${esc(key)}">
-          <div class="prof-cover" style="background-image:url('${coverOf(key)}')"><span class="prof-tier">${esc(tierName)}</span></div>
+          <div class="prof-cover" style="--cover:url('${coverOf(key)}');--cover-m:url('${coverOf(key, true)}')"><span class="prof-tier">${esc(tierName)}</span></div>
           <div class="prof-main">
+            <div class="prof-icons">
+              ${mine ? `<button class="pri" id="profEditI" title="${esc(ft("editProfile"))}" aria-label="${esc(ft("editProfile"))}">✏️</button>` : ""}
+              <button id="profShareI" title="${esc(ft("share"))}" aria-label="${esc(ft("share"))}">↗</button>
+            </div>
             <div class="prof-av">${avatarOf(w)}</div>
             <div class="prof-info">
               <div class="prof-name">${esc(w.name)} ${titleTag(w.title)}</div>
@@ -619,6 +630,8 @@
       const back = $("profBack");
       if (back) back.onclick = () => { history.pushState(null, "", location.pathname + location.search); route(); };
       const ed = $("profEdit"); if (ed) ed.onclick = openEditor;
+      const edi = $("profEditI"); if (edi) edi.onclick = openEditor;
+      $("profShareI").onclick = openSharer;
       const be = $("profBioEmpty"); if (be) be.onclick = openEditor;
       $("profShare").onclick = openSharer;
       // 获赞：数一下这个人（或店铺）收到的所有赞
@@ -637,7 +650,7 @@
       const RING = { mochii: "#ff6fae", silver: "#e2e8f0", gold: "#f5c542", diamond: "#67e8f9", black: "#d4af37", shop: "#fff" };
       $("shareCard").style.setProperty("--ring", RING[key] || "#ff6fae");
       $("shareInner").innerHTML = `
-        <div class="sc-cover" style="background-image:url('${coverOf(key)}')"></div>
+        <div class="sc-cover" style="background-image:url('${coverOf(key, true)}')"></div>
         <div class="sc-av">${avatarOf(w)}</div>
         <div class="sc-body">
           <div class="sc-name">${esc(w.name)} ${titleTag(w.title)}</div>
