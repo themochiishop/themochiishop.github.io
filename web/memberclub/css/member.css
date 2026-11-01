@@ -853,7 +853,7 @@ input.locked { opacity: .6; cursor: not-allowed; }
 .contact-tile .ct b { font-size: .92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .contact-tile .ct small { color: var(--muted); font-size: .76rem; }
 .contact-tile .ct .cn { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
-.contact-tile .ct .cn-tag { font-size: .72rem; line-height: 1.3; padding: 2px 8px; border-radius: 3px; max-width: 100%;
+.contact-tile .ct .cn-tag { font-size: .62rem; line-height: 1.3; padding: 2px 8px; border-radius: 3px; max-width: 100%;
   background: rgba(120,120,120,.12); border: 1px solid rgba(255,111,174,.3); color: var(--text); }
 .contact-tile .go { color: var(--accent); }
 @media (max-width: 640px) {
