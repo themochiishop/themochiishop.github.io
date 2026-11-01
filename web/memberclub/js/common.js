@@ -902,7 +902,7 @@ function safeLink(u) {
   u = String(u || "").trim();
   if (!u) return "";
   if (/^https:\/\//i.test(u)) return u;
-  if (/^[a-z0-9_-]+\.html(#[\w-]*)?$/i.test(u)) return u;
+  if (/^[a-z0-9_-]+\.html(#[\w~-]*)?$/i.test(u)) return u;   // ~ 用在「帖子~回复」
   return "";
 }
 
