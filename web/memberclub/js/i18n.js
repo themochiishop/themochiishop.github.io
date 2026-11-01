@@ -4,6 +4,9 @@
 const DICT = {
   // ======================= English =======================
   en: {
+    "pzp.askTitle": "Still have questions about your prize?",
+    "pzp.askSub": "Can't see your prize, or have a question about claiming or delivery? Message us directly.",
+    "pzp.moreHelp": "More answers in the Help Centre ➔",
     "pzp.pendingTitle": "🎉 Congratulations, you won!",
     "pzp.pendingNote": "We're preparing your prize. It will appear here for you to claim, and the bell will let you know.",
     "pzp.pendingPrize": "Monthly Draw prize",
@@ -474,6 +477,9 @@ const DICT = {
 
   // ======================= Bahasa Melayu =======================
   ms: {
+    "pzp.askTitle": "Masih ada soalan tentang hadiah anda?",
+    "pzp.askSub": "Tidak nampak hadiah anda, atau ada soalan tentang tuntutan atau penghantaran? Mesej kami terus.",
+    "pzp.moreHelp": "Lebih banyak jawapan di Pusat Bantuan ➔",
     "pzp.pendingTitle": "🎉 Tahniah, anda menang!",
     "pzp.pendingNote": "Kami sedang menyediakan hadiah anda. Ia akan muncul di sini untuk dituntut, dan loceng akan memaklumkan anda.",
     "pzp.pendingPrize": "Hadiah Cabutan Bulanan",
@@ -944,6 +950,9 @@ const DICT = {
 
   // ======================= 中文 =======================
   zh: {
+    "pzp.askTitle": "还有关于中奖的问题？",
+    "pzp.askSub": "看不到奖品、领取或寄送有疑问，直接联系我们。",
+    "pzp.moreHelp": "更多问题看帮助中心 ➔",
     "pzp.pendingTitle": "🎉 恭喜你中奖了！",
     "pzp.pendingNote": "奖品正在准备中，准备好后会出现在这里让你领取，铃铛也会通知你。",
     "pzp.pendingPrize": "每月抽奖奖品",

@@ -968,3 +968,4 @@ input.locked { opacity: .6; cursor: not-allowed; }
 .pz-pending-list li { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
 .pz-pending-list li:first-child { border-top: none; }
 .pz-pending-ico { font-size: 1.4rem; }
+.pz-more-help { display: inline-block; margin-top: 12px; font-size: .82rem; color: var(--accent); font-weight: 700; text-decoration: none; }
