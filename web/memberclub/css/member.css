@@ -942,3 +942,28 @@ input.locked { opacity: .6; cursor: not-allowed; }
 .home-prize { margin-bottom: 16px; }
 .pz-deadline { margin-top: 8px; font-size: .8rem; color: var(--muted); }
 .pz-deadline.soon { color: var(--warn); font-weight: 700; }
+
+/* ---------- 🏆 中奖记录页 ---------- */
+.pz-empty { text-align: center; padding: 28px 20px; }
+.pz-empty-ico { font-size: 2.6rem; line-height: 1; margin-bottom: 10px; }
+.pz-empty h2 { font-size: 1.1rem; margin-bottom: 6px; }
+.pz-empty .small { font-size: .82rem; margin-top: 4px; }
+.pz-empty-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+#drawCard .shop-grid { margin-top: 10px; }
+#drawCard .shop-item .ph img[data-zoom] { cursor: zoom-in; }
+.pz-draw-btn { margin-top: 14px; }
+/* 兑换记录：有奖品待领取的小提示 */
+.pz-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; padding: 12px 16px;
+  border-radius: var(--radius); border: 1px solid rgba(255,111,174,.5); color: var(--text); text-decoration: none; font-size: .9rem;
+  background: linear-gradient(90deg, rgba(255,111,174,.18), rgba(124,92,255,.12)); }
+.pz-banner b { color: var(--accent); white-space: nowrap; }
+/* 导航红点：有待领取的中奖奖品 */
+.main-nav a.has-dot, .sub-nav a.has-dot { position: relative; }
+.main-nav a.has-dot::after, .sub-nav a.has-dot::after { content: ""; position: absolute; top: 6px; right: 8px; width: 8px; height: 8px;
+  border-radius: 50%; background: var(--bad); box-shadow: 0 0 0 2px var(--card); }
+.pz-pending { border: 1px solid rgba(34,197,94,.45); background: linear-gradient(160deg, rgba(34,197,94,.12), var(--card) 60%); }
+.pz-pending h2 { font-size: 1.1rem; margin-bottom: 8px; }
+.pz-pending-list { list-style: none; margin-bottom: 10px; }
+.pz-pending-list li { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.pz-pending-list li:first-child { border-top: none; }
+.pz-pending-ico { font-size: 1.4rem; }

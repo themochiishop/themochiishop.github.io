@@ -658,8 +658,8 @@ export function logout() {
 // ---------- 顶部导航：会员俱乐部 logo、铃铛、语言、三大分类 + 子分页 ----------
 const NAV = [
   { key: "home",   icon: "🏠", label: "nav.home",   href: "home.html",    pages: ["home"] },
-  { key: "shop",   icon: "🛍️", label: "nav.shop",   href: "shop.html",    pages: ["shop", "rewards"],
-    sub: [["shop", "shop.html", "nav.mall"], ["rewards", "rewards.html", "nav.rewards"]] },
+  { key: "shop",   icon: "🛍️", label: "nav.shop",   href: "shop.html",    pages: ["shop", "rewards", "prizes"],
+    sub: [["shop", "shop.html", "nav.mall"], ["rewards", "rewards.html", "nav.rewards"], ["prizes", "prizes.html", "nav.prizes"]] },
   { key: "member", icon: "💎", label: "nav.points", href: "account.html", pages: ["account", "points"],
     sub: [["account", "account.html", "nav.account"], ["points", "points.html", "nav.pointsDetail"]] },
   { key: "me",     icon: "👤", label: "nav.me",     href: "profile.html", pages: ["profile", "bind", "help"],
@@ -689,13 +689,13 @@ export function renderNav(active) {
     </div>
     <div class="topbar-inner topbar-nav">
       <nav class="main-nav">
-        ${NAV.map(g => `<a href="${g.href}" class="${g === group ? "active" : ""}"><span>${g.icon}</span>${t(g.label)}</a>`).join("")}
+        ${NAV.map(g => `<a href="${g.href}" data-k="${g.key}" class="${g === group ? "active" : ""}"><span>${g.icon}</span>${t(g.label)}</a>`).join("")}
       </nav>
     </div>
     ${group && group.sub ? `
     <div class="topbar-inner sub-nav-row">
       <nav class="sub-nav">
-        ${group.sub.map(([k, href, key]) => `<a href="${href}" class="${k === active ? "active" : ""}">${t(key)}</a>`).join("")}
+        ${group.sub.map(([k, href, key]) => `<a href="${href}" data-k="${k}" class="${k === active ? "active" : ""}">${t(key)}</a>`).join("")}
       </nav>
     </div>` : ""}`;
   bindLangSwitch(el);
@@ -727,7 +727,7 @@ function speedUpNav(el) {
     }
   } catch (e) {}
   // 不支持的话：闲下来时预先下载主要页面
-  const pages = ["home.html", "shop.html", "rewards.html", "account.html", "points.html", "profile.html", "bind.html"];
+  const pages = ["home.html", "shop.html", "rewards.html", "prizes.html", "account.html", "points.html", "profile.html", "bind.html"];
   const idle = window.requestIdleCallback || (f => setTimeout(f, 1200));
   idle(() => pages.filter(p => !location.pathname.endsWith(p)).forEach(p => {
     const l = document.createElement("link");
@@ -791,22 +791,22 @@ function buildEvents() {
     const v = { name: p.prizeName };
     const won = toDate(p.createdAt);
     if (won) ev.push({ time: won, icon: "🏆", title: t("notif.prizeWon", v),
-      detail: p.status === "unclaimed" ? t("notif.prizeWonDetail") : "", link: "rewards.html#prizes" });
+      detail: p.status === "unclaimed" ? t("notif.prizeWonDetail") : "", link: "prizes.html" });
     const ap = toDate(p.approvedAt), sh = toDate(p.shippedAt);
     // 审核通过（如果是「通过并标记已发货」同一刻完成，只显示发货通知）
     if (ap && (!sh || sh - ap > 60000)) ev.push({ time: ap, icon: "✅", title: t("notif.prizeApproved", v),
-      detail: t(p.delivery === "separate" ? "notif.prizeApprovedSep" : "notif.prizeApprovedOrder"), link: "rewards.html#prizes" });
+      detail: t(p.delivery === "separate" ? "notif.prizeApprovedSep" : "notif.prizeApprovedOrder"), link: "prizes.html" });
     if (sh) ev.push({ time: sh, icon: "🚚", title: t("notif.prizeShipped", v),
-      detail: p.shipping ? [p.shipping.carrierName, p.shipping.trackingNo].filter(Boolean).join(" · ") : "", link: "rewards.html#prizes" });
+      detail: p.shipping ? [p.shipping.carrierName, p.shipping.trackingNo].filter(Boolean).join(" · ") : "", link: "prizes.html" });
     const cc = toDate(p.cancelledAt);
     if (cc && p.status === "cancelled") ev.push({ time: cc, icon: p.autoExpired ? "⌛" : "↩️",
       title: t(p.autoExpired ? "notif.prizeExpired" : "notif.prizeCancelled", v),
-      detail: p.autoExpired ? "" : p.cancelNote || "", link: "rewards.html#prizes" });
+      detail: p.autoExpired ? "" : p.cancelNote || "", link: "prizes.html" });
     const end = p.status === "unclaimed" ? prizeDeadline(p) : null;
     if (end && end > now) ev.push({ time: new Date(end.getTime() - PRIZE_REMIND_DAYS * 86400000), icon: "⏰",
-      title: t("notif.prizeExpiring", v), detail: t("pz.deadline", { d: fmtDate(end) }), link: "rewards.html#prizes" });
+      title: t("notif.prizeExpiring", v), detail: t("pz.deadline", { d: fmtDate(end) }), link: "prizes.html" });
     const done = toDate(p.completedAt);
-    if (done && p.autoCompleted) ev.push({ time: done, icon: "✅", title: t("notif.prizeAutoDone", v), detail: "", link: "rewards.html#prizes" });
+    if (done && p.autoCompleted) ev.push({ time: done, icon: "✅", title: t("notif.prizeAutoDone", v), detail: "", link: "prizes.html" });
   });
   // ⏳ 积分快过期：过期前 EXPIRY_WARN_DAYS 天提醒
   const reserved = bell.redemptions.filter(r => r.status === "pending").reduce((s, r) => s + (r.cost || 0), 0);
@@ -858,6 +858,9 @@ const BELL_TONE = { "🎉": "green", "✅": "green", "↩️": "red", "⌛": "or
   "🎁": "pink", "❌": "red", "🔗": "blue", "✂️": "red", "📢": "purple", "🏆": "pink", "⏰": "orange", "🚚": "blue", "⚠️": "orange", "📦": "orange" };
 
 function renderBell() {
+  // 🏆 有待领取的中奖奖品：「兑换商城」和「中奖记录」旁边显示红点
+  const prizeTodo = bell.prizes.some(p => p.status === "unclaimed");
+  document.querySelectorAll('.main-nav a[data-k="shop"], .sub-nav a[data-k="prizes"]').forEach(a => a.classList.toggle("has-dot", prizeTodo));
   const badge = document.getElementById("bellBadge");
   const list = document.getElementById("bellList");
   if (!badge || !list) return;

@@ -67,6 +67,17 @@ const TEXT = {
       ["收到奖品后要做什么？", () => `在「兑换记录」按「确认收货」，可以选填照片和留言。如果没有确认，发货 14 天后会自动完成。`],
       ["「即将下架」是什么意思？", () => `奖品设定了下架时间，时间一到就不能再兑换。商城会显示剩余天数或小时。`],
     ],
+    prize: [
+      ["怎么知道我有没有中奖？", () => `每月抽奖结束后，得奖名单会放在网站的 <a href="/monthly-draw/" target="_blank" rel="noopener">Monthly Draw</a> 页面。我们把奖品放进你的俱乐部后，「中奖记录」和首页会出现，铃铛也会通知你。`],
+      ["中奖后要怎么领奖？", () => `<ol><li>在「我的 → 绑定账号」绑定你中奖的那张订单。</li><li>私讯客服说你已经注册好了。</li><li>奖品出现在「中奖记录」后，按「领取奖品」。单独寄出的奖品要选或填收货地址。</li></ol>`],
+      ["领奖有期限吗？", () => `有。奖品放进来后 <b>30 天</b>内要按「领取奖品」，期限显示在每个奖品下面，到期前 7 天铃铛会提醒你。过期会自动作废；来不及的话，请在期限前联系客服。`],
+      ["「随单发送」和「单独寄出」有什么不同？", () => `<b>随单发送</b>：奖品和你下一张订单放在同一个包裹寄出。<b>单独寄出</b>：领取时填地址，我们另外寄给你。最近没有要下单的话，可以联系客服改成单独寄出。`],
+      ["领取后多久寄出？怎么查？", () => `领取后我们会审核，通过后尽快寄出。进度条会显示到哪一步，每一步铃铛都会通知；发货后会显示运单号和查询链接。`],
+      ["地址填错了怎么办？", () => `「待审核」或「待发货」时，在那个奖品的地址下按「修改」。已经寄出的话，请马上联系客服。`],
+      ["收到奖品后要做什么？", () => `在「中奖记录」按「确认收到」。没有按的话，发货 ${14} 天后会自动完成。`],
+      ["领奖要扣积分吗？", () => `不用，中奖奖品不扣积分。`],
+      ["没有注册会员也可以领奖吗？", () => `可以，请私讯客服，告诉我们你的名字和中奖订单编号，一样要在 30 天内联系。注册会员的话，可以自己在俱乐部领奖、看寄送进度，还能累积积分。`],
+    ],
     account: [
       ["怎么修改昵称？", () => `到「我的 › 个人资料」修改。昵称<b>每 30 天只能改一次</b>。`],
       ["手机号码、WhatsApp 通知可以改吗？", () => `可以，在「个人资料」随时修改。手机号码用来联系你领取奖品，请填可以用 WhatsApp 联系的号码。`],
@@ -123,6 +134,17 @@ const TEXT = {
       ["I entered the wrong address?", () => `<b>Before it ships</b>, tap “Edit” on that redemption in “My Redemptions”. If it has already shipped, please contact us right away.`],
       ["What should I do after receiving it?", () => `Tap “Confirm receipt” in “My Redemptions” (photo and comment are optional). If you don't, it completes automatically 14 days after shipping.`],
       ["What does “Ending soon” mean?", () => `The reward has an end time. After that it can no longer be redeemed. The mall shows the days or hours left.`],
+    ],
+    prize: [
+      ["How do I know if I won?", () => `After each Monthly Draw, the winners are posted on the <a href="/monthly-draw/" target="_blank" rel="noopener">Monthly Draw</a> page. Once we add your prize to the club, it appears in "My Prizes" and on the home page, and the bell notifies you.`],
+      ["I won — how do I claim my prize?", () => `<ol><li>Link the order you won with under "Me → Linked Accounts".</li><li>Message our customer service to let us know you've joined.</li><li>When the prize appears in "My Prizes", tap "Claim prize". For prizes shipped separately, pick or enter a delivery address.</li></ol>`],
+      ["Is there a deadline?", () => `Yes. Please tap "Claim prize" within <b>30 days</b> of it being added — the date is shown under each prize, and the bell reminds you 7 days before. Unclaimed prizes expire automatically; if you need more time, contact us before the deadline.`],
+      ["What's the difference between \"ships with your order\" and \"separate parcel\"?", () => `<b>Ships with your order</b>: the prize goes in the same parcel as your next order. <b>Separate parcel</b>: you enter an address when claiming and we send it on its own. Not planning to order soon? Ask us to switch it to a separate parcel.`],
+      ["How soon is it shipped? How do I track it?", () => `After you claim, we review it and ship as soon as possible. The progress bar shows each step and the bell notifies you; once shipped, the tracking number and link appear.`],
+      ["I entered the wrong address", () => `While it's "In review" or "Awaiting shipment", tap "Edit" under the prize's address. If it has already shipped, contact us right away.`],
+      ["What do I do when it arrives?", () => `Tap "I've received it" in "My Prizes". If you don't, it completes automatically ${14} days after shipping.`],
+      ["Does claiming a prize use my points?", () => `No, draw prizes don't use any points.`],
+      ["Can I claim without joining the club?", () => `Yes — message our customer service with your name and winning order number, also within 30 days. As a member you can claim in the club yourself, follow the delivery and earn points too.`],
     ],
     account: [
       ["How do I change my name?", () => `In “Me › Profile”. Your name can be changed <b>once every 30 days</b>.`],
@@ -181,6 +203,17 @@ const TEXT = {
       ["Apa perlu dibuat selepas menerimanya?", () => `Ketik “Sahkan penerimaan” di “Penebusan Saya” (foto dan komen adalah pilihan). Jika tidak, ia selesai secara automatik 14 hari selepas dihantar.`],
       ["Apa maksud “Hampir tamat”?", () => `Ganjaran itu ada masa tamat. Selepas itu ia tidak boleh ditebus lagi. Pusat Ganjaran memaparkan baki hari atau jam.`],
     ],
+    prize: [
+      ["Bagaimana saya tahu jika saya menang?", () => `Selepas setiap Cabutan Bulanan, senarai pemenang dipaparkan di halaman <a href="/monthly-draw/" target="_blank" rel="noopener">Monthly Draw</a>. Selepas kami tambah hadiah ke kelab anda, ia muncul di "Hadiah Saya" dan halaman utama, dan loceng akan memaklumkan anda.`],
+      ["Saya menang — bagaimana nak tuntut?", () => `<ol><li>Pautkan pesanan yang menang di "Saya → Pautan Akaun".</li><li>Mesej khidmat pelanggan kami bahawa anda sudah mendaftar.</li><li>Apabila hadiah muncul di "Hadiah Saya", ketik "Tuntut hadiah". Untuk hadiah yang dihantar berasingan, pilih atau isi alamat penghantaran.</li></ol>`],
+      ["Ada tarikh akhir?", () => `Ya. Sila ketik "Tuntut hadiah" dalam <b>30 hari</b> selepas ia ditambah — tarikhnya dipaparkan di bawah setiap hadiah, dan loceng akan mengingatkan 7 hari sebelumnya. Hadiah yang tidak dituntut akan tamat tempoh secara automatik; jika perlukan masa, hubungi kami sebelum tarikh akhir.`],
+      ["Apa beza \"dihantar bersama pesanan\" dan \"bungkusan berasingan\"?", () => `<b>Bersama pesanan</b>: hadiah dimasukkan dalam bungkusan pesanan anda yang seterusnya. <b>Bungkusan berasingan</b>: anda isi alamat semasa menuntut dan kami hantar secara berasingan. Tiada pesanan dalam masa terdekat? Minta kami tukar kepada bungkusan berasingan.`],
+      ["Bila ia dihantar? Bagaimana nak jejak?", () => `Selepas anda menuntut, kami akan semak dan hantar secepat mungkin. Bar kemajuan menunjukkan setiap langkah dan loceng memaklumkan anda; selepas dihantar, nombor penjejakan dan pautan akan dipaparkan.`],
+      ["Saya tersilap isi alamat", () => `Semasa "Dalam semakan" atau "Menunggu penghantaran", ketik "Ubah" di bawah alamat hadiah. Jika sudah dihantar, hubungi kami segera.`],
+      ["Apa perlu dibuat bila hadiah tiba?", () => `Ketik "Saya sudah terima" di "Hadiah Saya". Jika tidak, ia selesai secara automatik ${14} hari selepas dihantar.`],
+      ["Adakah menuntut hadiah menggunakan mata?", () => `Tidak, hadiah cabutan tidak menggunakan sebarang mata.`],
+      ["Boleh tuntut tanpa menyertai kelab?", () => `Boleh — mesej khidmat pelanggan kami dengan nama dan nombor pesanan yang menang, juga dalam 30 hari. Sebagai ahli, anda boleh tuntut sendiri di kelab, ikuti penghantaran dan kumpul mata.`],
+    ],
     account: [
       ["Bagaimana menukar nama?", () => `Di “Saya › Profil”. Nama boleh ditukar <b>sekali setiap 30 hari</b>.`],
       ["Boleh tukar nombor telefon atau makluman WhatsApp?", () => `Boleh, bila-bila masa di “Profil”. Nombor anda digunakan untuk menghubungi anda berkenaan ganjaran, jadi gunakan nombor yang ada WhatsApp.`],
@@ -193,7 +226,7 @@ const TEXT = {
 };
 
 // 帮助中心：会员俱乐部的分类（顺序 = 显示顺序）
-export const CLUB_SECTIONS = ["points", "tier", "redeem", "bind", "account"];
+export const CLUB_SECTIONS = ["points", "tier", "redeem", "prize", "bind", "account"];
 export function clubFaq() {
   const L = TEXT[lang] || TEXT.en;
   const hasCustom = customPerks().length > 0;

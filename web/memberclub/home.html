@@ -214,11 +214,11 @@
         const todo = list.some(p => p.status === "unclaimed");
         return `
           <div class="card prize-card home-prize${todo ? " has-todo" : ""}">
-            <div class="card-head"><h2>${t("pz.title")}</h2><a class="head-go" href="rewards.html#prizes" aria-label="${esc(t("home.viewAll"))}">➔</a></div>
+            <div class="card-head"><h2>${t("pz.title")}</h2><a class="head-go" href="prizes.html" aria-label="${esc(t("home.viewAll"))}">➔</a></div>
             <ul class="home-pz">
               ${list.map(p => {
                 const dlv = p.delivery === "separate" ? "separate" : "withOrder";
-                return `<li><a href="rewards.html#prizes" class="home-pz-item">
+                return `<li><a href="prizes.html" class="home-pz-item">
                   ${p.prizeImage ? `<img class="redeem-thumb" src="${esc(p.prizeImage)}" alt="" loading="lazy">` : `<span class="redeem-thumb">🏆</span>`}
                   <div class="redeem-body">
                     <div class="title">${esc(p.prizeName)} <span class="tag ${PZ_TAG[p.status]}">${t("pz.st." + p.status)}</span></div>
