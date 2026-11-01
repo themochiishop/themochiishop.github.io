@@ -507,7 +507,13 @@ details summary { cursor: pointer; color: var(--muted); font-size: .85rem; }
     flex-direction: column; gap: 1px; padding: 6px 2px !important;
     font-size: .74rem !important; border-radius: 10px !important; line-height: 1.2; text-align: center;
   }
-  .main-nav a span { font-size: 1rem; }
+  .main-nav a .ni { font-size: 1rem; }
+  /* 往下捲时：只留图标，整条变矮 */
+  .main-nav a { transition: padding .2s ease; }
+  .main-nav a .nl { display: block; max-height: 1.3em; overflow: hidden; transition: max-height .2s ease, opacity .2s ease; }
+  body.nav-compact .main-nav a { padding: 4px 2px !important; }
+  body.nav-compact .main-nav a .nl { max-height: 0; opacity: 0; }
+  body.nav-compact .topbar-inner.topbar-nav { padding-bottom: 6px; }
   .sub-nav a { padding: 5px 6px !important; font-size: .76rem !important; }
   /* 图片：手机端缩小 50% */
   .reward-img { width: 50%; margin: 0 auto 6px; display: block; }
