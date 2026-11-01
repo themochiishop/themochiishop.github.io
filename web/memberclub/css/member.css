@@ -931,3 +931,12 @@ input.locked { opacity: .6; cursor: not-allowed; }
 @media (max-width: 480px) {
   .pz-dlv { font-size: .8rem; padding: 8px 10px; }
 }
+
+/* 首页的中奖领取框 */
+.home-pz { list-style: none; }
+.home-pz li + li { border-top: 1px solid var(--line); }
+.home-pz-item { display: flex; gap: 12px; align-items: center; padding: 10px 0; color: inherit; text-decoration: none; }
+.home-pz-item .meta { font-size: .78rem; color: var(--muted); }
+.home-pz-go { flex-shrink: 0; color: var(--accent); font-weight: 700; }
+.home-pz-go.btn { color: #fff; animation: pzPulse 2s ease-in-out infinite; }
+.home-prize { margin-bottom: 16px; }

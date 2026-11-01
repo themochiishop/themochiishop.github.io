@@ -22,7 +22,7 @@
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, tierProgress, tierLabel, tierIconHTML,
-      toDate, fmtDate, fmtMoney, esc, platformTag, t, lang, endState, isInternalMember
+      toDate, fmtDate, fmtMoney, esc, platformTag, t, lang, endState, isInternalMember, redeemCode
     } from "./js/common.js";
 
     const $ = id => document.getElementById(id);
@@ -46,16 +46,17 @@
 
     requireMember(async (user, member) => {
       const mine = c => getDocs(query(collection(db, c), where("uid", "==", user.uid)));
-      let cfg = {}, bal, oSnap, rSnap, bnSnap, nSnap;
+      let cfg = {}, bal, oSnap, rSnap, bnSnap, nSnap, pzSnap;
       try {
         const sSnap = await getDoc(doc(db, "settings", "home")).catch(() => null);
         cfg = sSnap && sSnap.exists() ? sSnap.data() : {};
-        [bal, oSnap, rSnap, bnSnap, nSnap] = await Promise.all([
+        [bal, oSnap, rSnap, bnSnap, nSnap, pzSnap] = await Promise.all([
           loadBalance(user.uid),
           mine("orders"),
           getDocs(query(collection(db, "rewards"), where("active", "==", true))),
           getDocs(collection(db, "homeBanners")).catch(() => ({ docs: [] })),
           getDocs(query(collection(db, "homeNews"), orderBy("createdAt", "desc"), limit(30))).catch(() => ({ docs: [] })),
+          mine("prizeWins").catch(() => ({ docs: [] })),
         ]);
       } catch (e) {
         $("pageError").textContent = t("common.loadFail") + e.message;
@@ -202,7 +203,35 @@
         },
       };
 
-      $("homeSections").innerHTML = sections
+      // ---------- 🏆 中奖领取：有进行中的奖品才显示，固定在最上面（不受「首页设定」影响） ----------
+      function prizeBox() {
+        const PZ_TAG = { unclaimed: "tag-pending", claimed: "tag-pending", approved: "tag-ship", shipped: "tag-ship" };
+        const list = pzSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .filter(p => PZ_TAG[p.status])
+          .sort((a, b) => (a.status === "unclaimed" ? 0 : 1) - (b.status === "unclaimed" ? 0 : 1)
+            || (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0));
+        if (!list.length) return "";
+        const todo = list.some(p => p.status === "unclaimed");
+        return `
+          <div class="card prize-card home-prize${todo ? " has-todo" : ""}">
+            <div class="card-head"><h2>${t("pz.title")}</h2><a class="head-go" href="rewards.html#prizes" aria-label="${esc(t("home.viewAll"))}">➔</a></div>
+            <ul class="home-pz">
+              ${list.map(p => {
+                const dlv = p.delivery === "separate" ? "separate" : "withOrder";
+                return `<li><a href="rewards.html#prizes" class="home-pz-item">
+                  ${p.prizeImage ? `<img class="redeem-thumb" src="${esc(p.prizeImage)}" alt="" loading="lazy">` : `<span class="redeem-thumb">🏆</span>`}
+                  <div class="redeem-body">
+                    <div class="title">${esc(p.prizeName)} <span class="tag ${PZ_TAG[p.status]}">${t("pz.st." + p.status)}</span></div>
+                    <div class="meta">${dlv === "separate" ? "🚚" : "📦"} ${t("pz.dlv." + dlv)}${p.drawMonth ? " · " + esc(p.drawMonth) : ""}</div>
+                  </div>
+                  <span class="home-pz-go ${p.status === "unclaimed" ? "btn btn-primary btn-inline btn-xs" : ""}">${p.status === "unclaimed" ? t("pz.claim") : "➔"}</span>
+                </a></li>`;
+              }).join("")}
+            </ul>
+          </div>`;
+      }
+
+      $("homeSections").innerHTML = prizeBox() + sections
         .filter(s => s.on !== false && R[s.key])
         .map(s => R[s.key](s))
         .join("");
