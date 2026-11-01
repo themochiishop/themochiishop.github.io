@@ -182,6 +182,7 @@
     .cmt-head { font-weight: 700; margin: 14px 0 6px; padding-top: 12px; border-top: 1px solid var(--line); }
     .cmt { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
     .cmt:last-child { border-bottom: 0; }
+    .cmt { scroll-margin-bottom: 120px; }   /* 捲动时留位置给下面的回复输入框 */
     /* 从铃铛点进来的那一条回复 */
     .cmt.cmt-focus { background: rgba(255,111,174,.14); border-radius: 10px; padding-left: 8px; padding-right: 8px; transition: background 1.2s ease; }
     .cmt .av, .cmt .xhs-avatar { width: 26px; height: 26px; font-size: .68rem; margin-top: 2px; cursor: pointer; }
@@ -921,6 +922,13 @@
           p.nCmt = comments.length; replyTo = null;
           $("rText").value = "";
           drawDetail(p); render();
+          // 捲到刚送出的回复，不被下面的输入框挡住
+          const el = $("detailInner").querySelector(`.cmt[data-cid="${CSS.escape(ref.id)}"]`);
+          if (el) {
+            el.classList.add("cmt-focus");
+            setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "center" }), 60);
+            setTimeout(() => el.classList.remove("cmt-focus"), 2500);
+          }
         } catch (e) { toast(ft("fail") + e.message); send.disabled = false; }
       };
     }
