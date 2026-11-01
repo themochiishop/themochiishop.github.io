@@ -705,7 +705,7 @@ export function renderNav(active) {
     </div>
     <div class="topbar-inner topbar-nav">
       <nav class="main-nav">
-        ${NAV.map(g => `<a href="${g.href}" data-k="${g.key}" class="${g === group ? "active" : ""}"><span>${g.icon}</span>${t(g.label)}</a>`).join("")}
+        ${NAV.map(g => `<a href="${g.href}" data-k="${g.key}" class="${g === group ? "active" : ""}" title="${t(g.label)}"><span class="ni">${g.icon}</span><span class="nl">${t(g.label)}</span></a>`).join("")}
       </nav>
     </div>
     ${group && group.sub ? `
@@ -716,6 +716,26 @@ export function renderNav(active) {
     </div>` : ""}`;
   bindLangSwitch(el);
   speedUpNav(el);
+  initCompactNav();
+}
+
+// ---------- 📱 手机：往下捲时，主分类只留图标（节省空间）；捲回顶部再显示文字 ----------
+let compactNavInit = false;
+function initCompactNav() {
+  if (compactNavInit) return;
+  compactNavInit = true;
+  const mq = window.matchMedia("(max-width: 480px)");
+  let on = false, ticking = false;
+  const update = () => {
+    ticking = false;
+    const y = window.scrollY || document.documentElement.scrollTop || 0;
+    // 进入 / 离开的位置不同（80 / 20），避免在边界来回闪
+    const next = mq.matches && (on ? y > 20 : y > 80);
+    if (next !== on) { on = next; document.body.classList.toggle("nav-compact", on); }
+  };
+  window.addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+  if (mq.addEventListener) mq.addEventListener("change", update);
+  update();
 }
 
 // ---------- ⚡ 换页更顺：预先下载、按下马上有反应 ----------
