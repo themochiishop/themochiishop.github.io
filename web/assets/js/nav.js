@@ -297,3 +297,32 @@ try {
     }
   });
 } catch (e) { console.error('nav:', e); }
+/* ---------- 页脚:注册号、(WhatsApp only) 自动缩小 ---------- */
+(function () {
+  const f = document.querySelector('footer');
+  if (!f) return;
+  const RE = /(\(\s*\d{6,}\s*\)|\(\s*WhatsApp only\s*\))/i;
+  let busy = false;
+  function smallify() {
+    if (busy) return; busy = true;
+    try {
+      const w = document.createTreeWalker(f, NodeFilter.SHOW_TEXT);
+      const hits = []; let n;
+      while ((n = w.nextNode())) {
+        if (n.parentElement && n.parentElement.closest('.ft-sm')) continue;
+        if (RE.test(n.nodeValue)) hits.push(n);
+      }
+      hits.forEach(node => {
+        const frag = document.createDocumentFragment();
+        node.nodeValue.split(RE).forEach(p => {
+          if (!p) return;
+          if (RE.test(p)) { const s = document.createElement('span'); s.className = 'ft-sm'; s.textContent = p; frag.appendChild(s); }
+          else frag.appendChild(document.createTextNode(p));
+        });
+        node.replaceWith(frag);
+      });
+    } finally { busy = false; }
+  }
+  smallify();
+  new MutationObserver(smallify).observe(f, { childList: true, characterData: true, subtree: true });
+})();
