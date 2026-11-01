@@ -195,7 +195,20 @@
     .cmt-foot { display: flex; gap: 12px; font-size: .72rem; color: var(--muted); margin-top: 2px; }
     .cmt-foot button { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: .72rem; padding: 0; }
     .cmt-foot button:hover { color: var(--text); }
-    .reply-box { position: sticky; bottom: 0; background: var(--card); padding-top: 10px; margin-top: 6px; }
+    .reply-box { position: sticky; bottom: 0; background: var(--card); padding: 10px 0 2px; margin-top: 6px; }
+    /* 平常只显示一条「写留言」，点了才展开输入框 */
+    .reply-pill { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; cursor: text;
+      background: var(--card2); border: 1px solid var(--line); border-radius: 999px; padding: 9px 14px;
+      color: var(--muted); font-size: .86rem; }
+    .reply-pill:hover { border-color: var(--accent); }
+    .reply-pill .dr { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .reply-close { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: .76rem; margin-left: auto; }
+    .cmt-hidden { font-size: .84rem; color: var(--muted); font-style: italic; }
+    .report-reasons { display: grid; gap: 6px; margin: 10px 0; }
+    .report-reasons label { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border: 1px solid var(--line);
+      border-radius: 10px; cursor: pointer; font-size: .9rem; }
+    .report-reasons input { width: auto; margin: 0; accent-color: var(--accent); }
+    .report-reasons label:has(input:checked) { border-color: var(--accent); background: rgba(255,111,174,.08); }
     .reply-to { font-size: .76rem; color: var(--accent); margin-bottom: 4px; display: flex; gap: 8px; }
     .reply-to button { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: .76rem; }
     .reply-row { display: flex; gap: 8px; align-items: flex-end; }
@@ -283,6 +296,14 @@
   </div>
 
   <!-- 分享主页 -->
+  <!-- 🚩 检举 -->
+  <div id="reporter" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button type="button" class="modal-x" data-close aria-label="close">✕</button>
+      <div id="reportInner"></div>
+    </div>
+  </div>
+
   <div id="sharer" class="modal hidden" role="dialog" aria-modal="true">
     <div class="modal-card share-card" id="shareCard">
       <button type="button" class="modal-x" data-close aria-label="close" style="z-index:2">✕</button>
@@ -822,16 +843,20 @@
     // ---------- 帖子详情 + 回复 ----------
     let openId = null, openPost = null, comments = [], replyTo = null, focusCid = null;
     let editing = null;   // 正在编辑：「post」或「c:回复ID」
+    let replyOpen = false;          // 留言框有没有展开
+    const drafts = {};              // 每篇帖子写到一半的留言（收起后不会不见）
 
     // ⋯ 选单：作者本人可以编辑；作者、管理员、版主可以删除
     const canEdit = p => !!me.user && (me.admin || p.authorUid === me.user.uid);
-    const canEditCmt = c => !!me.user && (me.admin || c.authorUid === me.user.uid);
-    function moreHTML(kind, id, edit, del) {
-      if (!edit && !del) return "";
+    const canEditCmt = c => !!me.user && !c.hidden && (me.admin || c.authorUid === me.user.uid);
+    const canReport = authorUid => !!me.member && !!me.user && authorUid !== me.user.uid;
+    function moreHTML(kind, id, edit, del, rep) {
+      if (!edit && !del && !rep) return "";
       return `<span class="more-wrap"><button class="more-btn" data-more="${kind}:${esc(id)}" aria-label="${esc(ft("more"))}" title="${esc(ft("more"))}">⋯</button>
         <span class="more-menu hidden" data-menu="${kind}:${esc(id)}">
           ${edit ? `<button data-mact="edit">✏️ ${esc(ft("editText"))}</button>` : ""}
           ${del ? `<button data-mact="del" class="danger">🗑 ${esc(ft("delete"))}</button>` : ""}
+          ${rep ? `<button data-mact="report">🚩 ${esc(ft("report"))}</button>` : ""}
         </span></span>`;
     }
     function editBoxHTML(text) {
@@ -849,12 +874,12 @@
         if (!keepHash && /^#p-/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search + (view.mode === "user" ? "#u-" + view.uid : view.mode === "shop" ? "#shop" : ""));
       }
     }
-    ["detail", "composer", "editor", "sharer"].forEach(id => $(id).addEventListener("click", e => {
+    ["detail", "composer", "editor", "sharer", "reporter"].forEach(id => $(id).addEventListener("click", e => {
       if (e.target === $(id) || e.target.closest("[data-close]")) closeModal(id);
     }));
 
     async function openDetail(p) {
-      openId = p.id; openPost = p; replyTo = null; comments = []; editing = null;
+      openId = p.id; openPost = p; replyTo = null; comments = []; editing = null; replyOpen = false;
       $("detail").classList.remove("hidden"); document.body.style.overflow = "hidden";
       drawDetail(p, true);
       try {
@@ -874,7 +899,7 @@
     function drawDetail(p, loading = false) {
       const w = who(p);
       const mine = me.user && p.authorUid === me.user.uid;
-      const keep = $("rText") ? $("rText").value : "";
+
       $("detailInner").innerHTML = `
         ${sliderHTML(p.content.images, "detail-slider")}
         <div class="detail-body">
@@ -884,7 +909,7 @@
               <div class="tm">${titleTag(w.title)}<span>${p.pinned ? esc(ft("pinned")) + " · " : ""}${fmtTime(p.createdAt)}${p.editedAt ? ` · <span class="edited-tag">${esc(ft("edited"))}</span>` : ""}</span></div></div></div>
             <div style="display:flex;align-items:center;gap:4px">
               <button class="xhs-like-btn${p.liked ? " liked" : ""}" data-dlike>${p.liked ? "❤️" : "🤍"} <span>${p.nLike}</span></button>
-              ${moreHTML("post", "", canEdit(p), mine || isMod())}
+              ${moreHTML("post", "", canEdit(p), mine || isMod(), !isShop(p) && canReport(p.authorUid))}
             </div>
           </div>
           ${editing === "post" ? editBoxHTML(p.content.text || "")
@@ -897,16 +922,20 @@
               <div class="cmt-main">
                 <div class="cmt-name"><span class="cmt-who" data-author="${esc(authorKey(c))}">${esc(cw.name)} ${tierMark(cw)}</span> ${titleTag(cw.title)}</div>
                 ${editing === "c:" + c.id ? editBoxHTML(c.text || "")
+                  : c.hidden ? `<div class="cmt-hidden">*** ${esc(ft("hiddenCmt"))}</div>`
                   : `<div class="cmt-text">${c.replyTo && c.replyTo.name ? `<span class="at">@${esc(c.replyTo.name)}</span> ` : ""}${esc(c.text)}</div>`}
                 <div class="cmt-foot"><span>${fmtTime(c.createdAt)}${c.editedAt ? ` · ${esc(ft("edited"))}` : ""}</span>
                   ${canReply() ? `<button data-rto="${esc(c.id)}">${esc(ft("reply"))}</button>` : ""}
-                  ${moreHTML("cmt", c.id, canEditCmt(c), (me.user && c.authorUid === me.user.uid) || isMod())}
+                  ${moreHTML("cmt", c.id, canEditCmt(c), (me.user && c.authorUid === me.user.uid) || isMod(), !c.hidden && canReport(c.authorUid))}
                 </div>
               </div>
             </div>`; }).join("") : `<p class="muted" style="font-size:.85rem">${esc(ft("noReplies"))}</p>`}</div>
           <div class="reply-box">${replyBoxHTML()}</div>
         </div>`;
-      if ($("rText")) $("rText").value = keep;
+      if ($("rText")) {
+        $("rText").value = drafts[p.id] || "";
+        $("rText").oninput = () => { drafts[p.id] = $("rText").value; };
+      }
       bindDetail(p);
     }
 
@@ -915,7 +944,12 @@
       if (!me.member.name) return `<div class="cant"><a href="profile.html">${esc(ft("hintName"))}</a></div>`;
       if (!me.bound && !me.internal && me.perm === "none") return `<div class="cant"><a href="profile.html#bind">${esc(ft("cantBind"))}</a></div>`;
       if (!canReply()) return `<div class="cant">${esc(ft("cantTier", { tier: tierName(cfg.replyRank ?? 0) }))}</div>`;
-      return `${replyTo ? `<div class="reply-to">${esc(ft("replyTo", { name: replyTo.name }))}<button data-rcancel>${esc(ft("cancel"))}</button></div>` : ""}
+      if (!replyOpen) {
+        const d = openId && drafts[openId];
+        return `<button class="reply-pill" data-ropen>💬 ${d ? `<span class="dr">${esc(d)}</span>` : esc(ft("replyPh"))}</button>`;
+      }
+      return `<div class="reply-to">${replyTo ? `${esc(ft("replyTo", { name: replyTo.name }))}<button data-rcancel>${esc(ft("cancel"))}</button>` : ""}
+          <button class="reply-close" data-rclose>${esc(ft("collapse"))} ▾</button></div>
         <div class="reply-row"><textarea id="rText" rows="1" maxlength="500" placeholder="${esc(ft("replyPh"))}"></textarea>
         <button class="btn btn-primary" id="rSend">${esc(ft("send"))}</button></div>`;
     }
@@ -938,6 +972,7 @@
         menu.querySelectorAll("[data-mact]").forEach(b => b.onclick = async e => {
           e.stopPropagation();
           menu.classList.add("hidden");
+          if (b.dataset.mact === "report") { openReport(p, kind === "post" ? null : comments.find(x => x.id === cid)); return; }
           if (b.dataset.mact === "edit") {
             editing = kind === "post" ? "post" : "c:" + cid;
             drawDetail(p);
@@ -999,8 +1034,16 @@
       inner.querySelectorAll("[data-rto]").forEach(b => b.onclick = () => {
         const c = comments.find(x => x.id === b.dataset.rto);
         replyTo = c ? { uid: c.authorUid, name: who(c).name } : null;
+        replyOpen = true;
         drawDetail(p); $("rText") && $("rText").focus();
       });
+      const ro = inner.querySelector("[data-ropen]");
+      if (ro) ro.onclick = () => {
+        replyOpen = true; drawDetail(p);
+        const ta = $("rText"); if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+      };
+      const rx = inner.querySelector("[data-rclose]");
+      if (rx) rx.onclick = () => { replyOpen = false; replyTo = null; drawDetail(p); };
       const rc = inner.querySelector("[data-rcancel]");
       if (rc) rc.onclick = () => { replyTo = null; drawDetail(p); };
       const send = $("rSend");
@@ -1017,8 +1060,7 @@
           const ref = doc(collection(db, "feedPosts", p.id, "comments"));
           await setDoc(ref, data);
           comments.push({ id: ref.id, ...data, createdAt: new Date() });
-          p.nCmt = comments.length; replyTo = null;
-          $("rText").value = "";
+          p.nCmt = comments.length; replyTo = null; replyOpen = false; drafts[p.id] = "";
           drawDetail(p); render();
           // 捲到刚送出的回复，不被下面的输入框挡住
           const el = $("detailInner").querySelector(`.cmt[data-cid="${CSS.escape(ref.id)}"]`);
@@ -1030,6 +1072,44 @@
         } catch (e) { toast(ft("fail") + e.message); send.disabled = false; }
       };
     }
+
+    // ---------- 🚩 检举（后台审核；通过后留言变成 ***、帖子下架） ----------
+    const REASONS = [["spam", "rSpam"], ["abuse", "rAbuse"], ["inappropriate", "rInapp"], ["other", "rOther"]];
+    function openReport(p, c) {
+      const box = $("reportInner");
+      box.innerHTML = `<h2>🚩 ${esc(ft(c ? "reportTitleCmt" : "reportTitlePost"))}</h2>
+        <div class="muted" style="font-size:.84rem">${esc(ft("reportWhy"))}</div>
+        <div class="report-reasons">${REASONS.map(([v, k]) => `<label><input type="radio" name="rpWhy" value="${v}"> ${esc(ft(k))}</label>`).join("")}</div>
+        <textarea id="rpNote" maxlength="200" rows="2" placeholder="${esc(ft("reportNote"))}"></textarea>
+        <button class="btn btn-primary" id="rpSend" style="width:100%;margin-top:10px">${esc(ft("reportSend"))}</button>`;
+      $("reporter").classList.remove("hidden");
+      $("rpSend").onclick = async () => {
+        const why = box.querySelector("input[name=rpWhy]:checked");
+        if (!why) { toast(ft("reportPick")); return; }
+        const key = c ? `c_${p.id}_${c.id}` : `p_${p.id}`;
+        const ref = doc(db, "feedReports", key + "_" + me.user.uid);
+        $("rpSend").disabled = true;
+        try {
+          if ((await getDoc(ref)).exists()) { toast(ft("reportDup")); closeReport(); return; }
+          await setDoc(ref, {
+            kind: c ? "comment" : "post", postId: p.id, commentId: c ? c.id : "", targetKey: key,
+            targetUid: (c || p).authorUid || "", reporterUid: me.user.uid, reason: why.value,
+            note: $("rpNote").value.trim().slice(0, 200),
+            text: String(c ? c.text : (p.content && p.content.text) || "").slice(0, 2000),
+            status: "open", createdAt: serverTimestamp(),
+          });
+          toast(ft("reportThanks"));
+          closeReport();
+        } catch (e) { toast(ft("fail") + e.message); $("rpSend").disabled = false; }
+      };
+    }
+    function closeReport() {
+      $("reporter").classList.add("hidden");
+      if (!$("detail").classList.contains("hidden")) document.body.style.overflow = "hidden";   // 帖子还开着
+    }
+    $("reporter").addEventListener("click", e => {
+      if (e.target === $("reporter") || e.target.closest("[data-close]")) closeReport();
+    });
 
     // 从铃铛点进来（feed.html#p-帖子ID）：直接打开那篇
     async function openFromHash() {
