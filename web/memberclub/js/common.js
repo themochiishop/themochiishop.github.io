@@ -663,8 +663,8 @@ const NAV = [
     sub: [["shop", "shop.html", "nav.mall"], ["rewards", "rewards.html", "nav.rewards"], ["prizes", "prizes.html", "nav.prizes"]] },
   { key: "member", icon: "💎", label: "nav.points", href: "account.html", pages: ["account", "points"],
     sub: [["account", "account.html", "nav.account"], ["points", "points.html", "nav.pointsDetail"]] },
-  { key: "me",     icon: "👤", label: "nav.me",     href: "profile.html", pages: ["profile", "bind", "myfeed", "help"],
-    sub: [["profile", "profile.html", "nav.profile"], ["bind", "bind.html", "nav.bind"], ["myfeed", "feed.html#me", "fd:navMyFeed"], ["help", "help.html", "nav.help"]] },
+  { key: "me",     icon: "👤", label: "nav.me",     href: "profile.html", pages: ["profile", "myfeed", "help"],
+    sub: [["profile", "profile.html", "nav.profile"], ["myfeed", "feed.html#me", "fd:navMyFeed"], ["help", "help.html", "nav.help"]] },
 ];
 
 export function renderNav(active) {
@@ -729,7 +729,7 @@ function speedUpNav(el) {
     }
   } catch (e) {}
   // 不支持的话：闲下来时预先下载主要页面
-  const pages = ["home.html", "shop.html", "rewards.html", "prizes.html", "account.html", "points.html", "profile.html", "bind.html"];
+  const pages = ["home.html", "shop.html", "rewards.html", "prizes.html", "account.html", "points.html", "profile.html", "feed.html"];
   const idle = window.requestIdleCallback || (f => setTimeout(f, 1200));
   idle(() => pages.filter(p => !location.pathname.endsWith(p)).forEach(p => {
     const l = document.createElement("link");
@@ -826,8 +826,8 @@ function buildEvents() {
     const at = toDate(l.at);
     if (!at) return;
     const v = { platform: platformLabel(l.platform), user: l.username };
-    if (l.action === "bind") ev.push({ time: at, icon: "🔗", title: t("notif.linkedByAdmin", v), detail: "", link: "bind.html" });
-    if (l.action === "unbind") ev.push({ time: at, icon: "✂️", title: t("notif.unlinked", v), detail: t("notif.unlinkedDetail"), link: "bind.html" });
+    if (l.action === "bind") ev.push({ time: at, icon: "🔗", title: t("notif.linkedByAdmin", v), detail: "", link: "profile.html#bind" });
+    if (l.action === "unbind") ev.push({ time: at, icon: "✂️", title: t("notif.unlinked", v), detail: t("notif.unlinkedDetail"), link: "profile.html#bind" });
   });
   // 📢 管理员公告（有当前语言的版本就用那个）
   bell.announcements.forEach(a => {

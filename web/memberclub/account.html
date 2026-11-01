@@ -24,7 +24,7 @@
     <div id="bindCallout" class="callout hidden">
       <p data-i18n="acc.bindCallout"></p>
       <p class="welcome-line" id="welcomeLine"></p>
-      <a href="bind.html" class="btn btn-primary btn-inline" data-i18n="acc.goBind"></a>
+      <a href="profile.html#bind" class="btn btn-primary btn-inline" data-i18n="acc.goBind"></a>
     </div>
 
     <!-- 会员等级 -->
@@ -163,7 +163,7 @@
 
       // ---------- 🎁 额外福利（后台可设定） ----------
       const got = new Set(bal.ledger.map(x => (BONUSES.find(b => b.reason === x.reason) || {}).key).filter(Boolean));
-      const HREF = { welcome: "bind.html", birthday: "profile.html", whatsapp: "profile.html#phone", platform2: "bind.html" };
+      const HREF = { welcome: "profile.html#bind", birthday: "profile.html", whatsapp: "profile.html#phone", platform2: "profile.html#bind" };
       const tasks = activeBonuses().map(b => ({ key: b.key, href: HREF[b.key], ok: got.has(b.key) }));
       $("welcomeLine").textContent = bonusActive("welcome") ? t("acc.welcomeBonus", { n: bonusPoints("welcome") }) : "";
       const custom = customPerks();

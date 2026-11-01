@@ -19,6 +19,28 @@
     .folder-sub { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--line); }
     .folder-sub h3 { font-size: .95rem; margin-bottom: 8px; }
     .bday-locked { font-size: 1.05rem; font-weight: 700; }
+    /* 🔗 已绑定账号：一个账号一张小卡，左边是平台颜色 */
+    .acct-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+    .acct-head h3 { font-size: .95rem; }
+    .acct-head .muted { font-size: .78rem; }
+    .acct-cards { list-style: none; display: grid; gap: 10px; margin-top: 10px; }
+    .acct-cards > li.empty { color: var(--muted); font-size: .88rem; padding: 10px 0; }
+    .acct-card { position: relative; background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px 12px 18px; overflow: hidden; }
+    .acct-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--accent); }
+    .acct-card.p-shopee::before { background: #ee4d2d; }
+    .acct-card.p-tiktok::before { background: linear-gradient(#25f4ee, #fe2c55); }
+    .acct-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .acct-user { font-weight: 800; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+    .acct-meta { color: var(--muted); font-size: .76rem; margin-top: 3px; }
+    .acct-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+    .acct-chips span { background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 6px 4px; text-align: center; font-size: .74rem; color: var(--muted); }
+    .acct-chips b { display: block; color: var(--text); font-size: .95rem; }
+    .acct-last { color: var(--muted); font-size: .74rem; margin-top: 8px; }
+    .acct-none { color: var(--muted); font-size: .8rem; margin-top: 8px; }
+    .removed-box { margin-top: 14px; }
+    .removed-box summary { cursor: pointer; color: var(--muted); font-size: .85rem; font-weight: 700; }
+    .acct-cards.removed .acct-card { opacity: .6; }
+    .acct-cards.removed .acct-card::before { background: var(--muted); }
     @media (max-width: 480px) { .folder-tabs { padding: 0 4px; } .folder-tab { max-width: none; font-size: .82rem; padding: 9px 6px; } .folder-body { padding: 16px; } }
   </style>
 </head>
@@ -34,7 +56,8 @@
     <div class="folder">
       <div class="folder-tabs" role="tablist">
         <button type="button" role="tab" class="folder-tab active" data-tab="info"><span>👤</span><span data-i18n="prof.basic"></span></button>
-        <button type="button" role="tab" class="folder-tab" data-tab="addr"><span>📦</span><span data-i18n="addr.title"></span></button>
+        <button type="button" role="tab" class="folder-tab" data-tab="bind"><span>🔗</span><span data-i18n="prof.tabBind"></span></button>
+        <button type="button" role="tab" class="folder-tab" data-tab="addr"><span data-i18n="addr.title"></span></button>
       </div>
 
       <!-- ① 个人资料（含生日） -->
@@ -78,7 +101,39 @@
         </div>
       </div>
 
-      <!-- ② 收货地址（兑换实体奖品用） -->
+      <!-- ② 账号绑定（原本的 bind.html） -->
+      <div class="folder-body hidden" id="tab-bind">
+        <p class="muted" style="font-size:.85rem;margin:0 0 14px" data-i18n="bind.sub"></p>
+        <div class="acct-head">
+          <h3 data-i18n="acc.bound"></h3>
+          <span class="muted" id="bindPlatforms"></span>
+        </div>
+        <p class="muted bind-summary" id="bindSummary"></p>
+        <ul id="bindList" class="acct-cards"><li class="empty" data-i18n="common.loading"></li></ul>
+        <details id="removedBox" class="removed-box hidden">
+          <summary><span data-i18n="bind.removedTitle"></span> (<span id="removedCount">0</span>)</summary>
+          <ul id="removedList" class="acct-cards removed"></ul>
+        </details>
+
+        <div class="folder-sub">
+          <h3 data-i18n="bind.new"></h3>
+          <form id="bindForm">
+            <label><span data-i18n="bind.orderLabel"></span>
+              <input id="orderNo" required autocomplete="off" data-i18n-ph="bind.orderPh">
+              <div id="platformHint" class="platform-hint muted"></div>
+            </label>
+            <label><span data-i18n="bind.userLabel"></span>
+              <input id="username" required autocomplete="off" data-i18n-ph="bind.userPh">
+              <small class="muted" data-i18n="bind.userHint"></small>
+            </label>
+            <button type="submit" class="btn btn-primary" id="bindSubmit" data-i18n="bind.submit"></button>
+          </form>
+          <p id="bindMsg" class="msg"></p>
+        </div>
+        <a class="help-link" href="help.html#bind" style="margin:16px 0 0"><span>❓</span><span data-i18n="help.linkMore"></span><span class="go">➔</span></a>
+      </div>
+
+      <!-- ③ 收货地址（兑换实体奖品用） -->
       <div class="folder-body hidden" id="tab-addr">
         <div id="addr">
           <p class="muted" style="font-size:.85rem;margin:0 0 10px" data-i18n="addr.sub"></p>
@@ -107,11 +162,13 @@
 
   <script type="module">
     import { db } from "./js/firebase-config.js";
-    import { doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import { doc, updateDoc, serverTimestamp, collection, query, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, logout, t, normalizePhone, isValidPhone,
       claimBonuses, toastBonuses, bonusPoints, bonusActive, isInternalMember,
-      toDate, fmtDate, invalidateMemberCache
+      toDate, fmtDate, invalidateMemberCache,
+      esc, platformTag, platformLabel, detectPlatform, normalizeOrderNo, normalizeUsername,
+      accountStats, maskOrderNo, fmtMoney
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
     import { MAX_ADDRESSES } from "./js/common.js";
@@ -122,14 +179,119 @@
     // 📁 文件夹分页
     function openTab(k) {
       document.querySelectorAll(".folder-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === k));
-      ["info", "addr"].forEach(x => $("tab-" + x).classList.toggle("hidden", x !== k));
+      ["info", "bind", "addr"].forEach(x => $("tab-" + x).classList.toggle("hidden", x !== k));
     }
     document.querySelectorAll(".folder-tab").forEach(b => b.addEventListener("click", () => {
       openTab(b.dataset.tab);
-      history.replaceState(null, "", location.pathname + (b.dataset.tab === "addr" ? "#addr" : ""));
+      history.replaceState(null, "", location.pathname + (b.dataset.tab === "info" ? "" : "#" + b.dataset.tab));
     }));
-    if (location.hash === "#addr") openTab("addr");
-    window.addEventListener("hashchange", () => openTab(location.hash === "#addr" ? "addr" : "info"));
+    const tabFromHash = () => location.hash === "#addr" ? "addr" : location.hash === "#bind" ? "bind" : "info";
+    openTab(tabFromHash());
+    window.addEventListener("hashchange", () => openTab(tabFromHash()));
+
+    // ---------- 🔗 账号绑定 ----------
+    function bindMsg(text, type) {
+      $("bindMsg").textContent = text;
+      $("bindMsg").className = "msg" + (type ? " " + type : "");
+    }
+    // 输入单号时自动判断平台
+    $("orderNo").addEventListener("input", () => {
+      const no = normalizeOrderNo($("orderNo").value);
+      const p = detectPlatform(no);
+      $("platformHint").innerHTML = !no ? "" :
+        p ? t("bind.detected", { tag: platformTag(p) }) : esc(t("bind.badFormat"));
+    });
+
+    function initBind(user) {
+      async function loadBindings() {
+        const mine = c => getDocs(query(collection(db, c), where("uid", "==", user.uid)));
+        const [bSnap, oSnap, logs] = await Promise.all([
+          mine("bindings"), mine("orders"),
+          mine("bindingLogs").then(s => s.docs.map(d => d.data())).catch(() => [])
+        ]);
+        // 同一个平台排在一起，再按绑定时间
+        const rows = bSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => String(a.platform).localeCompare(String(b.platform)) || (toDate(a.createdAt) || 0) - (toDate(b.createdAt) || 0));
+        const stats = accountStats(oSnap.docs.map(d => d.data()));
+        const empty = { orders: 0, spend: 0, points: 0, last: null };
+
+        const tot = rows.reduce((s, b) => {
+          const st = stats[b.id] || empty;
+          return { o: s.o + st.orders, p: s.p + st.points };
+        }, { o: 0, p: 0 });
+        $("bindSummary").textContent = rows.length
+          ? t("bind.summary", { n: rows.length, o: tot.o, p: tot.p.toLocaleString() }) : "";
+        const per = {};
+        rows.forEach(b => { per[b.platform] = (per[b.platform] || 0) + 1; });
+        $("bindPlatforms").textContent = Object.entries(per).map(([p, n]) => platformLabel(p) + " " + n).join(" · ");
+
+        $("bindList").innerHTML = rows.length ? rows.map(b => {
+          const st = stats[b.id] || empty;
+          const how = b.verifyOrder === "admin" ? t("bind.viaAdmin") : t("bind.viaOrder", { no: maskOrderNo(b.verifyOrder) });
+          return `
+          <li class="acct-card p-${esc(b.platform)}">
+            <div class="acct-top">${platformTag(b.platform)}<span class="acct-user">${esc(b.username)}</span><span class="tag tag-ok">${t("bind.verified")}</span></div>
+            <div class="acct-meta">${t("bind.linkedOn", { d: fmtDate(toDate(b.createdAt)) })} · ${esc(how)}</div>
+            ${st.orders ? `
+            <div class="acct-chips">
+              <span>🧾<b>${st.orders}</b>${esc(t("bind.chipOrders", { n: "" }).trim())}</span>
+              <span>💰<b>${esc(fmtMoney(st.spend))}</b></span>
+              <span>⭐<b>${st.points.toLocaleString()}</b>${esc(t("bind.chipPoints", { n: "" }).trim())}</span>
+            </div>
+            ${st.last ? `<div class="acct-last">${esc(t("bind.lastOrder", { d: fmtDate(st.last) }))}</div>` : ""}`
+            : `<div class="acct-none">${esc(t("bind.noOrders"))}</div>`}
+          </li>`;
+        }).join("") : `<li class="empty">${t("bind.none")}</li>`;
+
+        // 已解除的账号（客服解除时留下的记录）：收起来
+        const active = new Set(rows.map(b => b.id));
+        const removed = logs.filter(l => l.action === "unbind" && !active.has(l.bindingId))
+          .sort((a, b) => (toDate(b.at) || 0) - (toDate(a.at) || 0));
+        $("removedBox").classList.toggle("hidden", !removed.length);
+        $("removedCount").textContent = removed.length;
+        $("removedList").innerHTML = removed.map(l => `
+          <li class="acct-card">
+            <div class="acct-top">${platformTag(l.platform)}<span class="acct-user">${esc(l.username)}</span><span class="tag tag-bad">${t("bind.removed")}</span></div>
+            <div class="acct-meta">${t("bind.linkedOn", { d: fmtDate(toDate(l.boundAt)) })} · ${t("bind.removedOn", { d: fmtDate(toDate(l.at)) })}</div>
+          </li>`).join("");
+      }
+
+      loadBindings().catch(e => { $("bindList").innerHTML = `<li class="empty">${esc(t("common.loadFail") + e.message)}</li>`; });
+
+      $("bindForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const orderNo = normalizeOrderNo($("orderNo").value);
+        const username = normalizeUsername($("username").value);
+        const platform = detectPlatform(orderNo);
+
+        if (!platform) { bindMsg(t("bind.badFormat"), "err"); return; }
+        if (!username) { bindMsg(t("bind.needUser"), "err"); return; }
+        if (username.includes("/")) { bindMsg(t("bind.badUser"), "err"); return; }
+
+        $("bindSubmit").disabled = true;
+        bindMsg(t("bind.verifying"));
+        try {
+          await setDoc(doc(db, "bindings", platform + "_" + username), {
+            uid: user.uid,
+            platform,
+            username,
+            verifyOrder: orderNo,
+            createdAt: serverTimestamp()
+          });
+          bindMsg(t("bind.success", { platform: platformLabel(platform), user: username }), "ok");
+          $("bindForm").reset();
+          $("platformHint").textContent = "";
+          await loadBindings();
+          // 绑定后马上领欢迎礼 / 第二平台奖励
+          try { toastBonuses((await claimBonuses(user.uid)).claimed); } catch (e2) { console.warn(e2); }
+        } catch (err) {
+          if (err.code === "permission-denied") bindMsg(t("bind.denied"), "err");
+          else bindMsg(t("bind.fail") + err.message, "err");
+        } finally {
+          $("bindSubmit").disabled = false;
+        }
+      });
+    }
     $("logoutBtn").addEventListener("click", logout);
 
     function setMsg(el, text, type) {
@@ -150,6 +312,7 @@
     }
 
     requireMember((user, member) => {
+      initBind(user);
       const ref = doc(db, "members", user.uid);
       $("internalTag").classList.toggle("hidden", !isInternalMember(member));
       $("email").value = member.email || user.email || "";
@@ -206,7 +369,6 @@
         } catch (err) { setMsg($("addrMsg"), t("idx.saveFail") + err.message, "err"); }
       }
       renderAddr();
-      if (location.hash === "#addr") openTab("addr");
       $("addrAdd").addEventListener("click", () => openAddr(-1));
       $("addrCancel").addEventListener("click", closeAddr);
       $("addrForm").addEventListener("submit", async e => {

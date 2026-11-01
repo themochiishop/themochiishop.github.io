@@ -9,7 +9,9 @@
   <style>
     /* ===== 沿用原本 Feed 的瀑布流卡片布局 ===== */
     .feed-page { max-width: 860px; margin: 0 auto; padding: 14px 6px 90px; }
-    .feed-page h1 { font-size: 1.15rem; text-align: center; margin: 4px 0 12px; }
+    .feed-head { text-align: center; margin: 4px 4px 16px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+    .feed-head h1 { font-size: 1.2rem; margin: 0; }
+    .feed-head p { color: var(--muted); font-size: .78rem; margin-top: 2px; }
     .feed-waterfall { column-count: 2; column-gap: 6px; width: 100%; }
     @media (min-width: 768px) { .feed-waterfall { column-count: 3; column-gap: 10px; } }
 
@@ -175,7 +177,7 @@
   <header id="topbar"></header>
 
   <main class="feed-page">
-    <h1 id="fTitle"></h1>
+    <div class="feed-head" id="fHead"><h1 id="fTitle"></h1><p id="fSub"></p></div>
     <div id="profileHead"></div>
     <div id="hint"></div>
     <div id="myPosts"></div>
@@ -275,6 +277,7 @@
     // ---------- 文字 ----------
     document.title = ft("pageTitle");
     $("fTitle").textContent = ft("title");
+    $("fSub").textContent = ft("latest");
     $("loadingText").textContent = ft("loading");
     $("prevPageBtn").textContent = ft("prev");
     $("nextPageBtn").textContent = ft("next");
@@ -436,7 +439,7 @@
       if (view.mode === "all") {
         if (!me.member) h = `<span>${esc(ft("hintGuest"))}</span><a class="btn btn-primary" href="index.html">${esc(ft("hintGuestBtn"))}</a>`;
         else if (!me.member.name) h = `<span>${esc(ft("hintName"))}</span><a class="btn btn-ghost" href="profile.html">${esc(ft("hintNameBtn"))}</a>`;
-        else if (!me.bound && !me.internal && me.perm === "none") h = `<span>${esc(ft("hintBind"))}</span><a class="btn btn-primary" href="bind.html">${esc(ft("hintBindBtn"))}</a>`;
+        else if (!me.bound && !me.internal && me.perm === "none") h = `<span>${esc(ft("hintBind"))}</span><a class="btn btn-primary" href="profile.html#bind">${esc(ft("hintBindBtn"))}</a>`;
         else if (!canPost()) h = `<span>${esc(ft("hintPost", { tier: tierName(cfg.postRank ?? 1) }))}</span><a class="btn btn-ghost" href="account.html#tiers">${esc(t("tier.explain"))}</a>`;
       }
       $("hint").innerHTML = h ? `<div class="feed-hint">${h}</div>` : "";
@@ -504,7 +507,7 @@
 
     async function renderProfileHead() {
       const box = $("profileHead");
-      $("fTitle").classList.toggle("hidden", view.mode !== "all");
+      $("fHead").classList.toggle("hidden", view.mode !== "all");
       if (view.mode === "all") { box.innerHTML = ""; return; }
       let w, mine = false, likeKey;
       if (view.mode === "shop") {
@@ -744,7 +747,7 @@
     function replyBoxHTML() {
       if (!me.member) return `<div class="cant"><a href="index.html">${esc(ft("hintGuestBtn"))}</a></div>`;
       if (!me.member.name) return `<div class="cant"><a href="profile.html">${esc(ft("hintName"))}</a></div>`;
-      if (!me.bound && !me.internal && me.perm === "none") return `<div class="cant"><a href="bind.html">${esc(ft("cantBind"))}</a></div>`;
+      if (!me.bound && !me.internal && me.perm === "none") return `<div class="cant"><a href="profile.html#bind">${esc(ft("cantBind"))}</a></div>`;
       if (!canReply()) return `<div class="cant">${esc(ft("cantTier", { tier: tierName(cfg.replyRank ?? 0) }))}</div>`;
       return `${replyTo ? `<div class="reply-to">${esc(ft("replyTo", { name: replyTo.name }))}<button data-rcancel>${esc(ft("cancel"))}</button></div>` : ""}
         <div class="reply-row"><textarea id="rText" rows="1" maxlength="500" placeholder="${esc(ft("replyPh"))}"></textarea>
