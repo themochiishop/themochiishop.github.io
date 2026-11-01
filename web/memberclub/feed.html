@@ -124,7 +124,6 @@
     .prof-icons button { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: var(--card2);
       color: var(--text); font-size: 1rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
     .prof-icons button:hover { border-color: var(--accent); }
-    .prof-icons button.pri { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: 0; color: #fff; }
     .prof-acts .btn { width: auto; flex: 1; max-width: 200px; padding: 9px 12px; font-size: .84rem; }
     .posts-head { display: flex; align-items: center; gap: 10px; margin: 0 4px 12px; color: var(--muted); font-size: .82rem; font-weight: 700; }
     .posts-head::after { content: ""; flex: 1; height: 1px; background: var(--line); }
@@ -602,7 +601,7 @@
           <div class="prof-cover" style="--cover:url('${coverOf(key)}');--cover-m:url('${coverOf(key, true)}')"><span class="prof-tier">${esc(tierName)}</span></div>
           <div class="prof-main">
             <div class="prof-icons">
-              ${mine ? `<button class="pri" id="profEditI" title="${esc(ft("editProfile"))}" aria-label="${esc(ft("editProfile"))}">✏️</button>` : ""}
+              ${mine ? `<button id="profEditI" title="${esc(ft("editProfile"))}" aria-label="${esc(ft("editProfile"))}">✏️</button>` : ""}
               <button id="profShareI" title="${esc(ft("share"))}" aria-label="${esc(ft("share"))}">↗</button>
             </div>
             <div class="prof-av">${avatarOf(w)}</div>

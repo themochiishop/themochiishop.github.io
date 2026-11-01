@@ -32,6 +32,12 @@
     "priceRange": "$$"
   }
   </script>
+  <style>
+    /* 最新动态：💬 回复数、已点赞的样子（Mochii Feed） */
+    .lc-cmt { margin: 0 auto 0 10px; color: #8a7f86; font-size: .82rem; font-weight: 700; text-decoration: none; }
+    .lc-cmt:hover { color: #e63946; }
+    .lc-like.liked { background: #e63946; color: #fff; }
+  </style>
 </head>
 <body class="home">
 
@@ -157,8 +163,26 @@ The MoChii Shop</h1>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+  import {
+    getFirestore, collection, query, where, orderBy, limit, getDocs, getDoc, doc, setDoc, deleteDoc,
+    getCountFromServer, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+  // 会员系统（Mochii Feed）：用预设 app，才能读到会员在俱乐部的登入状态
+  const msApp = initializeApp({
+    apiKey: "AIzaSyAdZkjbROHfmM_YSUeutoNpmXf5EHBwLlU",
+    authDomain: "login.themochiishop.com",
+    projectId: "member-system-27ae0",
+    storageBucket: "member-system-27ae0.firebasestorage.app",
+    messagingSenderId: "692900536052",
+    appId: "1:692900536052:web:24e3d6ccbd038ba3f4c8a1"
+  });
+  const fs = getFirestore(msApp);
+  const msAuth = getAuth(msApp);
+
+  // 首页设定（轮播、直播状态）：admin-status
   const app = initializeApp({
     apiKey: "AIzaSyDJrsKAjWqz0AmjEtBzz4CeswiskdQqASw",
     authDomain: "admin-status-c3bdb.firebaseapp.com",
@@ -167,7 +191,7 @@ The MoChii Shop</h1>
     storageBucket: "admin-status-c3bdb.firebasestorage.app",
     messagingSenderId: "377694458194",
     appId: "1:377694458194:web:71a78ba5dbed4df1b1aa8b"
-  });
+  }, "site");
   const db = getDatabase(app);
   const $ = s => document.querySelector(s);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -270,25 +294,50 @@ The MoChii Shop</h1>
     updateDots(); start();
   });
 
-  /* Latest updates(读取 my-admin-status 的同一份数据) */
-  let globalAvatar = "https://api.dicebear.com/7.x/bottts/svg?seed=admin";
-  let globalName = "The Mochii Shop";
-  let rawSnapshot = null;
+  /* Latest updates：读取会员系统 Mochii Feed 最新的一篇「公开」帖子 */
+  const FEED_URL = '/memberclub/feed.html';
+  const CLUB_LOGO = '/memberclub/img/member.jpg';
+  let latest = null;       // { id, post, content, nLike, nCmt, liked }
+  let member = null;       // 已登入的俱乐部会员（可以直接按赞）
   let lastSig = '';
 
-  onValue(ref(db, 'adminProfile'), snap => {
-    const d = snap.val() || {};
-    globalAvatar = d.defaultAvatar || globalAvatar;
-    globalName = d.displayName || globalName;
+  async function loadLatest() {
+    try {
+      const snap = await getDocs(query(collection(fs, 'feedPosts'),
+        where('status', '==', 'published'), where('minRank', '==', -1), orderBy('createdAt', 'desc'), limit(1)));
+      if (snap.empty) { latest = null; renderLatest(); return; }
+      const d = snap.docs[0], id = d.id;
+      const [c, nl, nc, ml, cfg] = await Promise.all([
+        getDoc(doc(fs, 'feedPosts', id, 'content', 'main')),
+        getCountFromServer(collection(fs, 'feedPosts', id, 'likes')).catch(() => null),
+        getCountFromServer(collection(fs, 'feedPosts', id, 'comments')).catch(() => null),
+        member ? getDoc(doc(fs, 'feedPosts', id, 'likes', member.uid)).catch(() => null) : null,
+        getDoc(doc(fs, 'feedConfig', 'main')).catch(() => null),
+      ]);
+      latest = {
+        id, post: d.data(), content: c.exists() ? c.data() : { text: '', images: [] },
+        nLike: nl ? nl.data().count : 0, nCmt: nc ? nc.data().count : 0, liked: !!(ml && ml.exists()),
+        shop: cfg && cfg.exists() ? cfg.data() : {},
+      };
+    } catch (e) { console.warn('latest feed', e); latest = null; }
     renderLatest();
+  }
+
+  // 俱乐部会员：确认有会员资料才算（只登入 Google 但没注册会员的当访客）
+  onAuthStateChanged(msAuth, async u => {
+    member = null;
+    if (u) { try { if ((await getDoc(doc(fs, 'members', u.uid))).exists()) member = u; } catch (e) {} }
+    lastSig = '';
+    loadLatest();
   });
-  onValue(ref(db, 'messages'), snap => { rawSnapshot = snap; renderLatest(); });
 
   function fmt(ts) {
-    if (!ts) return '';
-    const d = new Date(ts), p = n => String(n).padStart(2, '0');
+    const d = ts && ts.toDate ? ts.toDate() : (ts ? new Date(ts) : null);
+    if (!d) return '';
+    const p = n => String(n).padStart(2, '0');
     return p(d.getMonth() + 1) + '/' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
+  const safeImg = u => /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(u || '') || /^https:\/\//i.test(u || '') ? u : '';
 
   /* 点赞:跳动 + 飘心 */
   function popLike(btn) {
@@ -307,24 +356,21 @@ The MoChii Shop</h1>
 
   function renderLatest() {
     const box = $('#latest-card-wrapper');
-    if (!rawSnapshot || !rawSnapshot.exists()) {
+    if (!latest) {
       lastSig = '';
       box.innerHTML = '<div class="lc-empty">暂无最新动态</div>';
       return;
     }
-    const arr = [];
-    rawSnapshot.forEach(c => { arr.push({ id: c.key, ...c.val() }); });
-    arr.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    const m = arr[0];
-
-    let imgs = [];
-    if (Array.isArray(m.images)) imgs = m.images.slice(0, 3).filter(x => typeof x === 'string' && x);
-    else if (typeof m.imageUrl === 'string' && m.imageUrl) imgs = [m.imageUrl];
+    const m = latest.post;
+    const imgs = (latest.content.images || []).map(safeImg).filter(Boolean).slice(0, 3);
+    const name = m.authorName || latest.shop.shopName || 'The Mochii Shop';
+    const avatar = safeImg(m.avatar) || safeImg(latest.shop.shopAvatar) || CLUB_LOGO;
+    const postUrl = FEED_URL + '#p-' + latest.id;
 
     /* 只有点赞数变化时,只更新数字,不重建卡片(保留动画和滑动位置) */
-    const sig = [m.id, m.content, m.authorName, m.avatarUrl, m.timestamp, globalAvatar, globalName, imgs.map(u => u.length).join(',')].join('|');
+    const sig = [latest.id, latest.content.text, name, avatar.length, imgs.map(u => u.length).join(',')].join('|');
     const countEl = box.querySelector('.lc-count');
-    if (sig === lastSig && countEl) { countEl.textContent = m.likes || 0; return; }
+    if (sig === lastSig && countEl) { countEl.textContent = latest.nLike; return; }
     lastSig = sig;
 
     const slider = imgs.length
@@ -335,17 +381,21 @@ The MoChii Shop</h1>
     box.innerHTML =
       '<div class="latest-card">' +
         '<div class="lc-header">' +
-          '<img class="lc-avatar" src="' + esc(m.avatarUrl || globalAvatar) + '">' +
-          '<div><span class="lc-name">' + esc(m.authorName || globalName) + '</span>' +
-          '<span class="lc-time">最新更新 · ' + fmt(m.timestamp) + '</span></div>' +
+          '<img class="lc-avatar" src="' + esc(avatar) + '">' +
+          '<div><span class="lc-name">' + esc(name) + '</span>' +
+          '<span class="lc-time">最新更新 · ' + fmt(m.createdAt) + '</span></div>' +
         '</div>' +
         slider +
-        (m.content ? '<div class="lc-body">' + esc(m.content) + '</div>' : '') +
+        (latest.content.text ? '<div class="lc-body">' + esc(latest.content.text) + '</div>' : '') +
         '<div class="lc-footer">' +
-          '<button class="lc-like" id="likeBtn"><span class="lc-heart">❤️</span> <span class="lc-count">' + (m.likes || 0) + '</span></button>' +
-          '<a class="lc-more" href="https://admin.themochiishop.com/my-admin-status/feed.html" target="_blank" rel="noopener">More Feed ➔</a>' +
+          '<button class="lc-like' + (latest.liked ? ' liked' : '') + '" id="likeBtn" title="' + (member ? '' : '登入会员即可点赞') + '"><span class="lc-heart">' + (latest.liked ? '❤️' : '🤍') + '</span> <span class="lc-count">' + latest.nLike + '</span></button>' +
+          '<a class="lc-cmt" href="' + postUrl + '" title="回复">💬 ' + latest.nCmt + '</a>' +
+          '<a class="lc-more" href="' + FEED_URL + '">More Feed ➔</a>' +
         '</div>' +
       '</div>';
+
+    /* 点图片或文字：打开这篇帖子 */
+    box.querySelectorAll('.lc-slider, .lc-body').forEach(el => { el.style.cursor = 'pointer'; el.onclick = e => { if (!e.target.closest('a')) location.href = postUrl; }; });
 
     /* 多张图时,框的高度跟着当前这张走 */
     const sl = box.querySelector('.lc-slider');
@@ -361,13 +411,23 @@ The MoChii Shop</h1>
       fit();
     }
 
-    $('#likeBtn').onclick = () => {
-      const b = $('#likeBtn'), sp = b.querySelector('.lc-count');
-      const before = parseInt(sp.textContent, 10) || 0;
-      sp.textContent = before + 1;   // 先立刻显示,不用等网络
-      popLike(b);
-      runTransaction(ref(db, 'messages/' + m.id + '/likes'), n => (n || 0) + 1)
-        .catch(err => { sp.textContent = before; console.error('点赞失败:', err.code || '', err.message); });
+    /* 点赞：会员每人一次（再按取消）；访客去 Feed 登入 */
+    $('#likeBtn').onclick = async () => {
+      if (!member) { location.href = postUrl; return; }
+      const b = $('#likeBtn'), sp = b.querySelector('.lc-count'), ht = b.querySelector('.lc-heart');
+      const was = latest.liked;
+      latest.liked = !was; latest.nLike += was ? -1 : 1;
+      sp.textContent = latest.nLike; ht.textContent = latest.liked ? '❤️' : '🤍'; b.classList.toggle('liked', latest.liked);
+      if (!was) popLike(b);
+      const ref2 = doc(fs, 'feedPosts', latest.id, 'likes', member.uid);
+      try {
+        if (was) await deleteDoc(ref2);
+        else await setDoc(ref2, { at: serverTimestamp(), postAuthorUid: m.authorTier ? m.authorUid : 'shop' });
+      } catch (err) {
+        latest.liked = was; latest.nLike += was ? 1 : -1;
+        sp.textContent = latest.nLike; ht.textContent = was ? '❤️' : '🤍'; b.classList.toggle('liked', was);
+        console.error('点赞失败:', err.code || '', err.message);
+      }
     };
   }
 </script>
