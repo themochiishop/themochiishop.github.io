@@ -994,7 +994,7 @@ function waAskModal() {
     const text = [zh ? `【${c.tag}】` : `[${c.tag}]`,
       `${L.m}${zh ? "：" : ": "}${c.name}`,
       `${L.a}${zh ? "：" : ": "}${accts || L.none}`,
-      q].filter(Boolean).join("\n");
+      q ? "──────────────\n" + q : ""].filter(Boolean).join("\n");   // 有问题时，资料和问题之间加一条横线
     window.open(`https://wa.me/${c.num}?text=${encodeURIComponent(text)}`, "_blank", "noopener");
     waAskEl.classList.add("hidden");
   });
