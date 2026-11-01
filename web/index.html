@@ -171,14 +171,18 @@ The MoChii Shop</h1>
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   // 会员系统（Mochii Feed）：用预设 app，才能读到会员在俱乐部的登入状态
-  const msApp = getApps().find(a => a.name === '[DEFAULT]') || initializeApp({
+  const MS_CFG = {
     apiKey: "AIzaSyAdZkjbROHfmM_YSUeutoNpmXf5EHBwLlU",
     authDomain: "login.themochiishop.com",
     projectId: "member-system-27ae0",
     storageBucket: "member-system-27ae0.firebasestorage.app",
     messagingSenderId: "692900536052",
     appId: "1:692900536052:web:24e3d6ccbd038ba3f4c8a1"
-  });
+  };
+  // 预设位置如果被别的（例如浏览器存着的旧版 nav.js）占用了，就改用「ms」这个名字，至少帖子一定读得到
+  let msApp = getApps().find(a => a.name === '[DEFAULT]');
+  if (!msApp) msApp = initializeApp(MS_CFG);
+  else if (msApp.options.projectId !== MS_CFG.projectId) msApp = getApps().find(a => a.name === 'ms') || initializeApp(MS_CFG, 'ms');
   const fs = getFirestore(msApp);
   const msAuth = getAuth(msApp);
 
@@ -303,10 +307,13 @@ The MoChii Shop</h1>
 
   async function loadLatest() {
     try {
+      // 用 Feed 列表原本的索引（不用另外建索引）：取最新 30 篇，挑出最新的一篇「公开」帖（置顶不影响首页）
       const snap = await getDocs(query(collection(fs, 'feedPosts'),
-        where('status', '==', 'published'), where('minRank', '==', -1), orderBy('createdAt', 'desc'), limit(1)));
-      if (snap.empty) { latest = null; renderLatest(); return; }
-      const d = snap.docs[0], id = d.id;
+        where('status', '==', 'published'), orderBy('pinned', 'desc'), orderBy('createdAt', 'desc'), limit(30)));
+      const ms = x => (x && x.toMillis ? x.toMillis() : 0);
+      const pub = snap.docs.filter(x => x.data().minRank === -1).sort((a, b) => ms(b.data().createdAt) - ms(a.data().createdAt));
+      if (!pub.length) { latest = null; renderLatest(); return; }
+      const d = pub[0], id = d.id;
       const [c, nl, nc, ml, cfg] = await Promise.all([
         getDoc(doc(fs, 'feedPosts', id, 'content', 'main')),
         getCountFromServer(collection(fs, 'feedPosts', id, 'likes')).catch(() => null),
@@ -319,7 +326,7 @@ The MoChii Shop</h1>
         nLike: nl ? nl.data().count : 0, nCmt: nc ? nc.data().count : 0, liked: !!(ml && ml.exists()),
         shop: cfg && cfg.exists() ? cfg.data() : {},
       };
-    } catch (e) { console.warn('latest feed', e); latest = null; }
+    } catch (e) { console.error('最新动态载入失败：', e); latest = null; }
     renderLatest();
   }
 

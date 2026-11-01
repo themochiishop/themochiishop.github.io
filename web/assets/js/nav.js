@@ -284,7 +284,8 @@ try {
     messagingSenderId: "377694458194",
     appId: "1:377694458194:web:71a78ba5dbed4df1b1aa8b"
   };
-  const app = getApps().length ? getApp() : initializeApp(cfg);
+  // 用专属名字「site」：预设位置留给会员系统（首页要读俱乐部的登入状态）
+  const app = getApps().find(a => a.name === 'site') || initializeApp(cfg, 'site');
   onValue(ref(getDatabase(app), 'homepage/popup'), snap => showPopup(snap.val()));
   onValue(ref(getDatabase(app), 'homepage/nav'), snap => {
     const list = clean(snap.val());
