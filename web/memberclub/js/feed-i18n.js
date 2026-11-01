@@ -60,6 +60,8 @@ const FD = {
     "notifApproved": "Your post is now live ✨",
     "notifRejected": "Your post wasn't approved",
     "pinned": "📌 Pinned",
+    "notifReplyPost": "{name} replied to your post",
+    "notifReplyYou": "{name} replied to you",
   },
   ms: {
     "pageTitle": "Mochii Feed · Mochii Club",
@@ -118,6 +120,8 @@ const FD = {
     "notifApproved": "Siaran anda kini disiarkan ✨",
     "notifRejected": "Siaran anda tidak diluluskan",
     "pinned": "📌 Disematkan",
+    "notifReplyPost": "{name} membalas siaran anda",
+    "notifReplyYou": "{name} membalas anda",
   },
   zh: {
     "pageTitle": "Mochii Feed · Mochii Club",
@@ -176,6 +180,8 @@ const FD = {
     "notifApproved": "你的帖子已经公开 ✨",
     "notifRejected": "你的帖子没有通过审核",
     "pinned": "📌 置顶",
+    "notifReplyPost": "{name} 回复了你的帖子",
+    "notifReplyYou": "{name} 回复了你",
   },
 };
 

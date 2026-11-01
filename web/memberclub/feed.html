@@ -428,7 +428,10 @@
 
     // ---------- 帖子详情 + 回复 ----------
     let openId = null, comments = [], replyTo = null;
-    function closeModal(id) { $(id).classList.add("hidden"); document.body.style.overflow = ""; if (id === "detail") openId = null; }
+    function closeModal(id) {
+      $(id).classList.add("hidden"); document.body.style.overflow = "";
+      if (id === "detail") { openId = null; if (location.hash) history.replaceState(null, "", location.pathname + location.search); }
+    }
     ["detail", "composer"].forEach(id => $(id).addEventListener("click", e => {
       if (e.target === $(id) || e.target.closest("[data-close]")) closeModal(id);
     }));
@@ -525,7 +528,8 @@
           authorUid: me.user.uid, authorName: me.member.name || "", authorTier: me.member.tier || "mochii",
           authorTitle: me.title, text, createdAt: serverTimestamp(),
         };
-        if (replyTo) data.replyTo = replyTo;
+        data.postAuthorUid = p.authorUid;              // 让帖子作者收到回复通知
+        if (replyTo) { data.replyTo = replyTo; data.replyToUid = replyTo.uid; }
         try {
           const ref = doc(collection(db, "feedPosts", p.id, "comments"));
           await setDoc(ref, data);
@@ -536,6 +540,31 @@
         } catch (e) { toast(ft("fail") + e.message); send.disabled = false; }
       };
     }
+
+    // 从铃铛点进来（feed.html#p-帖子ID）：直接打开那篇
+    async function openFromHash() {
+      const m = location.hash.match(/^#p-([\w-]+)$/);
+      if (!m) return;
+      let p = shown.find(x => x.id === m[1]);
+      if (!p) {
+        try {
+          const s = await getDoc(doc(db, "feedPosts", m[1]));
+          if (!s.exists()) return;
+          p = { id: s.id, ...s.data() };
+          if (!canSee(p)) return;
+          const [c, nc, nl, ml] = await Promise.all([
+            getDoc(doc(db, "feedPosts", p.id, "content", "main")),
+            getCountFromServer(collection(db, "feedPosts", p.id, "comments")),
+            getCountFromServer(collection(db, "feedPosts", p.id, "likes")),
+            me.member ? getDoc(doc(db, "feedPosts", p.id, "likes", me.user.uid)) : null,
+          ]);
+          Object.assign(p, { visible: true, content: c.exists() ? c.data() : { text: "", images: [] },
+            nCmt: nc.data().count, nLike: nl.data().count, liked: !!(ml && ml.exists()) });
+        } catch (e) { console.warn("openFromHash", e); return; }
+      }
+      if (p.visible) openDetail(p);
+    }
+    window.addEventListener("hashchange", openFromHash);
 
     async function deletePost(id) {
       const batch = writeBatch(db);
@@ -601,7 +630,8 @@
       renderHint();
       document.body.classList.remove("loading");
       loadMyPosts();
-      loadPage(1);
+      await loadPage(1);
+      openFromHash();
     });
   </script>
 </body>

@@ -2,7 +2,7 @@
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
 import {
-  doc, getDoc, setDoc, collection, query, where, getDocs, orderBy, limit,
+  doc, getDoc, setDoc, collection, collectionGroup, query, where, getDocs, orderBy, limit,
   onSnapshot, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { t, applyI18n, langSwitchHTML, bindLangSwitch, translateReason, lang } from "./i18n.js";
@@ -677,6 +677,7 @@ export function renderNav(active) {
     <div class="topbar-inner">
       <a class="brand" href="home.html"><img class="brand-logo" src="img/member.jpg" alt=""><span>Mochii <b>Club</b></span></a>
       <div class="topbar-tools">
+        <a href="feed.html" id="feedBtn" class="bell feed-btn" aria-label="Mochii Feed" title="Mochii Feed">✨<span id="feedDot" class="bell-badge feed-dot" hidden></span></a>
         <button type="button" id="bellBtn" class="bell" aria-label="${t("notif.title")}">🔔<span id="bellBadge" class="bell-badge" hidden></span></button>
         ${langSwitchHTML()}
       </div>
@@ -740,7 +741,7 @@ function speedUpNav(el) {
 window.addEventListener("pageshow", () => document.body.classList.remove("navigating"));
 
 // ---------- 🔔 通知铃铛：积分进账、积分可用、兑换批准/拒绝 ----------
-const bell = { ledger: [], redemptions: [], announcements: [], bindLogs: [], prizes: [], feed: [], seenAt: null, highlightSince: null };
+const bell = { ledger: [], redemptions: [], announcements: [], bindLogs: [], prizes: [], feed: [], replies: [], uid: "", seenAt: null, highlightSince: null };
 const ANNOUNCE_DAYS = 60; // 公告在铃铛里显示多少天
 
 function buildEvents() {
@@ -850,6 +851,13 @@ function buildEvents() {
     if (p.status === "rejected") ev.push({ time: at, icon: "↩️", title: ft("notifRejected"),
       detail: p.rejectReason ? ft("reason", { r: p.rejectReason }) : "", link: "feed.html" });
   });
+  // 💬 有人回复我的帖子、或回复我（自己的回复不通知）
+  bell.replies.forEach(c => {
+    const at = toDate(c.createdAt);
+    if (!at || c.authorUid === bell.uid) return;
+    ev.push({ time: at, icon: "💬", title: ft(c.replyToUid === bell.uid ? "notifReplyYou" : "notifReplyPost", { name: c.authorName || "" }),
+      detail: String(c.text || "").slice(0, 80), link: "feed.html#p-" + c.postId });
+  });
   return ev.filter(e => e.time <= now).sort((a, b) => b.time - a.time).slice(0, 50);
 }
 
@@ -863,7 +871,7 @@ function safeLink(u) {
 }
 
 // 每种通知的颜色
-const BELL_TONE = { "✨": "green", "🎉": "green", "✅": "green", "↩️": "red", "⌛": "orange", "⏳": "orange",
+const BELL_TONE = { "💬": "blue", "✨": "green", "🎉": "green", "✅": "green", "↩️": "red", "⌛": "orange", "⏳": "orange",
   "🎁": "pink", "❌": "red", "🔗": "blue", "✂️": "red", "📢": "purple", "🏆": "pink", "⏰": "orange", "🚚": "blue", "⚠️": "orange", "📦": "orange" };
 
 function renderBell() {
@@ -919,6 +927,21 @@ export function initBell(user, member) {
   onSnapshot(mine("redemptions"), s => { bell.redemptions = s.docs.map(d => ({ id: d.id, ...d.data() })); renderBell(); });
   onSnapshot(mine("prizeWins"), s => { bell.prizes = s.docs.map(d => ({ id: d.id, ...d.data() })); renderBell(); },
     err => console.warn("prizeWins", err));
+  // 💬 回复通知：最近 30 天、回复我的帖子或 @我 的回复
+  bell.uid = user.uid;
+  const replySince = new Date(Date.now() - 30 * 86400000);
+  const rep = { a: [], b: [] };
+  const onRep = k => s => {
+    rep[k] = s.docs.map(d => ({ id: d.id, postId: d.ref.parent.parent.id, ...d.data() }));
+    const m = new Map();
+    [...rep.a, ...rep.b].forEach(x => m.set(x.id, x));
+    bell.replies = [...m.values()];
+    renderBell();
+  };
+  ["postAuthorUid", "replyToUid"].forEach((f, i) => onSnapshot(
+    query(collectionGroup(db, "comments"), where(f, "==", user.uid), where("createdAt", ">=", replySince), orderBy("createdAt", "desc"), limit(20)),
+    onRep(i ? "b" : "a"), err => console.warn("replies", err)));
+  initFeedDot(user);
   onSnapshot(query(collection(db, "feedPosts"), where("authorUid", "==", user.uid)),
     s => { bell.feed = s.docs.map(d => d.data()); renderBell(); },
     err => console.warn("feedPosts", err));
@@ -959,6 +982,28 @@ export function initBell(user, member) {
   });
   // 点「查看」：关掉通知面板（同一页的链接不会换页，面板会挡住内容）
   panel.addEventListener("click", e => { if (e.target.closest(".bell-link")) panel.classList.add("hidden"); });
+}
+
+// ---------- ✨ Feed 按钮的小红点：上次打开 Feed 之后有新帖子就亮 ----------
+const FEED_SEEN = "mochiiFeedSeen_";
+function initFeedDot(user) {
+  const dot = document.getElementById("feedDot");
+  const key = FEED_SEEN + user.uid;
+  if (/\/feed(\.html)?$/.test(location.pathname)) {   // 正在看 Feed：记下现在，红点消失
+    try { localStorage.setItem(key, String(Date.now())); } catch (e) {}
+    if (dot) dot.hidden = true;
+    return;
+  }
+  if (!dot) return;
+  let seen = 0;
+  try { seen = Number(localStorage.getItem(key)) || 0; } catch (e) {}
+  // 置顶、一般帖子各查最新一篇（用 Feed 列表同一个索引）
+  const newest = pinned => getDocs(query(collection(db, "feedPosts"), where("status", "==", "published"),
+    where("pinned", "==", pinned), orderBy("createdAt", "desc"), limit(1)));
+  Promise.all([newest(false), newest(true)]).then(([a, b]) => {
+    const latest = Math.max(0, ...[...a.docs, ...b.docs].map(d => +(toDate(d.data().createdAt) || 0)));
+    dot.hidden = !(latest > seen);
+  }).catch(e => console.warn("feedDot", e));
 }
 
 // ---------- 💬 WhatsApp 标签：先在网站打问题，再打开 WhatsApp ----------
