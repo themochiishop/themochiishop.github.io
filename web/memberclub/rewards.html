@@ -93,7 +93,7 @@
   <script type="module">
     import { db } from "./js/firebase-config.js";
     import {
-      doc, updateDoc, collection, getDocs, serverTimestamp, query, where
+      doc, updateDoc, collection, getDocs, serverTimestamp, query, where, onSnapshot
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, esc, fmtDate, t, toDate,
@@ -329,14 +329,22 @@
       const PZ_TAG = { unclaimed: "tag-pending", claimed: "tag-pending", approved: "tag-ship", shipped: "tag-ship", completed: "tag-ok", cancelled: "" };
       let prizes = [];
 
-      async function loadPrizes() {
-        try {
-          const s = await getDocs(query(collection(db, "prizeWins"), where("uid", "==", user.uid)));
+      // 即时更新：后台审核、发货后，这一页不用重新整理就会变
+      let prizeSub = null;
+      function loadPrizes() {
+        if (prizeSub) return;
+        prizeSub = onSnapshot(query(collection(db, "prizeWins"), where("uid", "==", user.uid)), s => {
           prizes = s.docs.map(d => ({ id: d.id, ...d.data() }))
             .sort((a, b) => (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0));
-        } catch (e) { console.warn("prizeWins", e); prizes = []; }
-        renderPrizes();
+          renderPrizes();
+        }, e => { console.warn("prizeWins", e); prizes = []; renderPrizes(); });
       }
+      // 已经在这一页时点铃铛通知（只改了 #prizes）：捲到中奖框
+      window.addEventListener("hashchange", () => {
+        if (location.hash !== "#prizes") return;
+        if (prizes.length) $("prizes").scrollIntoView({ behavior: "smooth", block: "start" });
+        history.replaceState(null, "", location.pathname);
+      });
 
       function prizeLi(p) {
         const step = PZ_STEP[p.status] ?? 0;
@@ -417,7 +425,6 @@
           b.disabled = true;
           try {
             await updateDoc(doc(db, "prizeWins", got), { status: "completed", completedAt: serverTimestamp() });
-            await loadPrizes();
           } catch (err) { alert(t("pz.fail") + err.message); b.disabled = false; }
         }
       });
@@ -465,7 +472,6 @@
         try {
           await updateDoc(doc(db, "prizeWins", pzId), data);
           $("pzModal").classList.add("hidden");
-          await loadPrizes();
           toast(t("pz.claimed"));
         } catch (err) { pzMsg(t("pz.fail") + err.message, "err"); }
         finally { $("pzSubmit").disabled = false; }

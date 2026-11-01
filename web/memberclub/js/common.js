@@ -780,7 +780,10 @@ function buildEvents() {
     const won = toDate(p.createdAt);
     if (won) ev.push({ time: won, icon: "🏆", title: t("notif.prizeWon", v),
       detail: p.status === "unclaimed" ? t("notif.prizeWonDetail") : "", link: "rewards.html#prizes" });
-    const sh = toDate(p.shippedAt);
+    const ap = toDate(p.approvedAt), sh = toDate(p.shippedAt);
+    // 审核通过（如果是「通过并标记已发货」同一刻完成，只显示发货通知）
+    if (ap && (!sh || sh - ap > 60000)) ev.push({ time: ap, icon: "✅", title: t("notif.prizeApproved", v),
+      detail: t(p.delivery === "separate" ? "notif.prizeApprovedSep" : "notif.prizeApprovedOrder"), link: "rewards.html#prizes" });
     if (sh) ev.push({ time: sh, icon: "🚚", title: t("notif.prizeShipped", v),
       detail: p.shipping ? [p.shipping.carrierName, p.shipping.trackingNo].filter(Boolean).join(" · ") : "", link: "rewards.html#prizes" });
     const cc = toDate(p.cancelledAt);
@@ -920,4 +923,6 @@ export function initBell(user, member) {
   document.addEventListener("click", e => {
     if (!e.target.closest("#bellPanel, #bellBtn")) panel.classList.add("hidden");
   });
+  // 点「查看」：关掉通知面板（同一页的链接不会换页，面板会挡住内容）
+  panel.addEventListener("click", e => { if (e.target.closest(".bell-link")) panel.classList.add("hidden"); });
 }

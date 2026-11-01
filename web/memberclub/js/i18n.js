@@ -4,6 +4,9 @@
 const DICT = {
   // ======================= English =======================
   en: {
+    "notif.prizeApproved": "Prize claim approved: {name}",
+    "notif.prizeApprovedOrder": "It will ship together with your order",
+    "notif.prizeApprovedSep": "We'll ship it to you soon",
     "pz.title": "🏆 Prizes to claim",
     "pz.sub": "Congrats on winning our Monthly Draw! Claim your prize below.",
     "pz.from": "Monthly Draw · {m}",
@@ -444,6 +447,9 @@ const DICT = {
 
   // ======================= Bahasa Melayu =======================
   ms: {
+    "notif.prizeApproved": "Tuntutan hadiah diluluskan: {name}",
+    "notif.prizeApprovedOrder": "Ia akan dihantar bersama pesanan anda",
+    "notif.prizeApprovedSep": "Kami akan menghantarnya tidak lama lagi",
     "pz.title": "🏆 Hadiah untuk dituntut",
     "pz.sub": "Tahniah kerana menang Cabutan Bulanan kami! Tuntut hadiah anda di bawah.",
     "pz.from": "Cabutan Bulanan · {m}",
@@ -884,6 +890,9 @@ const DICT = {
 
   // ======================= 中文 =======================
   zh: {
+    "notif.prizeApproved": "奖品审核通过：{name}",
+    "notif.prizeApprovedOrder": "将与您的订单一起寄出",
+    "notif.prizeApprovedSep": "我们会尽快为您寄出",
     "pz.title": "🏆 中奖领取",
     "pz.sub": "恭喜您在每月抽奖中奖！请在下面领取奖品。",
     "pz.from": "每月抽奖 · {m}",
