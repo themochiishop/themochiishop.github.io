@@ -61,7 +61,13 @@ export const TIERS = [
   { id: "silver",  icon: "🥈", minSpend: 300,  multiplier: 1.2, birthday: 128 },
   { id: "gold",    icon: "🥇", minSpend: 800,  multiplier: 1.5, birthday: 188 },
   { id: "diamond", icon: "💎", minSpend: 2000, multiplier: 2,   birthday: 288 },
+  { id: "black",   icon: "🖤", minSpend: null, multiplier: 2,   birthday: 888, invite: true },  // 邀请制：后台「会员详情」开通
 ];
+// 保级规则（必须和 Google 表格同步脚本的 MS_TIER_VALID_MONTHS / MS_TIER_KEEP_RATIO 一致）
+export const TIER_VALID_MONTHS = 12;
+export const TIER_KEEP_RATIO = 0.5;
+export const TIER_REMIND_DAYS = 30;   // 到期前几天开始提醒
+export const tierById = id => TIERS.find(x => x.id === id) || TIERS[0];
 
 // 等级图标：Mochii 会员用会员俱乐部 logo，其他等级用 emoji
 export function tierIconHTML(tier) {
@@ -73,15 +79,21 @@ export function tierLabel(tier) {
   return t("tier." + tier.id);
 }
 
-// 目前等级、下一级、还差多少
+// 目前等级、下一级、还差多少；保级：有效期、还差多少才能保住、历史最高
 export function tierProgress(member) {
   const spend = Number(member.spend12m || 0);
   const idx = Math.max(0, TIERS.findIndex(x => x.id === member.tier));
   const tier = TIERS[idx];
-  const next = TIERS[idx + 1] || null;
+  const next = tier.invite ? null : (TIERS[idx + 1] && !TIERS[idx + 1].invite ? TIERS[idx + 1] : null);
   const need = next ? Math.max(0, next.minSpend - spend) : 0;
   const pct = next ? Math.min(100, Math.round(((spend - tier.minSpend) / (next.minSpend - tier.minSpend)) * 100)) : 100;
-  return { tier, next, spend, need, pct: Math.max(0, pct) };
+  const expires = toDate(member.tierExpires);
+  const canKeep = !tier.invite && tier.id !== "mochii" && !!expires;   // 会降级的等级才有保级
+  const keepAt = canKeep ? tier.minSpend * TIER_KEEP_RATIO : 0;
+  const keepNeed = canKeep ? Math.max(0, keepAt - spend) : 0;
+  const best = tierById(member.bestTier || tier.id);
+  const bestHigher = TIERS.indexOf(best) > idx;
+  return { tier, next, spend, need, pct: Math.max(0, pct), expires, canKeep, keepAt, keepNeed, best, bestHigher };
 }
 
 // ---------- 商城分类：后台「奖品管理 › 商城分类」可自订（settings/shop），没设定过就用预设 ----------
@@ -741,7 +753,7 @@ function speedUpNav(el) {
 window.addEventListener("pageshow", () => document.body.classList.remove("navigating"));
 
 // ---------- 🔔 通知铃铛：积分进账、积分可用、兑换批准/拒绝 ----------
-const bell = { ledger: [], redemptions: [], announcements: [], bindLogs: [], prizes: [], feed: [], replies: [], uid: "", seenAt: null, highlightSince: null };
+const bell = { ledger: [], redemptions: [], announcements: [], bindLogs: [], prizes: [], feed: [], replies: [], uid: "", member: null, seenAt: null, highlightSince: null };
 const ANNOUNCE_DAYS = 60; // 公告在铃铛里显示多少天
 
 function buildEvents() {
@@ -851,6 +863,28 @@ function buildEvents() {
     if (p.status === "rejected") ev.push({ time: at, icon: "↩️", title: ft("notifRejected"),
       detail: p.rejectReason ? ft("reason", { r: p.rejectReason }) : "", link: "feed.html" });
   });
+  // 💎 会员等级：升级、保级成功、降级（同步脚本写在 members.tierEvent），以及到期前提醒
+  const mem = bell.member;
+  if (mem) {
+    const tp = tierProgress(mem);
+    const ev2 = mem.tierEvent;
+    const at = ev2 && toDate(ev2.at);
+    if (at) {
+      const to = tierById(ev2.to);
+      const v = { label: tierLabel(to), m: to.multiplier, d: tp.expires ? fmtDate(tp.expires) : "-" };
+      if (ev2.type === "up") ev.push({ time: at, icon: "⬆️", title: t("notif.tierUp", v), detail: to.invite ? t("tier.blackNote") : t("notif.tierUpDetail", v), link: "account.html#tiers" });
+      if (ev2.type === "keep") ev.push({ time: at, icon: "✅", title: t("notif.tierKeep", v), detail: t("notif.tierKeepDetail", v), link: "account.html#tiers" });
+      if (ev2.type === "down") ev.push({ time: at, icon: "⬇️", title: t("notif.tierDown", v), detail: t("notif.tierDownDetail"), link: "account.html#tiers" });
+    }
+    if (tp.canKeep) {
+      const remind = new Date(tp.expires.getTime() - TIER_REMIND_DAYS * 86400000);
+      if (remind <= now && now < tp.expires) ev.push({
+        time: remind, icon: "⏰", title: t("notif.tierExpiring", { label: tierLabel(tp.tier), d: fmtDate(tp.expires) }),
+        detail: tp.keepNeed > 0 ? t("notif.tierExpiringDetail", { need: fmtMoney(tp.keepNeed) }) : t("notif.tierExpiringOk"),
+        link: "account.html#tiers",
+      });
+    }
+  }
   // 💬 有人回复我的帖子、或回复我（自己的回复不通知）
   bell.replies.forEach(c => {
     const at = toDate(c.createdAt);
@@ -871,7 +905,7 @@ function safeLink(u) {
 }
 
 // 每种通知的颜色
-const BELL_TONE = { "💬": "blue", "✨": "green", "🎉": "green", "✅": "green", "↩️": "red", "⌛": "orange", "⏳": "orange",
+const BELL_TONE = { "⬆️": "green", "⬇️": "orange", "💬": "blue", "✨": "green", "🎉": "green", "✅": "green", "↩️": "red", "⌛": "orange", "⏳": "orange",
   "🎁": "pink", "❌": "red", "🔗": "blue", "✂️": "red", "📢": "purple", "🏆": "pink", "⏰": "orange", "🚚": "blue", "⚠️": "orange", "📦": "orange" };
 
 function renderBell() {
@@ -920,6 +954,7 @@ export function initBell(user, member) {
   const panel = document.getElementById("bellPanel");
   if (!btn || !panel) return;
   bell.seenAt = toDate(member.notifSeenAt);
+  bell.member = member;
   bell.highlightSince = bell.seenAt;
 
   const mine = c => query(collection(db, c), where("uid", "==", user.uid));

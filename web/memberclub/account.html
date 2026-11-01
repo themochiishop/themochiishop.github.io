@@ -37,10 +37,17 @@
       </div>
       <div class="bar"><div id="tierBar" style="width:0%"></div></div>
       <div class="muted" style="font-size:.85rem" id="tierNext"></div>
+      <!-- 保级：有效期、保级进度、历史最高等级 -->
+      <div class="tier-keep hidden" id="tierKeep">
+        <div class="tk-row"><span id="tierValid"></span><span class="tk-best hidden" id="tierBest"></span></div>
+        <div class="bar thin hidden" id="tierKeepBarBox"><div id="tierKeepBar" style="width:0%"></div></div>
+        <div class="tk-text" id="tierKeepText"></div>
+      </div>
       <details id="tiers">
         <summary data-i18n="tier.explain"></summary>
         <table class="tier-table" id="tierTable"></table>
         <p class="muted" style="font-size:.78rem;margin-top:8px" data-i18n="tier.note"></p>
+        <p class="muted" style="font-size:.78rem;margin-top:6px" data-i18n="tier.keepRule"></p>
       </details>
     </div>
 
@@ -117,11 +124,22 @@
       $("tierNext").textContent = tp.next
         ? t("tier.next", { need: fmtMoney(tp.need), icon: tp.next.icon, label: tierLabel(tp.next), m: tp.next.multiplier })
         : t("tier.max");
+      // 保级
+      const showKeep = tp.canKeep || tp.tier.invite || tp.bestHigher;
+      $("tierKeep").classList.toggle("hidden", !showKeep);
+      $("tierValid").textContent = tp.tier.invite ? t("tier.blackNote") : tp.canKeep ? t("tier.validUntil", { d: fmtDate(tp.expires) }) : "";
+      $("tierBest").classList.toggle("hidden", !tp.bestHigher);
+      $("tierBest").textContent = t("tier.best", { label: tierLabel(tp.best) });
+      $("tierKeepBarBox").classList.toggle("hidden", !tp.canKeep);
+      $("tierKeepBar").style.width = (tp.canKeep ? Math.min(100, Math.round(tp.spend / tp.keepAt * 100)) : 0) + "%";
+      $("tierKeepText").textContent = !tp.canKeep ? ""
+        : tp.keepNeed > 0 ? t("tier.keepNeed", { need: fmtMoney(tp.keepNeed), d: fmtDate(tp.expires), label: tierLabel(tp.tier) })
+        : t("tier.keepOk", { label: tierLabel(tp.tier), d: fmtDate(tp.expires) });
       $("tierTable").innerHTML = `
         <tr><th>${t("tier.colTier")}</th><th>${t("tier.colSpend")}</th><th>${t("tier.colMult")}</th><th>${t("tier.colBday")}</th></tr>
         ${TIERS.map(x => `
           <tr class="${x.id === tp.tier.id ? "current" : ""}">
-            <td><span class="tier-cell"><span class="ti">${tierIconHTML(x)}</span><span>${tierLabel(x)}</span></span></td>            <td>${x.minSpend ? t("tier.minSpend", { n: x.minSpend }) : t("tier.free")}</td>
+            <td><span class="tier-cell"><span class="ti">${tierIconHTML(x)}</span><span>${tierLabel(x)}</span></span></td>            <td>${x.invite ? t("tier.invite") : x.minSpend ? t("tier.minSpend", { n: x.minSpend }) : t("tier.free")}</td>
             <td>×${x.multiplier}</td>
             <td>${t("unit.pts", { n: x.birthday })}</td>
           </tr>`).join("")}`;

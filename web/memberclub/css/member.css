@@ -987,3 +987,12 @@ input.locked { opacity: .6; cursor: not-allowed; }
 a.feed-btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 a.feed-btn:hover { text-decoration: none; }
 .feed-dot { min-width: 10px; width: 10px; height: 10px; padding: 0; top: -1px; right: -1px; border: 2px solid var(--bg); }
+
+/* ---------- 🖤 Black Elite + 保级 ---------- */
+.tier-black .tier-name { color: #d4af37; }
+.tier-black .tier-icon { filter: drop-shadow(0 0 6px rgba(212,175,55,.5)); }
+.tier-keep { background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.tier-keep .tk-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .82rem; font-weight: 700; }
+.tier-keep .tk-best { font-size: .74rem; padding: 2px 9px; border-radius: 999px; border: 1px solid rgba(212,175,55,.6); color: #f3d27a; }
+.tier-keep .tk-text { font-size: .8rem; color: var(--muted); margin-top: 6px; }
+.bar.thin { height: 6px; margin-top: 8px; }
