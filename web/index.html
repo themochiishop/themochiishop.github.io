@@ -162,7 +162,7 @@ The MoChii Shop</h1>
   </footer>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
   import {
@@ -171,7 +171,7 @@ The MoChii Shop</h1>
   } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   // 会员系统（Mochii Feed）：用预设 app，才能读到会员在俱乐部的登入状态
-  const msApp = initializeApp({
+  const msApp = getApps().find(a => a.name === '[DEFAULT]') || initializeApp({
     apiKey: "AIzaSyAdZkjbROHfmM_YSUeutoNpmXf5EHBwLlU",
     authDomain: "login.themochiishop.com",
     projectId: "member-system-27ae0",
@@ -182,8 +182,8 @@ The MoChii Shop</h1>
   const fs = getFirestore(msApp);
   const msAuth = getAuth(msApp);
 
-  // 首页设定（轮播、直播状态）：admin-status
-  const app = initializeApp({
+  // 首页设定（轮播、直播状态）：admin-status，和 nav.js 共用名字「site」
+  const app = getApps().find(a => a.name === 'site') || initializeApp({
     apiKey: "AIzaSyDJrsKAjWqz0AmjEtBzz4CeswiskdQqASw",
     authDomain: "admin-status-c3bdb.firebaseapp.com",
     databaseURL: "https://admin-status-c3bdb-default-rtdb.asia-southeast1.firebasedatabase.app",
