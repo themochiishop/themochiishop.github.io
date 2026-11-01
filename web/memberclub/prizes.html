@@ -147,6 +147,12 @@
       const book = Array.isArray(member.addresses) ? member.addresses : [];
       renderFaq($("faqBox"), "prize");
 
+      // 「负责处理」：按逗号 / 顿号拆成小标签，每一项完整换行
+      const noteHTML = txt => {
+        const items = String(txt || "").split(/[,，、;；]+/).map(x => x.trim()).filter(Boolean);
+        if (!items.length) return "";
+        return `<span class="cn">${items.map(x => `<span class="cn-tag">${esc(x)}</span>`).join("")}</span>`;
+      };
       // 💬 俱乐部 WhatsApp（后台「商店帮助 › 联系我们按钮」设定）
       getDoc(doc(db, "settings", "help")).then(hs => {
         const c = hs.exists() ? hs.data() : {};
@@ -157,7 +163,7 @@
         $("pzContactBtns").innerHTML = `
           <a class="contact-tile wa" href="https://wa.me/${esc(num)}" target="_blank" rel="noopener">
             <span class="ci">${SOCIAL_ICONS.whatsapp}</span>
-            <span class="ct"><b>${esc(pick(c.waClubLabel) || t("help.waClub"))}</b><small>WhatsApp</small>${note ? `<span class="cn">${esc(note)}</span>` : ""}</span>
+            <span class="ct"><b>${esc(pick(c.waClubLabel) || t("help.waClub"))}</b><small>WhatsApp</small>${noteHTML(note)}</span>
             <span class="go" aria-hidden="true">➔</span>
           </a>`;
         $("pzContact").classList.remove("hidden");

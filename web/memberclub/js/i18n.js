@@ -704,7 +704,7 @@ const DICT = {
     "common.loadFail": "Gagal dimuatkan: ",
     "common.privacy": "Dasar Privasi",
     "common.terms": "Terma Ahli",
-    "nav.shop": "Pusat Ganjaran",
+    "nav.shop": "Ganjaran",
     "nav.points": "Ahli",
     "nav.me": "Saya",
     "lang.choose": "Bahasa",

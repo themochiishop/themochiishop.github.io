@@ -71,10 +71,16 @@
       return store.map(x => ({ q: x.q, a: x.a, cat: x.cat, html: false }));
     }
 
+    // 「负责处理」：按逗号 / 顿号拆成小标签，每一项完整换行
+    const noteHTML = txt => {
+      const items = String(txt || "").split(/[,，、;；]+/).map(x => x.trim()).filter(Boolean);
+      if (!items.length) return "";
+      return `<span class="cn">${items.map(x => `<span class="cn-tag">${esc(x)}</span>`).join("")}</span>`;
+    };
     const tile = (cls, href, icon, title, sub, note) => `
       <a class="contact-tile ${cls}" href="${esc(href)}" target="_blank" rel="noopener">
         <span class="ci">${icon}</span>
-        <span class="ct"><b>${esc(title)}</b><small>${esc(sub)}</small>${note ? `<span class="cn">${esc(note)}</span>` : ""}</span>
+        <span class="ct"><b>${esc(title)}</b><small>${esc(sub)}</small>${noteHTML(note)}</span>
         <span class="go" aria-hidden="true">➔</span>
       </a>`;
 
