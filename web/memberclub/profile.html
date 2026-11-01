@@ -5,6 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n-title="prof.pageTitle">Profile · The Mochii Shop</title>
   <link rel="stylesheet" href="css/member.css">
+  <style>
+    /* 📁 文件夹式分页 */
+    .folder { margin-bottom: 16px; }
+    .folder-tabs { display: flex; gap: 4px; padding: 0 8px; position: relative; z-index: 1; }
+    .folder-tab { flex: 1; max-width: 200px; display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 12px; font-weight: 700; font-size: .88rem; cursor: pointer; color: var(--muted);
+      background: var(--card2); border: 1px solid var(--line); border-bottom: 0; border-radius: 12px 12px 0 0;
+      transform: translateY(4px); transition: transform .15s, color .15s; }
+    .folder-tab:hover { color: var(--text); }
+    .folder-tab.active { background: var(--card); color: var(--text); transform: none; box-shadow: inset 0 3px 0 var(--accent); margin-bottom: -1px; padding-bottom: 11px; }
+    .folder-body { background: var(--card); border: 1px solid var(--line); border-radius: 0 var(--radius) var(--radius) var(--radius); padding: 20px; }
+    .folder-sub { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--line); }
+    .folder-sub h3 { font-size: .95rem; margin-bottom: 8px; }
+    .bday-locked { font-size: 1.05rem; font-weight: 700; }
+    @media (max-width: 480px) { .folder-tabs { padding: 0 4px; } .folder-tab { max-width: none; font-size: .82rem; padding: 9px 6px; } .folder-body { padding: 16px; } }
+  </style>
 </head>
 <body class="loading">
   <header id="topbar"></header>
@@ -14,64 +30,70 @@
     <p class="muted" data-i18n="prof.sub"></p>
     <p id="pageError" class="msg err hidden"></p>
 
-    <div class="card">
-      <h2 data-i18n="prof.basic"></h2>
-      <form id="nameForm">
-        <label><span data-i18n="idx.email"></span>
-          <input id="email" readonly>
-        </label>
-        <label><span data-i18n="idx.name"></span>
-          <input id="name" required maxlength="40">
-          <small class="muted" id="nameHint"></small>
-        </label>
-        <label><span data-i18n="idx.phone"></span>
-          <input type="tel" id="phone" required inputmode="tel" autocomplete="tel" data-i18n-ph="idx.phonePh">
-          <small class="muted" data-i18n="idx.phoneHint"></small>
-        </label>
-        <label class="check">
-          <input type="checkbox" id="waOptIn">
-          <span data-i18n="idx.waOptIn"></span>
-        </label>
-        <p class="bonus-hint" id="waBonusHint"></p>
-        <button type="submit" class="btn btn-primary" id="nameSubmit" data-i18n="prof.save"></button>
-      </form>
-      <p id="nameMsg" class="msg"></p>
-    </div>
-
-    <!-- ✨ 我在 Feed 的头像与简介 -->
-    <a class="help-link" href="feed.html#me"><span>✨</span><span id="feedMeLink"></span><span class="go">➔</span></a>
-
-    <!-- 📦 收货地址（兑换实体奖品用） -->
-    <div class="card" id="addr">
-      <h2 data-i18n="addr.title"></h2>
-      <p class="muted" style="font-size:.85rem;margin:-6px 0 10px" data-i18n="addr.sub"></p>
-      <ul id="addrList" class="addr-list"></ul>
-      <button type="button" class="btn btn-ghost btn-inline" id="addrAdd" data-i18n="addr.add"></button>
-      <form id="addrForm" class="hidden" style="margin-top:12px">
-        <div id="addrFields"></div>
-        <div class="actions-row">
-          <button type="submit" class="btn btn-primary btn-inline" id="addrSave" data-i18n="prof.save"></button>
-          <button type="button" class="btn btn-ghost btn-inline" id="addrCancel" data-i18n="addr.cancel"></button>
-        </div>
-      </form>
-      <p id="addrMsg" class="msg"></p>
-    </div>
-
-    <div class="card">
-      <h2 data-i18n="prof.bday"></h2>
-      <div id="birthdayLocked" class="hidden">
-        <p style="font-size:1.2rem;font-weight:700" id="birthdayText"></p>
-        <p class="muted" style="font-size:.85rem;margin-top:6px" data-i18n="prof.bdayLocked"></p>
+    <!-- 📁 文件夹式分页：个人资料 · 收货地址 -->
+    <div class="folder">
+      <div class="folder-tabs" role="tablist">
+        <button type="button" role="tab" class="folder-tab active" data-tab="info"><span>👤</span><span data-i18n="prof.basic"></span></button>
+        <button type="button" role="tab" class="folder-tab" data-tab="addr"><span>📦</span><span data-i18n="addr.title"></span></button>
       </div>
-      <form id="birthdayForm" class="hidden">
-        <label><span data-i18n="prof.setBday"></span>
-          <input type="date" id="birthday" required>
-          <small data-i18n="prof.bdayHint"></small>
-        </label>
-        <p class="bonus-hint" id="bdayBonusHint"></p>
-        <button type="submit" class="btn btn-primary" id="birthdaySubmit" data-i18n="prof.bdaySubmit"></button>
-      </form>
-      <p id="birthdayMsg" class="msg"></p>
+
+      <!-- ① 个人资料（含生日） -->
+      <div class="folder-body" id="tab-info">
+        <form id="nameForm">
+          <label><span data-i18n="idx.email"></span>
+            <input id="email" readonly>
+          </label>
+          <label><span data-i18n="idx.name"></span>
+            <input id="name" required maxlength="40">
+            <small class="muted" id="nameHint"></small>
+          </label>
+          <label><span data-i18n="idx.phone"></span>
+            <input type="tel" id="phone" required inputmode="tel" autocomplete="tel" data-i18n-ph="idx.phonePh">
+            <small class="muted" data-i18n="idx.phoneHint"></small>
+          </label>
+          <label class="check">
+            <input type="checkbox" id="waOptIn">
+            <span data-i18n="idx.waOptIn"></span>
+          </label>
+          <p class="bonus-hint" id="waBonusHint"></p>
+          <button type="submit" class="btn btn-primary" id="nameSubmit" data-i18n="prof.save"></button>
+        </form>
+        <p id="nameMsg" class="msg"></p>
+
+        <div class="folder-sub">
+          <h3 data-i18n="prof.bday"></h3>
+          <div id="birthdayLocked" class="hidden">
+            <p class="bday-locked"><span id="birthdayText"></span> 🔒</p>
+            <p class="muted" style="font-size:.8rem;margin-top:4px" data-i18n="prof.bdayLocked"></p>
+          </div>
+          <form id="birthdayForm" class="hidden">
+            <label><span data-i18n="prof.setBday"></span>
+              <input type="date" id="birthday" required>
+              <small data-i18n="prof.bdayHint"></small>
+            </label>
+            <p class="bonus-hint" id="bdayBonusHint"></p>
+            <button type="submit" class="btn btn-primary" id="birthdaySubmit" data-i18n="prof.bdaySubmit"></button>
+          </form>
+          <p id="birthdayMsg" class="msg"></p>
+        </div>
+      </div>
+
+      <!-- ② 收货地址（兑换实体奖品用） -->
+      <div class="folder-body hidden" id="tab-addr">
+        <div id="addr">
+          <p class="muted" style="font-size:.85rem;margin:0 0 10px" data-i18n="addr.sub"></p>
+          <ul id="addrList" class="addr-list"></ul>
+          <button type="button" class="btn btn-ghost btn-inline" id="addrAdd" data-i18n="addr.add"></button>
+          <form id="addrForm" class="hidden" style="margin-top:12px">
+            <div id="addrFields"></div>
+            <div class="actions-row">
+              <button type="submit" class="btn btn-primary btn-inline" id="addrSave" data-i18n="prof.save"></button>
+              <button type="button" class="btn btn-ghost btn-inline" id="addrCancel" data-i18n="addr.cancel"></button>
+            </div>
+          </form>
+          <p id="addrMsg" class="msg"></p>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -96,6 +118,18 @@
 
     const $ = id => document.getElementById(id);
     renderNav("profile");
+
+    // 📁 文件夹分页
+    function openTab(k) {
+      document.querySelectorAll(".folder-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === k));
+      ["info", "addr"].forEach(x => $("tab-" + x).classList.toggle("hidden", x !== k));
+    }
+    document.querySelectorAll(".folder-tab").forEach(b => b.addEventListener("click", () => {
+      openTab(b.dataset.tab);
+      history.replaceState(null, "", location.pathname + (b.dataset.tab === "addr" ? "#addr" : ""));
+    }));
+    if (location.hash === "#addr") openTab("addr");
+    window.addEventListener("hashchange", () => openTab(location.hash === "#addr" ? "addr" : "info"));
     $("logoutBtn").addEventListener("click", logout);
 
     function setMsg(el, text, type) {
@@ -172,7 +206,7 @@
         } catch (err) { setMsg($("addrMsg"), t("idx.saveFail") + err.message, "err"); }
       }
       renderAddr();
-      if (location.hash === "#addr") setTimeout(() => $("addr").scrollIntoView({ behavior: "smooth" }), 300);
+      if (location.hash === "#addr") openTab("addr");
       $("addrAdd").addEventListener("click", () => openAddr(-1));
       $("addrCancel").addEventListener("click", closeAddr);
       $("addrForm").addEventListener("submit", async e => {
@@ -245,10 +279,6 @@
         }
       });
     });
-  </script>
-  <script type="module">
-    import { ft } from "./js/feed-i18n.js";
-    document.getElementById("feedMeLink").textContent = ft("meLink");
   </script>
 </body>
 </html>

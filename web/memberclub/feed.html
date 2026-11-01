@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
   <title>Mochii Feed · Mochii Club</title>
   <link rel="stylesheet" href="css/member.css">
   <style>
@@ -33,6 +34,7 @@
     .xhs-author { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; cursor: pointer; }
     .xhs-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
     .xhs-author-info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+    .xhs-card, .xhs-card .xhs-content { color: #222; }
     .xhs-name { font-size: .72rem; color: #333; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
     .xhs-time { font-size: .56rem; color: #aaa; letter-spacing: -.2px; white-space: nowrap; }
     .xhs-like-btn { background: #fff0f2; border: none; cursor: pointer; display: flex; align-items: center; gap: 2px;
@@ -84,18 +86,34 @@
     .my-post:first-of-type { margin-top: 8px; }
     .my-post .txt { color: var(--muted); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60vw; }
 
-    /* 会员主页 */
+    /* 会员主页（封面、头像外框跟着等级变色） */
     .prof-back { display: inline-block; margin: 0 4px 10px; font-size: .85rem; color: var(--muted); cursor: pointer; background: none; border: 0; }
     .prof-back:hover { color: var(--text); }
-    .prof-head { display: flex; gap: 14px; align-items: center; background: var(--card); border: 1px solid var(--line);
-      border-radius: 14px; padding: 16px; margin: 0 4px 14px; }
-    .prof-head .av, .prof-head .xhs-avatar { width: 64px; height: 64px; font-size: 1.5rem; }
-    .prof-head .av.preset { font-size: 2rem; }
-    .prof-name { font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .prof-name .ttl { font-size: .7rem; padding: 1px 7px; }
-    .prof-bio { color: var(--text); opacity: .85; font-size: .88rem; margin-top: 4px; white-space: pre-wrap; word-break: break-word; }
-    .prof-stat { color: var(--muted); font-size: .8rem; margin-top: 6px; }
-    .prof-head .btn { width: auto; padding: 6px 12px; font-size: .78rem; margin-top: 8px; }
+    .prof { background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; margin: 0 4px 14px; text-align: center; padding-bottom: 16px; }
+    .prof-cover { height: 118px; position: relative; --ring: #ff6fae;
+      background: repeating-linear-gradient(135deg, rgba(255,255,255,.07) 0 2px, transparent 2px 14px), linear-gradient(135deg, #ff6fae, #7c5cff); }
+    .prof-cover.t-silver { --ring: #e2e8f0; background: repeating-linear-gradient(135deg, rgba(255,255,255,.12) 0 2px, transparent 2px 14px), linear-gradient(135deg, #f1f5f9, #94a3b8 55%, #475569); }
+    .prof-cover.t-gold { --ring: #f5c542; background: repeating-linear-gradient(135deg, rgba(255,255,255,.12) 0 2px, transparent 2px 14px), linear-gradient(135deg, #fde68a, #d4a017 55%, #92400e); }
+    .prof-cover.t-diamond { --ring: #67e8f9; background: repeating-linear-gradient(135deg, rgba(255,255,255,.1) 0 2px, transparent 2px 14px), linear-gradient(135deg, #a5f3fc, #6366f1 55%, #6d28d9); }
+    .prof-cover.t-black { --ring: #d4af37; background: repeating-linear-gradient(135deg, rgba(212,175,55,.16) 0 1px, transparent 1px 12px), linear-gradient(135deg, #050507, #1f2937 60%, #3f3f46); }
+    .prof-cover.t-shop { --ring: #fff; background: repeating-linear-gradient(135deg, rgba(255,255,255,.1) 0 2px, transparent 2px 14px), linear-gradient(135deg, #ff6fae, #ffb4d6 45%, #7c5cff); }
+    .prof-tier { position: absolute; right: 14px; top: 11px; font-size: .7rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+      color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.35); }
+    .prof-av { display: flex; justify-content: center; margin-top: -46px; position: relative; }
+    .prof-av > .av, .prof-av > .xhs-avatar { width: 92px; height: 92px; font-size: 2rem; border: 4px solid var(--ring, #ff6fae);
+      box-shadow: 0 0 0 4px var(--card), 0 8px 24px rgba(0,0,0,.35); }
+    .prof-av > .av.preset { font-size: 2.8rem; }
+    .prof-name { font-size: 1.25rem; font-weight: 800; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 6px; flex-wrap: wrap; padding: 0 14px; }
+    .prof-name .ttl { font-size: .7rem; padding: 1px 8px; border-radius: 5px; }
+    .prof-id { color: var(--muted); font-size: .8rem; margin-top: 2px; }
+    .prof-bio { font-size: .9rem; margin: 10px auto 0; max-width: 420px; padding: 0 16px; white-space: pre-wrap; word-break: break-word; }
+    .prof-stats { display: grid; grid-template-columns: 1fr 1fr; margin: 14px 16px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+    .prof-stats div { padding: 10px 0; }
+    .prof-stats div + div { border-left: 1px solid var(--line); }
+    .prof-stats b { display: block; font-size: 1.15rem; }
+    .prof-stats span { color: var(--muted); font-size: .76rem; }
+    .prof-acts { display: flex; gap: 8px; justify-content: center; margin-top: 14px; padding: 0 16px; }
+    .prof-acts .btn { width: auto; flex: 1; max-width: 180px; padding: 8px 12px; font-size: .82rem; }
 
     .fab { position: fixed; right: 18px; bottom: 22px; z-index: 20; border: 0; border-radius: 999px; padding: 12px 18px;
       font-weight: 800; font-size: .95rem; color: #fff; cursor: pointer; box-shadow: 0 8px 22px rgba(255,111,174,.35);
@@ -227,7 +245,7 @@
     import { auth, db } from "./js/firebase-config.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
     import {
-      collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where, orderBy, limit, startAfter,
+      collection, collectionGroup, doc, getDoc, getDocs, setDoc, deleteDoc, query, where, orderBy, limit, startAfter,
       getCountFromServer, writeBatch, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import { renderNav, initBell, esc, toDate, toast, compressImage, isInternalMember, t, lang } from "./js/common.js";
@@ -402,7 +420,7 @@
 
     // ---------- 顶部 ----------
     function renderTop() {
-      if (me.member) { renderNav("feed"); initBell(me.user, me.member); return; }
+      if (me.member) { renderNav(location.hash === "#me" ? "myfeed" : "feed"); initBell(me.user, me.member); return; }
       applyI18n();
       $("topbar").className = "topbar";
       $("topbar").innerHTML = `
@@ -419,7 +437,7 @@
         if (!me.member) h = `<span>${esc(ft("hintGuest"))}</span><a class="btn btn-primary" href="index.html">${esc(ft("hintGuestBtn"))}</a>`;
         else if (!me.member.name) h = `<span>${esc(ft("hintName"))}</span><a class="btn btn-ghost" href="profile.html">${esc(ft("hintNameBtn"))}</a>`;
         else if (!me.bound && !me.internal && me.perm === "none") h = `<span>${esc(ft("hintBind"))}</span><a class="btn btn-primary" href="bind.html">${esc(ft("hintBindBtn"))}</a>`;
-        else if (!canPost()) h = `<span>${esc(ft("hintPost", { tier: tierName(cfg.postRank ?? 1) }))}</span><a class="btn btn-ghost" href="account.html">${esc(t("tier.explain"))}</a>`;
+        else if (!canPost()) h = `<span>${esc(ft("hintPost", { tier: tierName(cfg.postRank ?? 1) }))}</span><a class="btn btn-ghost" href="account.html#tiers">${esc(t("tier.explain"))}</a>`;
       }
       $("hint").innerHTML = h ? `<div class="feed-hint">${h}</div>` : "";
       $("fab").classList.toggle("hidden", !canPost());
@@ -458,7 +476,7 @@
       let m;
       if ((m = h.match(/^#u-([\w-]+)$/))) return { mode: "user", uid: m[1] };
       if (h === "#shop") return { mode: "shop" };
-      if (h === "#me" && me.member) return { mode: "user", uid: me.user.uid, edit: true };
+      if (h === "#me" && me.member) return { mode: "user", uid: me.user.uid };
       if (/^#p-/.test(h)) return view;   // 打开帖子：留在目前的列表
       return { mode: "all" };
     }
@@ -475,7 +493,6 @@
         await loadPage(1);
         window.scrollTo({ top: 0 });
       }
-      if (view.edit) { view.edit = false; openEditor(); }
       openFromHash();
     }
     window.addEventListener("hashchange", route);
@@ -489,26 +506,52 @@
       const box = $("profileHead");
       $("fTitle").classList.toggle("hidden", view.mode !== "all");
       if (view.mode === "all") { box.innerHTML = ""; return; }
-      const back = `<button class="prof-back" id="profBack">${esc(ft("back"))}</button>`;
-      let w, mine = false;
+      let w, mine = false, likeKey;
       if (view.mode === "shop") {
         w = { name: cfg.shopName || "The Mochii Shop", tier: "", title: cfg.shopTitle ?? "owner", avatar: cfg.shopAvatar || "", shop: true };
+        likeKey = "shop";
       } else {
         await loadProfiles([view.uid]);
         const f = profiles[view.uid] || {};
         w = { name: f.name || "", tier: f.tier || "mochii", title: f.title || "", avatar: f.avatar || "", bio: f.bio || "" };
-        mine = me.user && view.uid === me.user.uid;
+        mine = !!me.user && view.uid === me.user.uid;
+        likeKey = view.uid;
       }
+      const tierLbl = w.shop ? "Official" : w.tier === "black" ? "Black Elite" : t("tier." + w.tier);
       document.title = (mine ? ft("myPage") : ft("pageOf", { name: w.name })) + " · Mochii Club";
-      box.innerHTML = back + `<div class="prof-head">${avatarOf(w)}
-        <div style="min-width:0">
+      box.innerHTML = `${mine && location.hash === "#me" ? "" : `<button class="prof-back" id="profBack">${esc(ft("back"))}</button>`}
+        <div class="prof">
+          <div class="prof-cover t-${w.shop ? "shop" : esc(w.tier)}"><span class="prof-tier">${esc(tierLbl)}</span></div>
+          <div class="prof-av" style="--ring:${w.shop ? "#fff" : ""}">${avatarOf(w)}</div>
           <div class="prof-name">${esc(w.name)} ${tierMark(w)} ${titleTag(w.title)}</div>
+          <div class="prof-id">${esc(ft(w.shop ? "shopOfficial" : "clubMember"))}</div>
           ${w.bio ? `<div class="prof-bio">${esc(w.bio)}</div>` : ""}
-          <div class="prof-stat" id="profStat"></div>
-          ${mine ? `<button class="btn btn-ghost" id="profEdit">${esc(ft("edit"))}</button>` : ""}
-        </div></div>`;
-      $("profBack").onclick = () => { history.pushState(null, "", location.pathname + location.search); route(); };
+          <div class="prof-stats">
+            <div><b id="statPosts">–</b><span>${esc(ft("statPosts"))}</span></div>
+            <div><b id="statLikes">–</b><span>${esc(ft("statLikes"))}</span></div>
+          </div>
+          <div class="prof-acts">
+            ${mine ? `<button class="btn btn-primary" id="profEdit">${esc(ft("editProfile"))}</button>` : ""}
+            <button class="btn btn-ghost" id="profShare">${esc(ft("share"))}</button>
+          </div>
+        </div>`;
+      // 头像外框颜色：从封面的等级颜色来
+      const cover = box.querySelector(".prof-cover");
+      box.querySelector(".prof-av").style.setProperty("--ring", getComputedStyle(cover).getPropertyValue("--ring").trim() || "#ff6fae");
+      const back = $("profBack");
+      if (back) back.onclick = () => { history.pushState(null, "", location.pathname + location.search); route(); };
       const ed = $("profEdit"); if (ed) ed.onclick = openEditor;
+      $("profShare").onclick = async () => {
+        const url = location.origin + location.pathname + (w.shop ? "#shop" : "#u-" + view.uid);
+        try {
+          if (navigator.share) await navigator.share({ title: w.name + " · Mochii Club", url });
+          else { await navigator.clipboard.writeText(url); toast(ft("copied")); }
+        } catch (e) { if (e && e.name !== "AbortError") prompt("", url); }
+      };
+      // 获赞：数一下这个人（或店铺）收到的所有赞
+      getCountFromServer(query(collectionGroup(db, "likes"), where("postAuthorUid", "==", likeKey)))
+        .then(c => { const el = $("statLikes"); if (el) el.textContent = c.data().count.toLocaleString(); })
+        .catch(e => console.warn("likes count", e));
     }
 
     // ---------- 帖子列表（分页） ----------
@@ -548,7 +591,7 @@
           const c = await getCountFromServer(query(collection(db, "feedPosts"), ...filters()));
           const total = c.data().count;
           totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-          const st = $("profStat"); if (st) st.textContent = ft("postsN", { n: total });
+          const st = $("statPosts"); if (st) st.textContent = total.toLocaleString();
         }
         const q = cursors[n - 1] ? query(base(), startAfter(cursors[n - 1]), limit(PAGE_SIZE)) : query(base(), limit(PAGE_SIZE));
         const snap = await getDocs(q);
@@ -560,7 +603,7 @@
         render();
       } catch (e) {
         console.error(e);
-        box.innerHTML = `<div style="column-span:all;color:var(--bad);text-align:center;padding:30px">${esc(t("common.loadFail") + e.message)}</div>`;
+        box.innerHTML = `<div style="column-span:all;color:var(--bad);text-align:center;padding:30px;overflow-wrap:anywhere;word-break:break-word">${esc(t("common.loadFail") + e.message)}</div>`;
       }
     }
 
@@ -630,7 +673,8 @@
       p.liked = !was; p.nLike += was ? -1 : 1;
       render(); if (openId === id) drawDetail(p);
       try {
-        if (was) await deleteDoc(ref); else await setDoc(ref, { at: serverTimestamp() });
+        if (was) await deleteDoc(ref);
+        else await setDoc(ref, { at: serverTimestamp(), postAuthorUid: isShop(p) ? "shop" : p.authorUid });
       } catch (e) {
         p.liked = was; p.nLike += was ? 1 : -1; render(); if (openId === id) drawDetail(p);
         toast(ft("fail") + e.message);

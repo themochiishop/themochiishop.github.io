@@ -37,7 +37,7 @@
       </div>
       <div class="bar"><div id="tierBar" style="width:0%"></div></div>
       <div class="muted" style="font-size:.85rem" id="tierNext"></div>
-      <details>
+      <details id="tiers">
         <summary data-i18n="tier.explain"></summary>
         <table class="tier-table" id="tierTable"></table>
         <p class="muted" style="font-size:.78rem;margin-top:8px" data-i18n="tier.note"></p>
@@ -93,7 +93,17 @@
     const $ = id => document.getElementById(id);
     renderNav("account");
 
+    // 从别页的「查看等级说明」过来（account.html#tiers）：自动展开并滑到那里
+    function openTiers() {
+      if (location.hash !== "#tiers") return;
+      const d = document.getElementById("tiers");
+      d.open = true;
+      setTimeout(() => d.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
+    }
+    window.addEventListener("hashchange", openTiers);
+
     requireMember(async (user, member) => {
+      setTimeout(openTiers, 0);
       $("hello").textContent = t("acc.hello", { name: member.name || t("acc.member") });
       if (isInternalMember(member)) $("hello").insertAdjacentHTML("beforeend", ` <span class="tag tag-internal">${t("tag.internal")}</span>`);
       $("phoneCallout").classList.toggle("hidden", !!member.phone);

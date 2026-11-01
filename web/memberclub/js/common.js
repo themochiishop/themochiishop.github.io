@@ -663,8 +663,8 @@ const NAV = [
     sub: [["shop", "shop.html", "nav.mall"], ["rewards", "rewards.html", "nav.rewards"], ["prizes", "prizes.html", "nav.prizes"]] },
   { key: "member", icon: "💎", label: "nav.points", href: "account.html", pages: ["account", "points"],
     sub: [["account", "account.html", "nav.account"], ["points", "points.html", "nav.pointsDetail"]] },
-  { key: "me",     icon: "👤", label: "nav.me",     href: "profile.html", pages: ["profile", "bind", "help"],
-    sub: [["profile", "profile.html", "nav.profile"], ["bind", "bind.html", "nav.bind"], ["help", "help.html", "nav.help"]] },
+  { key: "me",     icon: "👤", label: "nav.me",     href: "profile.html", pages: ["profile", "bind", "myfeed", "help"],
+    sub: [["profile", "profile.html", "nav.profile"], ["bind", "bind.html", "nav.bind"], ["myfeed", "feed.html#me", "fd:navMyFeed"], ["help", "help.html", "nav.help"]] },
 ];
 
 export function renderNav(active) {
@@ -697,7 +697,7 @@ export function renderNav(active) {
     ${group && group.sub ? `
     <div class="topbar-inner sub-nav-row">
       <nav class="sub-nav">
-        ${group.sub.map(([k, href, key]) => `<a href="${href}" data-k="${k}" class="${k === active ? "active" : ""}">${t(key)}</a>`).join("")}
+        ${group.sub.map(([k, href, key]) => `<a href="${href}" data-k="${k}" class="${k === active ? "active" : ""}">${key.startsWith("fd:") ? ft(key.slice(3)) : t(key)}</a>`).join("")}
       </nav>
     </div>` : ""}`;
   bindLangSwitch(el);
