@@ -38,6 +38,9 @@
       <p id="nameMsg" class="msg"></p>
     </div>
 
+    <!-- ✨ 我在 Feed 的头像与简介 -->
+    <a class="help-link" href="feed.html#me"><span>✨</span><span id="feedMeLink"></span><span class="go">➔</span></a>
+
     <!-- 📦 收货地址（兑换实体奖品用） -->
     <div class="card" id="addr">
       <h2 data-i18n="addr.title"></h2>
@@ -242,6 +245,10 @@
         }
       });
     });
+  </script>
+  <script type="module">
+    import { ft } from "./js/feed-i18n.js";
+    document.getElementById("feedMeLink").textContent = ft("meLink");
   </script>
 </body>
 </html>

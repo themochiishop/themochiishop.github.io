@@ -19,19 +19,22 @@
       break-inside: avoid; -webkit-column-break-inside: avoid; margin-bottom: 6px; color: #333;
     }
     .xhs-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+    .slider-wrap { position: relative; }
     .slider-container { width: 100%; display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch; scrollbar-width: none; position: relative; }
     .slider-container::-webkit-scrollbar { display: none; }
     .slider-img { width: 100%; flex-shrink: 0; scroll-snap-align: start; height: auto; display: block; background: #f7f7f7; }
+    .pic-count { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,.55); color: #fff; font-size: .62rem;
+      font-weight: 700; padding: 1px 7px; border-radius: 999px; pointer-events: none; letter-spacing: .3px; }
     .xhs-content { padding: 8px 10px; font-size: .88rem; font-weight: 500; color: #222; line-height: 1.45;
       white-space: pre-wrap; word-break: break-word; }
     .xhs-footer { padding: 6px 8px; display: flex; align-items: center; justify-content: space-between;
-      border-top: 1px solid #fafafa; gap: 4px; }
-    .xhs-author { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; }
-    .xhs-avatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-    .xhs-author-info { display: flex; flex-direction: column; min-width: 0; }
-    .xhs-name { font-size: .72rem; color: #333; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: clip; }
-    .xhs-time { font-size: .55rem; color: #aaa; letter-spacing: -.2px; margin-top: 1px; }
+      border-top: 1px solid #fafafa; gap: 6px; }
+    .xhs-author { display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0; cursor: pointer; }
+    .xhs-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .xhs-author-info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+    .xhs-name { font-size: .72rem; color: #333; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .xhs-time { font-size: .56rem; color: #aaa; letter-spacing: -.2px; white-space: nowrap; }
     .xhs-like-btn { background: #fff0f2; border: none; cursor: pointer; display: flex; align-items: center; gap: 2px;
       font-size: .72rem; color: #e63946; padding: 3px 6px; border-radius: 12px; font-weight: bold; flex-shrink: 0;
       transition: transform .15s ease; }
@@ -43,20 +46,27 @@
     .page-btn:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
     .page-info { font-size: .82rem; color: var(--muted); font-weight: 500; }
 
-    /* ===== 新增的小东西 ===== */
+    /* ===== 卡片底部：两行（名字＋等级 / 头衔＋时间） ===== */
     .xhs-like-btn.liked { background: #e63946; color: #fff; }
     .xhs-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
     .xhs-cmt { font-size: .68rem; color: #888; font-weight: 600; }
-    .letter-av { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center;
-      justify-content: center; color: #fff; font-size: .62rem; font-weight: 800; background: linear-gradient(135deg, #ff6fae, #7c5cff); }
-    .letter-av.t-silver { background: linear-gradient(135deg, #94a3b8, #64748b); }
-    .letter-av.t-gold { background: linear-gradient(135deg, #f59e0b, #d97706); }
-    .letter-av.t-diamond { background: linear-gradient(135deg, #22d3ee, #6366f1); }
-    .letter-av.t-black { background: linear-gradient(135deg, #111827, #4b5563); }
+    @media (max-width: 600px) { .xhs-cmt { display: none; } }
     .name-row { display: flex; align-items: center; gap: 3px; min-width: 0; }
+    .sub-row { display: flex; align-items: center; gap: 4px; min-width: 0; margin-top: 1px; }
     .tier-mark { font-size: .66rem; line-height: 1; flex-shrink: 0; }
     .ttl { display: inline-block; font-size: .56rem; font-weight: 700; padding: 0 4px; border-radius: 3px; color: #fff;
-      line-height: 1.5; flex-shrink: 0; }
+      line-height: 1.5; flex-shrink: 0; white-space: nowrap; }
+
+    /* 头像：名字字母 / 预设 */
+    .av { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; display: inline-flex; align-items: center;
+      justify-content: center; color: #fff; font-size: .64rem; font-weight: 800; line-height: 1; overflow: hidden;
+      background: linear-gradient(135deg, #ff6fae, #7c5cff); }
+    .av.t-silver { background: linear-gradient(135deg, #94a3b8, #64748b); }
+    .av.t-gold { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .av.t-diamond { background: linear-gradient(135deg, #22d3ee, #6366f1); }
+    .av.t-black { background: linear-gradient(135deg, #111827, #4b5563); }
+    .av.preset { font-size: .78rem; }
+
     .lock-box { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: linear-gradient(135deg, #fde2ef, #e4defd); }
     .lock-box img { width: 100%; height: 100%; object-fit: cover; filter: blur(14px); transform: scale(1.2); }
     .lock-box .lock-on { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -74,30 +84,43 @@
     .my-post:first-of-type { margin-top: 8px; }
     .my-post .txt { color: var(--muted); font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60vw; }
 
+    /* 会员主页 */
+    .prof-back { display: inline-block; margin: 0 4px 10px; font-size: .85rem; color: var(--muted); cursor: pointer; background: none; border: 0; }
+    .prof-back:hover { color: var(--text); }
+    .prof-head { display: flex; gap: 14px; align-items: center; background: var(--card); border: 1px solid var(--line);
+      border-radius: 14px; padding: 16px; margin: 0 4px 14px; }
+    .prof-head .av, .prof-head .xhs-avatar { width: 64px; height: 64px; font-size: 1.5rem; }
+    .prof-head .av.preset { font-size: 2rem; }
+    .prof-name { font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .prof-name .ttl { font-size: .7rem; padding: 1px 7px; }
+    .prof-bio { color: var(--text); opacity: .85; font-size: .88rem; margin-top: 4px; white-space: pre-wrap; word-break: break-word; }
+    .prof-stat { color: var(--muted); font-size: .8rem; margin-top: 6px; }
+    .prof-head .btn { width: auto; padding: 6px 12px; font-size: .78rem; margin-top: 8px; }
+
     .fab { position: fixed; right: 18px; bottom: 22px; z-index: 20; border: 0; border-radius: 999px; padding: 12px 18px;
       font-weight: 800; font-size: .95rem; color: #fff; cursor: pointer; box-shadow: 0 8px 22px rgba(255,111,174,.35);
       background: linear-gradient(135deg, var(--accent), var(--accent2)); }
 
-    /* 详情窗、发帖窗 */
+    /* 详情窗、发帖窗、编辑窗 */
     .modal-card.wide { max-width: 560px; padding: 0; }
     .detail-body { padding: 16px 18px 18px; }
     .detail-text { white-space: pre-wrap; word-break: break-word; line-height: 1.55; margin: 10px 0 12px; }
     .detail-slider .slider-img { max-height: 70vh; object-fit: contain; background: #000; }
+    .modal-card .pic-count { top: 10px; right: auto; left: 10px; font-size: .72rem; }
     .detail-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .detail-meta .who { display: flex; align-items: center; gap: 8px; min-width: 0; }
-    .detail-meta .xhs-avatar, .detail-meta .letter-av { width: 30px; height: 30px; font-size: .8rem; }
+    .detail-meta .who { display: flex; align-items: center; gap: 8px; min-width: 0; cursor: pointer; }
+    .detail-meta .xhs-avatar, .detail-meta .av { width: 34px; height: 34px; font-size: .85rem; }
+    .detail-meta .av.preset { font-size: 1.1rem; }
     .detail-meta .nm { font-weight: 700; font-size: .9rem; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
-    .detail-meta .tm { font-size: .72rem; color: var(--muted); }
-    .detail-meta .ttl { font-size: .66rem; padding: 1px 6px; }
-    .dots { display: flex; justify-content: center; gap: 5px; padding: 6px 0 0; }
-    .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line); }
-    .dots i.on { background: var(--accent); }
+    .detail-meta .tm { font-size: .72rem; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+    .detail-meta .ttl { font-size: .64rem; padding: 0 6px; }
     .cmt-head { font-weight: 700; margin: 14px 0 6px; padding-top: 12px; border-top: 1px solid var(--line); }
     .cmt { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
     .cmt:last-child { border-bottom: 0; }
-    .cmt .letter-av, .cmt .xhs-avatar { width: 24px; height: 24px; font-size: .66rem; margin-top: 2px; }
+    .cmt .av, .cmt .xhs-avatar { width: 26px; height: 26px; font-size: .68rem; margin-top: 2px; cursor: pointer; }
+    .cmt .av.preset { font-size: .85rem; }
     .cmt-main { flex: 1; min-width: 0; }
-    .cmt-name { font-size: .8rem; font-weight: 700; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+    .cmt-name { font-size: .8rem; font-weight: 700; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; cursor: pointer; }
     .cmt-text { font-size: .88rem; white-space: pre-wrap; word-break: break-word; }
     .cmt-text .at { color: var(--accent); }
     .cmt-foot { display: flex; gap: 12px; font-size: .72rem; color: var(--muted); margin-top: 2px; }
@@ -118,6 +141,16 @@
     .post-add { width: 84px; height: 84px; border-radius: 10px; border: 2px dashed var(--line); background: transparent;
       color: var(--muted); cursor: pointer; font-size: .8rem; }
     .del-link { border: 0; background: none; color: var(--bad); cursor: pointer; font-size: .78rem; }
+
+    .av-pick { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 10px 0 12px; }
+    .av-pick button { border: 2px solid transparent; background: none; padding: 2px; border-radius: 50%; cursor: pointer; aspect-ratio: 1; }
+    .av-pick button.on { border-color: var(--accent); }
+    .av-pick .av { width: 100%; height: 100%; font-size: 1.3rem; }
+    .av-now { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+    .av-now .av, .av-now .xhs-avatar { width: 56px; height: 56px; font-size: 1.4rem; }
+    .av-now .av.preset { font-size: 1.8rem; }
+    .av-now .btn { width: auto; padding: 7px 12px; font-size: .8rem; }
+    .bio-count { text-align: right; font-size: .72rem; color: var(--muted); margin-top: -10px; margin-bottom: 8px; }
   </style>
 </head>
 <body class="loading">
@@ -125,6 +158,7 @@
 
   <main class="feed-page">
     <h1 id="fTitle"></h1>
+    <div id="profileHead"></div>
     <div id="hint"></div>
     <div id="myPosts"></div>
 
@@ -164,6 +198,31 @@
     </div>
   </div>
 
+  <!-- 我的头像与简介 -->
+  <div id="editor" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <button type="button" class="modal-x" data-close aria-label="close">✕</button>
+      <h2 id="eTitle"></h2>
+      <div class="av-now">
+        <span id="eNow"></span>
+        <div>
+          <button type="button" class="btn btn-ghost" id="eUpload"></button>
+          <button type="button" class="btn btn-ghost" id="eLetter"></button>
+          <p class="muted hidden" style="font-size:.74rem;margin-top:4px" id="eNeedBind"></p>
+        </div>
+      </div>
+      <input type="file" id="eFile" accept="image/*" class="hidden">
+      <p class="muted" style="font-size:.82rem;margin-top:10px" id="ePickLbl"></p>
+      <div class="av-pick" id="ePick"></div>
+      <label><span id="eBioLbl"></span>
+        <textarea id="eBio" rows="2" maxlength="60"></textarea>
+      </label>
+      <div class="bio-count" id="eBioCount"></div>
+      <button type="button" class="btn btn-primary" id="eSave"></button>
+      <p id="eMsg" class="msg"></p>
+    </div>
+  </div>
+
   <script type="module">
     import { auth, db } from "./js/firebase-config.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
@@ -183,10 +242,17 @@
     const RANK = { mochii: 0, silver: 1, gold: 2, diamond: 3, black: 4 };
     const TIER_MARK = { silver: "🥈", gold: "🥇", diamond: "💎", black: "🖤" };
     const tierName = r => r === 4 ? "Black Elite" : t("tier." + (Object.keys(RANK).find(k => RANK[k] === r) || "mochii"));
+    // 预设头像（存成 p:0 ~ p:11）
+    const PRESETS = [
+      ["🐰", "#ffd1e8", "#ff8fc1"], ["🐱", "#ffe7c2", "#ffb36b"], ["🐻", "#f3d9c4", "#c08457"], ["🐼", "#e5e7eb", "#94a3b8"],
+      ["🦊", "#ffd8b8", "#ff8a4c"], ["🐥", "#fff3b0", "#ffcf3f"], ["🌸", "#ffe0ef", "#f472b6"], ["⭐", "#e0e7ff", "#818cf8"],
+      ["🍡", "#fde2f3", "#c084fc"], ["🧸", "#fde6cf", "#e2a46b"], ["🎀", "#ffd6e0", "#fb7185"], ["☁️", "#dbeafe", "#60a5fa"],
+    ];
 
     // 目前这个人
-    const me = { user: null, member: null, rank: -1, bound: false, internal: false, admin: false, title: "", perm: "none" };
+    const me = { user: null, member: null, rank: -1, bound: false, internal: false, admin: false, title: "", perm: "none", feed: null };
     let cfg = {};
+    const profiles = {};   // 会员ID → memberFeed 资料（头像、简介、最新名字）
 
     // ---------- 文字 ----------
     document.title = ft("pageTitle");
@@ -199,6 +265,14 @@
     $("cText").placeholder = ft("postPh");
     $("cPicNote").textContent = ft("picNote");
     $("cSend").textContent = ft("postBtn");
+    $("eTitle").textContent = ft("editTitle");
+    $("eUpload").textContent = ft("upload");
+    $("eLetter").textContent = ft("useLetter");
+    $("eNeedBind").textContent = ft("uploadNeedBind");
+    $("ePickLbl").textContent = ft("pickAvatar");
+    $("eBioLbl").textContent = ft("bio");
+    $("eBio").placeholder = ft("bioPh");
+    $("eSave").textContent = ft("save");
 
     // ---------- 小工具 ----------
     function fmtTime(ts) {
@@ -213,29 +287,62 @@
       if (!tt) return "";
       return `<span class="ttl" style="background:${esc(/^#[0-9a-f]{6}$/i.test(tt.color || "") ? tt.color : "#64748b")}">${esc(tt[lang] || tt.zh || id)}</span>`;
     }
-    function avatarHTML(p) {
-      if (safeImg(p.avatar)) return `<img class="xhs-avatar" src="${esc(p.avatar)}" alt="">`;
-      if (!p.authorTier) return `<img class="xhs-avatar" src="${CLUB_LOGO}" alt="">`;   // 店铺帖子没设头像：用俱乐部 logo
-      const ch = Array.from(String(p.authorName || "?").trim())[0] || "?";
-      return `<span class="letter-av t-${esc(p.authorTier)}">${esc(ch.toUpperCase())}</span>`;
+    const isShop = p => !p.authorTier;   // 店铺帖子（后台发的）没有等级
+    // 作者的资料：会员以会员资料（memberFeed）为准，没有的话用帖子上的
+    function who(p) {
+      if (isShop(p)) return { name: p.authorName || cfg.shopName || "The Mochii Shop", tier: "", title: p.authorTitle || "", avatar: p.avatar || cfg.shopAvatar || "", shop: true };
+      const f = profiles[p.authorUid] || {};
+      return { name: f.name || p.authorName || "", tier: f.tier || p.authorTier || "mochii", title: f.title ?? p.authorTitle ?? "", avatar: f.avatar || "", bio: f.bio || "" };
     }
-    function nameHTML(p) {
-      return `<span class="xhs-name">${esc(p.authorName || "")}</span>${TIER_MARK[p.authorTier] ? `<span class="tier-mark">${TIER_MARK[p.authorTier]}</span>` : ""}${titleTag(p.authorTitle)}`;
+    function avatarOf(w) {
+      const a = w.avatar || "";
+      const m = a.match(/^p:(\d{1,2})$/);
+      if (m && PRESETS[+m[1]]) {
+        const [e, c1, c2] = PRESETS[+m[1]];
+        return `<span class="av preset" style="background:linear-gradient(135deg,${c1},${c2})">${e}</span>`;
+      }
+      if (safeImg(a)) return `<img class="xhs-avatar" src="${esc(a)}" alt="">`;
+      if (w.shop) return `<img class="xhs-avatar" src="${CLUB_LOGO}" alt="">`;
+      const ch = Array.from(String(w.name || "?").trim())[0] || "?";
+      return `<span class="av t-${esc(w.tier || "mochii")}">${esc(ch.toUpperCase())}</span>`;
     }
+    const tierMark = w => TIER_MARK[w.tier] ? `<span class="tier-mark">${TIER_MARK[w.tier]}</span>` : "";
+    const authorKey = p => isShop(p) ? "shop" : "u-" + p.authorUid;
     const canSee = p => me.rank >= (p.minRank ?? 0);
     const isMod = () => me.admin || me.perm === "mod";
     const canReply = () => !!me.member && !!me.member.name && (me.perm !== "none" || me.internal || me.bound) && me.rank >= (cfg.replyRank ?? 0);
     const canPost = () => !!me.member && !!me.member.name && (me.perm !== "none" || ((me.internal || me.bound) && me.rank >= (cfg.postRank ?? 1)));
+    const canUpload = () => me.admin || me.internal || me.bound || me.perm !== "none";
     const autoPublish = () => me.admin || me.perm !== "none" || me.rank >= (cfg.autoRank ?? 2);
     function sliderHTML(images, cls = "") {
       const imgs = (images || []).map(safeImg).filter(Boolean).slice(0, 3);
-      return imgs.length ? `<div class="slider-container ${cls}">${imgs.map(u => `<img src="${esc(u)}" class="slider-img" alt="">`).join("")}</div>` : "";
+      if (!imgs.length) return "";
+      return `<div class="slider-wrap"><div class="slider-container ${cls}">${imgs.map(u => `<img src="${esc(u)}" class="slider-img" alt="">`).join("")}</div>`
+        + (imgs.length > 1 ? `<span class="pic-count">1/${imgs.length}</span>` : "") + `</div>`;
+    }
+    // 滑动图片时更新「1/3」
+    document.addEventListener("scroll", e => {
+      const sl = e.target;
+      if (!sl.classList || !sl.classList.contains("slider-container")) return;
+      const badge = sl.parentElement.querySelector(".pic-count");
+      if (!badge) return;
+      const n = sl.children.length;
+      badge.textContent = Math.min(n, Math.round(sl.scrollLeft / sl.clientWidth) + 1) + "/" + n;
+    }, true);
+
+    // 读取作者的会员资料（只读还没读过的）
+    async function loadProfiles(uids) {
+      const need = [...new Set(uids.filter(u => u && !(u in profiles)))];
+      await Promise.all(need.map(async u => {
+        try { const s = await getDoc(doc(db, "memberFeed", u)); profiles[u] = s.exists() ? s.data() : null; }
+        catch (e) { profiles[u] = null; }
+      }));
     }
 
     // ---------- 判断身份 ----------
     async function loadMe(user) {
       me.user = user;
-      const [cfgSnap] = await Promise.all([getDoc(doc(db, "feedConfig", "main")).catch(() => null)]);
+      const cfgSnap = await getDoc(doc(db, "feedConfig", "main")).catch(() => null);
       cfg = cfgSnap && cfgSnap.exists() ? cfgSnap.data() : {};
       if (!user) return;
       const [mSnap, club, adm, ttl] = await Promise.all([
@@ -253,6 +360,7 @@
       me.title = ttl && ttl.exists() ? (ttl.data().title || "") : "";
       me.perm = me.title ? (((cfg.titles || {})[me.title] || {}).perm || "none") : "none";
       if (!me.internal) me.bound = await ensurePass(user.uid);
+      await syncMyFeed();
     }
 
     // 绑定通行证：记下一个自己的绑定账号，让规则确认「已绑定订单」（别人看不到）
@@ -270,6 +378,28 @@
       } catch (e) { console.warn("feedPass", e); return false; }
     }
 
+    // 我的会员 Feed 资料：名字、等级、头衔跟着会员资料走（头像、简介保留）
+    async function syncMyFeed(patch) {
+      const ref = doc(db, "memberFeed", me.user.uid);
+      try {
+        if (!me.feed) { const s = await getDoc(ref); me.feed = s.exists() ? s.data() : null; }
+        const cur = me.feed || {};
+        const next = {
+          name: me.member.name || "", tier: me.member.tier || "mochii", title: me.title,
+          avatar: cur.avatar || "", bio: cur.bio || "", ...(patch || {}),
+        };
+        const same = me.feed && ["name", "tier", "title", "avatar", "bio"].every(k => cur[k] === next[k]);
+        if (!same) {
+          await setDoc(ref, { ...next, updatedAt: serverTimestamp() });
+          me.feed = next;
+        }
+        profiles[me.user.uid] = me.feed;
+      } catch (e) {
+        console.warn("memberFeed", e);
+        if (patch) throw e;
+      }
+    }
+
     // ---------- 顶部 ----------
     function renderTop() {
       if (me.member) { renderNav("feed"); initBell(me.user, me.member); return; }
@@ -285,12 +415,15 @@
 
     function renderHint() {
       let h = "";
-      if (!me.member) h = `<span>${esc(ft("hintGuest"))}</span><a class="btn btn-primary" href="index.html">${esc(ft("hintGuestBtn"))}</a>`;
-      else if (!me.member.name) h = `<span>${esc(ft("hintName"))}</span><a class="btn btn-ghost" href="profile.html">${esc(ft("hintNameBtn"))}</a>`;
-      else if (!me.bound && !me.internal && me.perm === "none") h = `<span>${esc(ft("hintBind"))}</span><a class="btn btn-primary" href="bind.html">${esc(ft("hintBindBtn"))}</a>`;
-      else if (!canPost()) h = `<span>${esc(ft("hintPost", { tier: tierName(cfg.postRank ?? 1) }))}</span><a class="btn btn-ghost" href="account.html">${esc(t("tier.explain"))}</a>`;
+      if (view.mode === "all") {
+        if (!me.member) h = `<span>${esc(ft("hintGuest"))}</span><a class="btn btn-primary" href="index.html">${esc(ft("hintGuestBtn"))}</a>`;
+        else if (!me.member.name) h = `<span>${esc(ft("hintName"))}</span><a class="btn btn-ghost" href="profile.html">${esc(ft("hintNameBtn"))}</a>`;
+        else if (!me.bound && !me.internal && me.perm === "none") h = `<span>${esc(ft("hintBind"))}</span><a class="btn btn-primary" href="bind.html">${esc(ft("hintBindBtn"))}</a>`;
+        else if (!canPost()) h = `<span>${esc(ft("hintPost", { tier: tierName(cfg.postRank ?? 1) }))}</span><a class="btn btn-ghost" href="account.html">${esc(t("tier.explain"))}</a>`;
+      }
       $("hint").innerHTML = h ? `<div class="feed-hint">${h}</div>` : "";
       $("fab").classList.toggle("hidden", !canPost());
+      $("myPosts").classList.toggle("hidden", view.mode !== "all");
     }
 
     // ---------- 我的投稿（审核中、未通过） ----------
@@ -318,39 +451,112 @@
       } catch (e) { console.warn("myPosts", e); }
     }
 
+    // ---------- 看哪里：全部 / 某会员的主页 / 店铺主页 ----------
+    let view = { mode: "all" };
+    function viewFromHash() {
+      const h = location.hash;
+      let m;
+      if ((m = h.match(/^#u-([\w-]+)$/))) return { mode: "user", uid: m[1] };
+      if (h === "#shop") return { mode: "shop" };
+      if (h === "#me" && me.member) return { mode: "user", uid: me.user.uid, edit: true };
+      if (/^#p-/.test(h)) return view;   // 打开帖子：留在目前的列表
+      return { mode: "all" };
+    }
+    async function route() {
+      if (location.hash === "#me" && !me.member) { location.href = "index.html"; return; }
+      const next = viewFromHash();
+      const changed = next.mode !== view.mode || next.uid !== view.uid;
+      view = next;
+      if (changed || !shown.length) {
+        cursors.length = 1;
+        closeModal("detail", true);
+        renderHint();
+        await renderProfileHead();
+        await loadPage(1);
+        window.scrollTo({ top: 0 });
+      }
+      if (view.edit) { view.edit = false; openEditor(); }
+      openFromHash();
+    }
+    window.addEventListener("hashchange", route);
+
+    function goAuthor(key) {
+      if (location.hash === "#" + key) return;
+      location.hash = key;
+    }
+
+    async function renderProfileHead() {
+      const box = $("profileHead");
+      $("fTitle").classList.toggle("hidden", view.mode !== "all");
+      if (view.mode === "all") { box.innerHTML = ""; return; }
+      const back = `<button class="prof-back" id="profBack">${esc(ft("back"))}</button>`;
+      let w, mine = false;
+      if (view.mode === "shop") {
+        w = { name: cfg.shopName || "The Mochii Shop", tier: "", title: cfg.shopTitle ?? "owner", avatar: cfg.shopAvatar || "", shop: true };
+      } else {
+        await loadProfiles([view.uid]);
+        const f = profiles[view.uid] || {};
+        w = { name: f.name || "", tier: f.tier || "mochii", title: f.title || "", avatar: f.avatar || "", bio: f.bio || "" };
+        mine = me.user && view.uid === me.user.uid;
+      }
+      document.title = (mine ? ft("myPage") : ft("pageOf", { name: w.name })) + " · Mochii Club";
+      box.innerHTML = back + `<div class="prof-head">${avatarOf(w)}
+        <div style="min-width:0">
+          <div class="prof-name">${esc(w.name)} ${tierMark(w)} ${titleTag(w.title)}</div>
+          ${w.bio ? `<div class="prof-bio">${esc(w.bio)}</div>` : ""}
+          <div class="prof-stat" id="profStat"></div>
+          ${mine ? `<button class="btn btn-ghost" id="profEdit">${esc(ft("edit"))}</button>` : ""}
+        </div></div>`;
+      $("profBack").onclick = () => { history.pushState(null, "", location.pathname + location.search); route(); };
+      const ed = $("profEdit"); if (ed) ed.onclick = openEditor;
+    }
+
     // ---------- 帖子列表（分页） ----------
     let page = 1, totalPages = 1;
     const cursors = [null];   // 每一页开始前的最后一篇
-    const base = () => query(collection(db, "feedPosts"), where("status", "==", "published"), orderBy("pinned", "desc"), orderBy("createdAt", "desc"));
+    function filters() {
+      const f = [where("status", "==", "published")];
+      if (view.mode === "user") f.unshift(where("authorUid", "==", view.uid));
+      if (view.mode === "shop") f.unshift(where("authorTier", "==", ""));
+      return f;
+    }
+    const base = () => view.mode === "all"
+      ? query(collection(db, "feedPosts"), ...filters(), orderBy("pinned", "desc"), orderBy("createdAt", "desc"))
+      : query(collection(db, "feedPosts"), ...filters(), orderBy("createdAt", "desc"));
     let shown = [];           // 这一页的帖子
+
+    async function withExtras(p) {
+      const visible = canSee(p);
+      const [c, nc, nl, ml] = await Promise.all([
+        visible ? getDoc(doc(db, "feedPosts", p.id, "content", "main")).catch(() => null) : null,
+        visible ? getCountFromServer(collection(db, "feedPosts", p.id, "comments")).catch(() => null) : null,
+        visible ? getCountFromServer(collection(db, "feedPosts", p.id, "likes")).catch(() => null) : null,
+        visible && me.member ? getDoc(doc(db, "feedPosts", p.id, "likes", me.user.uid)).catch(() => null) : null,
+      ]);
+      p.visible = visible;
+      p.content = c && c.exists() ? c.data() : { text: "", images: [] };
+      p.nCmt = nc ? nc.data().count : 0;
+      p.nLike = nl ? nl.data().count : 0;
+      p.liked = !!(ml && ml.exists());
+      return p;
+    }
 
     async function loadPage(n) {
       const box = $("social-feed");
       try {
         if (n === 1) {
-          const c = await getCountFromServer(query(collection(db, "feedPosts"), where("status", "==", "published")));
-          totalPages = Math.max(1, Math.ceil(c.data().count / PAGE_SIZE));
+          const c = await getCountFromServer(query(collection(db, "feedPosts"), ...filters()));
+          const total = c.data().count;
+          totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+          const st = $("profStat"); if (st) st.textContent = ft("postsN", { n: total });
         }
         const q = cursors[n - 1] ? query(base(), startAfter(cursors[n - 1]), limit(PAGE_SIZE)) : query(base(), limit(PAGE_SIZE));
         const snap = await getDocs(q);
         if (snap.docs.length) cursors[n] = snap.docs[snap.docs.length - 1];
         page = n;
-        shown = await Promise.all(snap.docs.map(async d => {
-          const p = { id: d.id, ...d.data() };
-          const visible = canSee(p);
-          const [c, nc, nl, ml] = await Promise.all([
-            visible ? getDoc(doc(db, "feedPosts", p.id, "content", "main")).catch(() => null) : null,
-            visible ? getCountFromServer(collection(db, "feedPosts", p.id, "comments")).catch(() => null) : null,
-            visible ? getCountFromServer(collection(db, "feedPosts", p.id, "likes")).catch(() => null) : null,
-            visible && me.member ? getDoc(doc(db, "feedPosts", p.id, "likes", me.user.uid)).catch(() => null) : null,
-          ]);
-          p.visible = visible;
-          p.content = c && c.exists() ? c.data() : { text: "", images: [] };
-          p.nCmt = nc ? nc.data().count : 0;
-          p.nLike = nl ? nl.data().count : 0;
-          p.liked = !!(ml && ml.exists());
-          return p;
-        }));
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        await loadProfiles(list.filter(p => !isShop(p)).map(p => p.authorUid));
+        shown = await Promise.all(list.map(withExtras));
         render();
       } catch (e) {
         console.error(e);
@@ -359,6 +565,7 @@
     }
 
     function cardHTML(p) {
+      const w = who(p);
       const top = p.visible
         ? sliderHTML(p.content.images)
         : `<div class="lock-box">${safeImg(p.thumb) ? `<img src="${esc(p.thumb)}" alt="">` : ""}
@@ -372,9 +579,11 @@
       return `<div class="xhs-card" data-id="${esc(p.id)}">
           ${top}${text}
           <div class="xhs-footer">
-            <div class="xhs-author">${avatarHTML(p)}
-              <div class="xhs-author-info"><div class="name-row">${nameHTML(p)}</div>
-                <span class="xhs-time">${p.pinned ? "📌 " : ""}${fmtTime(p.createdAt)}</span></div>
+            <div class="xhs-author" data-author="${esc(authorKey(p))}">${avatarOf(w)}
+              <div class="xhs-author-info">
+                <div class="name-row"><span class="xhs-name">${esc(w.name)}</span>${tierMark(w)}</div>
+                <div class="sub-row">${titleTag(w.title)}<span class="xhs-time">${p.pinned && view.mode === "all" ? "📌 " : ""}${fmtTime(p.createdAt)}</span></div>
+              </div>
             </div>${right}
           </div>
         </div>`;
@@ -383,7 +592,7 @@
     function render() {
       const box = $("social-feed");
       if (!shown.length) {
-        box.innerHTML = `<div style="column-span:all;color:var(--muted);text-align:center;padding:30px">${esc(ft("empty"))}</div>`;
+        box.innerHTML = `<div style="column-span:all;color:var(--muted);text-align:center;padding:30px">${esc(ft(view.mode === "all" ? "empty" : "noPosts"))}</div>`;
         $("paginationControls").style.display = "none";
         return;
       }
@@ -401,6 +610,8 @@
       if (!card) return;
       const p = shown.find(x => x.id === card.dataset.id);
       if (!p) return;
+      const au = e.target.closest("[data-author]");
+      if (au && view.mode === "all") { goAuthor(au.dataset.author); return; }
       if (!p.visible) { if (!me.member) location.href = "index.html"; return; }
       openDetail(p);
     });
@@ -411,7 +622,7 @@
     const liking = new Set();
     async function toggleLike(id) {
       if (!me.member) { toast(ft("needLogin")); return; }
-      const p = shown.find(x => x.id === id);
+      const p = shown.find(x => x.id === id) || (openPost && openPost.id === id ? openPost : null);
       if (!p || liking.has(id)) return;
       liking.add(id);
       const ref = doc(db, "feedPosts", id, "likes", me.user.uid);
@@ -427,52 +638,59 @@
     }
 
     // ---------- 帖子详情 + 回复 ----------
-    let openId = null, comments = [], replyTo = null;
-    function closeModal(id) {
+    let openId = null, openPost = null, comments = [], replyTo = null;
+    function closeModal(id, keepHash) {
       $(id).classList.add("hidden"); document.body.style.overflow = "";
-      if (id === "detail") { openId = null; if (location.hash) history.replaceState(null, "", location.pathname + location.search); }
+      if (id === "detail") {
+        openId = null; openPost = null;
+        if (!keepHash && /^#p-/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search + (view.mode === "user" ? "#u-" + view.uid : view.mode === "shop" ? "#shop" : ""));
+      }
     }
-    ["detail", "composer"].forEach(id => $(id).addEventListener("click", e => {
+    ["detail", "composer", "editor"].forEach(id => $(id).addEventListener("click", e => {
       if (e.target === $(id) || e.target.closest("[data-close]")) closeModal(id);
     }));
 
     async function openDetail(p) {
-      openId = p.id; replyTo = null; comments = [];
+      openId = p.id; openPost = p; replyTo = null; comments = [];
       $("detail").classList.remove("hidden"); document.body.style.overflow = "hidden";
       drawDetail(p, true);
       try {
         const snap = await getDocs(query(collection(db, "feedPosts", p.id, "comments"), orderBy("createdAt", "asc")));
         comments = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        await loadProfiles(comments.filter(c => c.authorTier).map(c => c.authorUid));
       } catch (e) { console.warn("comments", e); }
       if (openId === p.id) drawDetail(p);
     }
 
     function drawDetail(p, loading = false) {
-      const nImg = (p.content.images || []).filter(safeImg).length;
+      const w = who(p);
       const mine = me.user && p.authorUid === me.user.uid;
       const keep = $("rText") ? $("rText").value : "";
       $("detailInner").innerHTML = `
         ${sliderHTML(p.content.images, "detail-slider")}
-        ${nImg > 1 ? `<div class="dots">${Array.from({ length: nImg }, (_, i) => `<i class="${i ? "" : "on"}"></i>`).join("")}</div>` : ""}
         <div class="detail-body">
           <div class="detail-meta">
-            <div class="who">${avatarHTML(p)}<div><div class="nm">${nameHTML(p)}</div><div class="tm">${p.pinned ? esc(ft("pinned")) + " · " : ""}${fmtTime(p.createdAt)}</div></div></div>
+            <div class="who" data-author="${esc(authorKey(p))}">${avatarOf(w)}<div>
+              <div class="nm">${esc(w.name)} ${tierMark(w)}</div>
+              <div class="tm">${titleTag(w.title)}<span>${p.pinned ? esc(ft("pinned")) + " · " : ""}${fmtTime(p.createdAt)}</span></div></div></div>
             <button class="xhs-like-btn${p.liked ? " liked" : ""}" data-dlike>${p.liked ? "❤️" : "🤍"} <span>${p.nLike}</span></button>
           </div>
           ${p.content.text ? `<div class="detail-text">${esc(p.content.text)}</div>` : ""}
           ${mine || isMod() ? `<button class="del-link" data-dpost>🗑 ${esc(ft("delete"))}</button>` : ""}
           <div class="cmt-head">💬 ${esc(ft("replies"))}${comments.length ? ` (${comments.length})` : ""}</div>
-          <div>${loading ? `<p class="muted" style="font-size:.85rem">${esc(ft("loading"))}</p>` : comments.length ? comments.map(c => `
-            <div class="cmt">${avatarHTML(c)}
+          <div>${loading ? `<p class="muted" style="font-size:.85rem">${esc(ft("loading"))}</p>` : comments.length ? comments.map(c => {
+            const cw = who(c);
+            return `
+            <div class="cmt"><span data-author="${esc(authorKey(c))}">${avatarOf(cw)}</span>
               <div class="cmt-main">
-                <div class="cmt-name">${nameHTML(c)}</div>
+                <div class="cmt-name" data-author="${esc(authorKey(c))}">${esc(cw.name)} ${tierMark(cw)} ${titleTag(cw.title)}</div>
                 <div class="cmt-text">${c.replyTo && c.replyTo.name ? `<span class="at">@${esc(c.replyTo.name)}</span> ` : ""}${esc(c.text)}</div>
                 <div class="cmt-foot"><span>${fmtTime(c.createdAt)}</span>
                   ${canReply() ? `<button data-rto="${esc(c.id)}">${esc(ft("reply"))}</button>` : ""}
                   ${(me.user && c.authorUid === me.user.uid) || isMod() ? `<button data-cdel="${esc(c.id)}">${esc(ft("delete"))}</button>` : ""}
                 </div>
               </div>
-            </div>`).join("") : `<p class="muted" style="font-size:.85rem">${esc(ft("noReplies"))}</p>`}</div>
+            </div>`; }).join("") : `<p class="muted" style="font-size:.85rem">${esc(ft("noReplies"))}</p>`}</div>
           <div class="reply-box">${replyBoxHTML()}</div>
         </div>`;
       if ($("rText")) $("rText").value = keep;
@@ -491,22 +709,18 @@
 
     function bindDetail(p) {
       const inner = $("detailInner");
-      const sl = inner.querySelector(".detail-slider");
-      if (sl) sl.addEventListener("scroll", () => {
-        const i = Math.round(sl.scrollLeft / sl.clientWidth);
-        inner.querySelectorAll(".dots i").forEach((d, k) => d.classList.toggle("on", k === i));
-      });
+      inner.querySelectorAll("[data-author]").forEach(el => el.onclick = () => { closeModal("detail", true); goAuthor(el.dataset.author); });
       const dl = inner.querySelector("[data-dlike]");
       if (dl) dl.onclick = () => toggleLike(p.id);
       const dp = inner.querySelector("[data-dpost]");
       if (dp) dp.onclick = async () => {
         if (!confirm(ft("delPost"))) return;
-        try { await deletePost(p.id); closeModal("detail"); loadPage(1); }
+        try { await deletePost(p.id); closeModal("detail"); cursors.length = 1; loadPage(1); }
         catch (e) { toast(ft("fail") + e.message); }
       };
       inner.querySelectorAll("[data-rto]").forEach(b => b.onclick = () => {
         const c = comments.find(x => x.id === b.dataset.rto);
-        replyTo = c ? { uid: c.authorUid, name: c.authorName || "" } : null;
+        replyTo = c ? { uid: c.authorUid, name: who(c).name } : null;
         drawDetail(p); $("rText") && $("rText").focus();
       });
       const rc = inner.querySelector("[data-rcancel]");
@@ -526,9 +740,8 @@
         send.disabled = true;
         const data = {
           authorUid: me.user.uid, authorName: me.member.name || "", authorTier: me.member.tier || "mochii",
-          authorTitle: me.title, text, createdAt: serverTimestamp(),
+          authorTitle: me.title, text, postAuthorUid: p.authorUid, createdAt: serverTimestamp(),
         };
-        data.postAuthorUid = p.authorUid;              // 让帖子作者收到回复通知
         if (replyTo) { data.replyTo = replyTo; data.replyToUid = replyTo.uid; }
         try {
           const ref = doc(collection(db, "feedPosts", p.id, "comments"));
@@ -544,27 +757,19 @@
     // 从铃铛点进来（feed.html#p-帖子ID）：直接打开那篇
     async function openFromHash() {
       const m = location.hash.match(/^#p-([\w-]+)$/);
-      if (!m) return;
+      if (!m || openId === m[1]) return;
       let p = shown.find(x => x.id === m[1]);
       if (!p) {
         try {
           const s = await getDoc(doc(db, "feedPosts", m[1]));
           if (!s.exists()) return;
           p = { id: s.id, ...s.data() };
-          if (!canSee(p)) return;
-          const [c, nc, nl, ml] = await Promise.all([
-            getDoc(doc(db, "feedPosts", p.id, "content", "main")),
-            getCountFromServer(collection(db, "feedPosts", p.id, "comments")),
-            getCountFromServer(collection(db, "feedPosts", p.id, "likes")),
-            me.member ? getDoc(doc(db, "feedPosts", p.id, "likes", me.user.uid)) : null,
-          ]);
-          Object.assign(p, { visible: true, content: c.exists() ? c.data() : { text: "", images: [] },
-            nCmt: nc.data().count, nLike: nl.data().count, liked: !!(ml && ml.exists()) });
+          if (!isShop(p)) await loadProfiles([p.authorUid]);
+          await withExtras(p);
         } catch (e) { console.warn("openFromHash", e); return; }
       }
       if (p.visible) openDetail(p);
     }
-    window.addEventListener("hashchange", openFromHash);
 
     async function deletePost(id) {
       const batch = writeBatch(db);
@@ -614,10 +819,68 @@
         $("cText").value = ""; pics = [];
         closeModal("composer");
         toast(ft(direct ? "posted" : "sentReview"));
-        if (direct) loadPage(1); else loadMyPosts();
+        if (direct) { cursors.length = 1; loadPage(1); } else loadMyPosts();
       } catch (e) {
         setMsg(ft("fail") + e.message + (/size|exceed|too large/i.test(e.message) ? " " + ft("tooBig") : ""), "err");
       } finally { $("cSend").disabled = false; }
+    };
+
+    // ---------- 我的头像与简介 ----------
+    let draftAvatar = "";
+    // 上传的照片：裁成正方形中间，缩到 200px
+    function squareAvatar(file, size = 200) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const s = Math.min(img.width, img.height);
+          const c = document.createElement("canvas");
+          c.width = c.height = size;
+          c.getContext("2d").drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+          let url = c.toDataURL("image/webp", 0.82);
+          if (!url.startsWith("data:image/webp")) url = c.toDataURL("image/jpeg", 0.85);
+          URL.revokeObjectURL(img.src);
+          resolve(url);
+        };
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+      });
+    }
+    function drawEditor() {
+      const w = { name: me.member.name, tier: me.member.tier || "mochii", avatar: draftAvatar };
+      $("eNow").innerHTML = avatarOf(w);
+      $("ePick").innerHTML = PRESETS.map((_, i) => `<button type="button" data-p="p:${i}" class="${draftAvatar === "p:" + i ? "on" : ""}">${avatarOf({ avatar: "p:" + i })}</button>`).join("");
+      $("ePick").querySelectorAll("[data-p]").forEach(b => b.onclick = () => { draftAvatar = b.dataset.p; drawEditor(); });
+      $("eUpload").disabled = !canUpload();
+      $("eNeedBind").classList.toggle("hidden", canUpload());
+      $("eBioCount").textContent = $("eBio").value.length + " / 60";
+    }
+    function openEditor() {
+      if (!me.member) return;
+      draftAvatar = (me.feed && me.feed.avatar) || "";
+      $("eBio").value = (me.feed && me.feed.bio) || "";
+      $("eMsg").textContent = "";
+      drawEditor();
+      $("editor").classList.remove("hidden"); document.body.style.overflow = "hidden";
+    }
+    $("eBio").addEventListener("input", () => { $("eBioCount").textContent = $("eBio").value.length + " / 60"; });
+    $("eLetter").onclick = () => { draftAvatar = ""; drawEditor(); };
+    $("eUpload").onclick = () => $("eFile").click();
+    $("eFile").onchange = async e => {
+      const f = e.target.files[0]; e.target.value = "";
+      if (!f) return;
+      try { draftAvatar = await squareAvatar(f); drawEditor(); } catch (err) { toast(ft("fail") + err.message); }
+    };
+    $("eSave").onclick = async () => {
+      $("eSave").disabled = true;
+      try {
+        await syncMyFeed({ avatar: draftAvatar, bio: $("eBio").value.trim().slice(0, 60) });
+        closeModal("editor");
+        toast(ft("saved"));
+        await renderProfileHead();
+        if (view.mode !== "all") { cursors.length = 1; await loadPage(1); } else render();
+      } catch (e) {
+        $("eMsg").textContent = ft("fail") + e.message; $("eMsg").className = "msg err";
+      } finally { $("eSave").disabled = false; }
     };
 
     // ---------- 开始 ----------
@@ -627,11 +890,9 @@
       started = true;
       try { await loadMe(user); } catch (e) { console.warn("loadMe", e); }
       renderTop();
-      renderHint();
       document.body.classList.remove("loading");
       loadMyPosts();
-      await loadPage(1);
-      openFromHash();
+      await route();
     });
   </script>
 </body>
