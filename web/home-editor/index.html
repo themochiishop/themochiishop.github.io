@@ -1030,11 +1030,12 @@
   const readItems = (raw, text) => {
     const arr = Array.isArray(raw) ? raw : Object.values(raw || {});
     const split = n => { const m = String(n).trim().match(/^(.*?)\s*[x×]\s*(\d+)\s*$/i); return m && m[1] ? { n: m[1], q: Math.min(30, Number(m[2]) || 1) } : { n: String(n).trim(), q: 1 }; };
-    const ok = arr.filter(x => x && typeof x.n === 'string').map(x => { const s = Number(x.q) ? { n: x.n, q: Math.min(30, Number(x.q)) } : split(x.n); return { n: s.n, q: s.q, i: typeof x.i === 'string' ? x.i : '' }; });
+        const ok = arr.filter(x => x && typeof x.n === 'string').map(x => { const s = Number(x.q) ? { n: x.n, q: Math.min(30, Number(x.q)) } : split(x.n); return { n: s.n, q: s.q, i: typeof x.i === 'string' ? x.i : '', b: typeof x.b === 'string' ? x.b : '' }; });
     if (ok.length) return ok;
     return String(text || '').split(/\n+/).map(x => x.trim()).filter(Boolean).map(n => ({ ...split(n), i: '' }));
   };
   const THUMB = f => compressImage(f, 240, 0.8, 40000);
+    const BIG = f => compressImage(f, 720, 0.8, 70000);
   const fileName = n => String(n || '').replace(/\.[a-z0-9]+$/i, '').replace(/_+/g, ' ').trim();
   const pmsg = (t, ok = true) => { const m = $('#prizeMsg'); m.className = 'msg ' + (ok ? 'ok' : 'err'); m.textContent = t; };
 
@@ -1053,14 +1054,12 @@
     pick.onclick = () => file.click();
     file.onchange = async () => {
       const f = file.files[0]; if (!f) return;
-      try { it.i = await THUMB(f); if (!it.n.trim()) it.n = fileName(f.name); renderPrizes(); markDirty(); }
-      catch (err) { pmsg(f.name + ':' + err.message, false); }
+      try { it.i = await THUMB(f); it.b = await BIG(f); if (!it.n.trim()) it.n = fileName(f.name); renderPrizes(); markDirty(); }      catch (err) { pmsg(f.name + ':' + err.message, false); }
     };
     box.append(pick, file);
     if (it.i) {
       const cx = document.createElement('button'); cx.type = 'button'; cx.className = 'pimgx'; cx.textContent = '×'; cx.setAttribute('aria-label', '清除缩略图');
-      cx.onclick = () => { it.i = ''; renderPrizes(); markDirty(); };
-      box.appendChild(cx);
+      cx.onclick = () => { it.i = ''; it.b = ''; renderPrizes(); markDirty(); };      box.appendChild(cx);
     }
 
     const name = document.createElement('input'); name.type = 'text'; name.className = 'pn'; name.placeholder = '奖品名称,例如 Air Fryer';
@@ -1104,8 +1103,7 @@
     if (!Array.isArray(d.items)) d.items = [];
     let ok = 0; const errs = [];
     for (const f of files) {
-      try { pmsg('正在处理 ' + f.name + ' ...'); d.items.push({ n: fileName(f.name), q: 1, i: await THUMB(f) }); ok++; }
-      catch (err) { errs.push(f.name + ':' + err.message); }
+      try { pmsg('正在处理 ' + f.name + ' ...'); d.items.push({ n: fileName(f.name), q: 1, i: await THUMB(f), b: await BIG(f) }); ok++; }      catch (err) { errs.push(f.name + ':' + err.message); }
     }
     renderPrizes(); markDirty();
     if (errs.length) pmsg((ok ? '已添加 ' + ok + ' 个。' : '') + errs.join(' '), false);
@@ -1156,7 +1154,7 @@
       for (const d of draws) {
         const o = { month: d.month.trim(), maskName: d.maskName !== false, maskOrder: d.maskOrder !== false };
         ['intro', 'w1', 'w2', 'w3', 'terms'].forEach(k => { const t = (d[k] || '').trim(); if (t) o[k] = t; });
-        const pit = (d.items || []).filter(x => x.n.trim()).map(x => { const o2 = { n: x.n.trim() }; if (Number(x.q) > 1) o2.q = Math.min(30, Number(x.q)); if (x.i) o2.i = x.i; return o2; });
+              const pit = (d.items || []).filter(x => x.n.trim()).map(x => { const o2 = { n: x.n.trim() }; if (Number(x.q) > 1) o2.q = Math.min(30, Number(x.q)); if (x.i) o2.i = x.i; if (x.i && x.b) o2.b = x.b; return o2; });
         if (pit.length) o.prizeItems = pit;
         if (d.image) o.image = d.image;
         await set(ref(db, 'homepage/drawData/' + d.id), o);
