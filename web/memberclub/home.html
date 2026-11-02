@@ -232,8 +232,15 @@
           </div>`;
       }
 
+      // 📍 管理员改成单独寄出、等会员填地址的兑换
+      function addrBox() {
+        const list = (bal.redemptions || []).filter(r => r.addrPending === true && ["approved", "problem"].includes(r.status));
+        if (!list.length) return "";
+        return `<a class="home-addr" href="rewards.html${list.length === 1 ? "#r-" + esc(list[0].id) : ""}">
+          <span>${esc(t("home.needAddr", { n: list.length }))}</span><span class="go">➔</span></a>`;
+      }
       const draw = () => {
-        $("homeSections").innerHTML = prizeBox() + sections
+        $("homeSections").innerHTML = addrBox() + prizeBox() + sections
           .filter(s => s.on !== false && R[s.key])
           .map(s => R[s.key](s))
           .join("");

@@ -60,11 +60,17 @@
   <div id="eaModal" class="modal hidden" role="dialog" aria-modal="true">
     <div class="modal-card">
       <button type="button" class="modal-x" data-close aria-label="close">✕</button>
-      <h2 data-i18n="gift.editAddr"></h2>
+      <h2 id="eaTitle"></h2>
+      <div id="eaReward" class="muted" style="font-size:.85rem;margin-bottom:8px"></div>
+      <div class="ea-opt-h" id="eaDefH"></div>
       <ul id="eaList" class="addr-list"></ul>
-      <div id="eaFields"></div>
+      <button type="button" class="btn btn-ghost ea-new" id="eaNew"></button>
+      <div id="eaForm" class="hidden">
+        <div id="eaFields"></div>
+        <label class="inline" id="eaSaveRow"><input type="checkbox" id="eaSave" checked> <span data-i18n="addr.saveToBook"></span></label>
+      </div>
       <p id="eaMsg" class="msg"></p>
-      <button type="button" class="btn btn-primary" id="eaSubmit" data-i18n="prof.save"></button>
+      <button type="button" class="btn btn-primary" id="eaSubmit" style="width:100%" data-i18n="gift.confirmAddr"></button>
     </div>
   </div>
 
@@ -75,9 +81,10 @@
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, esc, fmtDate, t, toDate,
-      giftStep, GIFT_STEPS, addressHTML, AUTO_COMPLETE_DAYS, compressImage, redeemCode, DETAIL_COLLAPSE_DAYS
+      giftStep, GIFT_STEPS, addressHTML, AUTO_COMPLETE_DAYS, compressImage, redeemCode, DETAIL_COLLAPSE_DAYS,
+      deliveryOf, MAX_ADDRESSES
     } from "./js/common.js";
-    import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, addressCardHTML } from "./js/address.js";
+    import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, addressCardHTML, saveAddresses } from "./js/address.js";
 
     const $ = id => document.getElementById(id);
     renderNav("rewards");
@@ -125,12 +132,19 @@
         if (r.kind !== "gift" || r.status === "rejected" || r.status === "cancelled") {
           return r.kind === "gift" && r.address ? `<div class="gift-addr muted">📍 ${addressHTML(r.address)}</div>` : "";
         }
-        const step = giftStep(r);
-        const dates = [r.createdAt, r.decidedAt, toDate(r.shippedAt), toDate(r.receivedAt) || toDate(r.completedAt), toDate(r.completedAt)];
+        // 单独寄出：「已通过」后面多一步「填写地址」
+        const sep = deliveryOf(r) === "separate";
+        const waitAddr = r.addrPending === true && ["approved", "problem"].includes(r.status);
+        const keys = sep ? ["pending", "approved", "address", "shipped", "received", "completed"] : GIFT_STEPS;
+        let step = giftStep(r);
+        if (sep && step >= 1) step += 1;   // 已通过 → 停在「填写地址」那一步；之后每一步往后推一格
+        const dates = sep
+          ? [r.createdAt, r.decidedAt, waitAddr ? null : (toDate(r.addressUpdatedAt) || r.decidedAt), toDate(r.shippedAt), toDate(r.receivedAt) || toDate(r.completedAt), toDate(r.completedAt)]
+          : [r.createdAt, r.decidedAt, toDate(r.shippedAt), toDate(r.receivedAt) || toDate(r.completedAt), toDate(r.completedAt)];
         const bar = `
-          <div class="gift-steps">
-            ${GIFT_STEPS.map((k, i) => `
-              <div class="gstep${i <= step ? " done" : ""}${i === step ? " now" : ""}">
+          <div class="gift-steps${sep ? " six" : ""}">
+            ${keys.map((k, i) => `
+              <div class="gstep${i < step || (i === step && !(waitAddr && k === "address")) ? " done" : ""}${i === step ? " now" : ""}${waitAddr && k === "address" ? " ask" : ""}">
                 <span class="dot"></span>
                 <span class="lbl">${t("gift.step." + k)}</span>
                 <span class="dt">${i <= step && dates[i] ? fmtDate(dates[i]).slice(0, 5) : ""}</span>
@@ -140,7 +154,12 @@
         const doneAt = toDate(r.receivedAt) || toDate(r.completedAt);
         const old = r.status === "completed" && doneAt && (Date.now() - doneAt) > DETAIL_COLLAPSE_DAYS * 86400000;
         const url = /^https:\/\//i.test(sh.trackingUrl || "") ? sh.trackingUrl : "";
-        const ship = r.shippedAt ? `
+        const ship = r.shippedAt && sh.withOrder ? `
+          <div class="gift-ship">
+            <div class="ship-line">${esc(t("gift.withOrderDone"))}${sh.orderNo ? ` <span class="mono small-break">${esc(sh.orderNo)}</span>` : ""}</div>
+            ${(sh.photos || []).length ? `<div class="gift-photos">${sh.photos.map(p => `<img src="${esc(p)}" alt="" loading="lazy" data-zoom>`).join("")}</div>` : ""}
+            ${sh.note ? `<div class="small">💬 ${esc(sh.note)}</div>` : ""}
+          </div>` : r.shippedAt ? `
           <div class="gift-ship">
             <div class="ship-line">🚚 <b>${esc(sh.carrierName || "")}</b>
               ${sh.trackingNo ? `<span class="mono small-break">${esc(sh.trackingNo)}</span>
@@ -160,11 +179,17 @@
           <div class="gift-receipt">${r.autoCompleted ? "✅ " + esc(t("gift.autoDone")) : "✅ " + esc(t("gift.received", { d: fmtDate(doneAt) }))}
             ${rc.photo ? `<div class="gift-photos"><img src="${esc(rc.photo)}" alt="" data-zoom></div>` : ""}
             ${rc.comment ? `<div class="muted">「${esc(rc.comment)}」</div>` : ""}</div>` : "";
-        const canEdit = ["pending", "approved", "problem"].includes(r.status);
+        const canEdit = sep && ["pending", "approved", "problem"].includes(r.status);
+        const addrPart = waitAddr
+          ? `<div class="gift-ask"><div>📍 ${esc(t("gift.needAddr"))}</div>
+               <button class="btn btn-primary" data-editaddr="${esc(r.id)}">${esc(t("gift.fillAddr"))}</button></div>`
+          : sep && r.address
+          ? `<div class="gift-addr">📍 ${addressHTML(r.address)}
+              ${canEdit ? `<div><button class="btn btn-ghost btn-inline btn-xs" data-editaddr="${esc(r.id)}">${t("addr.edit")}</button></div>` : ""}</div>`
+          : !sep && !r.shippedAt ? `<div class="gift-addr muted">${esc(t("dlv.withOrderNote"))}</div>` : "";
         const details = `
-          ${problem}${ship}
-          <div class="gift-addr">📍 ${addressHTML(r.address)}
-            ${canEdit ? `<div><button class="btn btn-ghost btn-inline btn-xs" data-editaddr="${esc(r.id)}">${t("addr.edit")}</button></div>` : ""}</div>
+          <div class="dlv-line">${esc(t(sep ? "dlv.separate" : "dlv.withOrder"))}</div>
+          ${problem}${ship}${addrPart}
           ${receipt}${auto}`;
         return `
           ${bar}
@@ -236,32 +261,60 @@
       });
 
       // ---------- 📍 修改收货地址 ----------
+      // ① 用已存的地址（默认在最上面）② 用新地址（可以顺便存到地址簿）
       let eaId = null, eaPick = -1;
-      const book = Array.isArray(member.addresses) ? member.addresses : [];
+      let book = Array.isArray(member.addresses) ? member.addresses.slice() : [];
       $("eaFields").innerHTML = addressFormHTML();
       bindAddressForm($("eaFields"));
       const eaMsg = (x, ty) => { $("eaMsg").textContent = x; $("eaMsg").className = "msg" + (ty ? " " + ty : ""); };
+      function renderEa() {
+        const usingNew = eaPick === -1;
+        $("eaDefH").textContent = book.length ? t("gift.useDefault") : t("gift.noBook");
+        $("eaDefH").classList.toggle("muted", !book.length);
+        $("eaList").innerHTML = book.map((a, i) => (i === 1 ? `<li class="ea-sub">${esc(t("gift.useSaved"))}</li>` : "")
+          + addressCardHTML(a, i, { radio: true, selected: i === eaPick })).join("");
+        $("eaList").classList.toggle("hidden", !book.length);
+        $("eaNew").textContent = t("gift.useNew");
+        $("eaNew").classList.toggle("on", usingNew);
+        $("eaForm").classList.toggle("hidden", !usingNew);
+        $("eaSaveRow").classList.toggle("hidden", book.length >= MAX_ADDRESSES);
+      }
       function openEditAddr(id) {
         const r = bal.redemptions.find(x => x.id === id);
         if (!r) return;
-        eaId = id; eaPick = -1;
-        fillAddressForm($("eaFields"), r.address || {});
-        $("eaList").innerHTML = book.map((a, i) => addressCardHTML(a, i, {})).join("");
-        $("eaList").classList.toggle("hidden", !book.length);
-        eaMsg(book.length ? t("gift.pickFromBook") : "");
+        eaId = id;
+        eaPick = book.length ? 0 : -1;
+        $("eaTitle").textContent = r.addrPending ? t("gift.fillTitle") : t("gift.editAddr");
+        $("eaReward").textContent = r.rewardName + " · " + t("dlv.separate");
+        fillAddressForm($("eaFields"), r.address || { name: member.name || "", phone: member.phone || "" });
+        $("eaSave").checked = true;
+        eaMsg("");
+        renderEa();
         $("eaModal").classList.remove("hidden");
       }
       $("eaList").addEventListener("click", e => {
         const li = e.target.closest(".addr-item");
-        if (!li) return;
-        fillAddressForm($("eaFields"), book[+li.dataset.i]);
+        if (li) { eaPick = +li.dataset.i; renderEa(); }
       });
+      $("eaNew").addEventListener("click", () => { eaPick = -1; renderEa(); });
       $("eaSubmit").addEventListener("click", async () => {
-        const v = validateAddressForm($("eaFields"));
-        if (v.error) { eaMsg(v.error, "err"); return; }
+        const r = bal.redemptions.find(x => x.id === eaId);
+        let address;
+        if (eaPick === -1) {
+          const v = validateAddressForm($("eaFields"));
+          if (v.error) { eaMsg(v.error, "err"); return; }
+          address = v.address;
+        } else address = book[eaPick];
         $("eaSubmit").disabled = true;
         try {
-          await updateDoc(doc(db, "redemptions", eaId), { address: v.address, addressUpdatedAt: serverTimestamp() });
+          if (eaPick === -1 && $("eaSave").checked && book.length < MAX_ADDRESSES) {
+            const next = [...book, address];
+            await saveAddresses(user.uid, next);
+            book = next;
+          }
+          const upd = { address, addressUpdatedAt: serverTimestamp() };
+          if (r && r.addrPending) upd.addrPending = false;
+          await updateDoc(doc(db, "redemptions", eaId), upd);
           $("eaModal").classList.add("hidden");
           await load();
         } catch (err) { eaMsg(t("idx.saveFail") + err.message, "err"); }

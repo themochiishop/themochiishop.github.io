@@ -154,6 +154,7 @@
           kind: r.type === "coupon" ? "coupon" : "gift",
           createdAt: serverTimestamp()
         };
+        if (data.kind === "gift") data.delivery = "withOrder";   // 预设随单寄送；要单独寄出由管理员在审核时改
         if (address) data.address = address;
         const ref = await addDoc(collection(db, "redemptions"), data);
         return ref.id;
@@ -164,13 +165,13 @@
         if (!id) return;
         const r = rewards.find(x => x.id === id);
         if (!r || lockState(r)) return;   // 未开放
-        if (r.type !== "coupon") { openAddrModal(r); return; }   // 实体奖品：先选地址
-        if (!confirm(t("rw.confirm", { name: r.name, cost: r.cost }))) return;
+        const gift = r.type !== "coupon";   // 实体奖品：随单寄送，不用先填地址
+        if (!confirm(t(gift ? "rw.confirmGift" : "rw.confirm", { name: r.name, cost: r.cost }))) return;
         e.target.disabled = true;
         setMsg(t("rw.submitting"));
         try {
           const newId = await submitRedeem(r, null);
-          setMsg(t("rw.submitted", { name: r.name }), "ok");
+          setMsg(t(gift ? "rw.submittedGift" : "rw.submitted", { name: r.name }), "ok");
           location.href = "rewards.html#r-" + newId;   // 自动跳到兑换记录
         } catch (err) {
           setMsg(err.code === "permission-denied" ? t("rw.denied") : t("rw.fail") + err.message, "err");
