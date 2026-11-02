@@ -42,7 +42,13 @@
       <button type="button" class="btn btn-primary" id="amSubmit"></button>
     </div>
   </div>
-
+  <!-- 🛍️ 商品详情 -->
+  <div id="dtModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card dt-card">
+      <button type="button" class="modal-x" id="dtClose" aria-label="close">✕</button>
+      <div id="dtBody"></div>
+    </div>
+  </div>
   <script type="module">
     import { db } from "./js/firebase-config.js";
     import {
@@ -108,6 +114,31 @@
       }
       const limitOf = r => typeof r.perMember === "number" && r.perMember > 0 ? r.perMember : null;
 
+            // 一张卡的状态：按钮、剩余份数、即将下架、限兑次数（卡片和详情共用）
+      function cardState(r) {
+        const ty = TYPE[r.type] || TYPE.gift;
+        const off = offShelf(r);
+        const es = off ? null : endState(r);
+        const soldOut = typeof r.stock === "number" && r.stock <= 0;
+        const short = r.cost - bal.spendable;
+        const locked = off || !!lockState(r);
+        const max = limitOf(r), used = max ? usedOf(r) : 0, full = !!max && used >= max;
+        let btn;
+        if (locked) btn = `<button class="btn btn-primary" disabled>${t("rw.redeem")}</button>`;   // 未开放 / 已下架：灰色、按不下去
+        else if (full) btn = `<button class="btn btn-ghost" disabled>${t("rw.limitDone", { used, max })}</button>`;
+        else if (soldOut) btn = `<button class="btn btn-ghost" disabled>${t("rw.soldOut")}</button>`;
+        else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
+        else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
+        const subs = `
+          <div class="sub">${t(ty.key)}${typeof r.stock === "number" ? " · " + t("rw.left", { n: Math.max(r.stock, 0) }) : ""}</div>
+          ${es ? `<div class="ending-line">${esc(t("shop.endingSoon"))} · ${esc(t("shop.endsOn", { d: fmtDate(es.end, true) }))}</div>` : ""}
+          ${max ? `<div class="sub">${esc(full && r.type === "coupon" ? t("rw.limitNext") : t("rw.limitLine", { max, used }))}</div>` : ""}`;
+        const pic = `${r.image ? `<img src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">` : ty.icon}
+          ${lockOverlayHTML(r)}
+          ${es ? `<span class="ending-badge">⏰ ${esc(es.label)}</span>` : ""}`;
+        return { kind: r.type === "coupon" ? "coupon" : "gift", soldOut, locked, btn, subs, pic };
+      }
+
       function render() {
         $("myPts").textContent = bal.spendable.toLocaleString();
 
@@ -122,43 +153,50 @@
 
         const list = rewards.filter(r => currentCat === "all" || catOf(r, shopCats) === currentCat);
         $("rewardGrid").innerHTML = list.length ? list.map(r => {
-          const ty = TYPE[r.type] || TYPE.gift;
-          const off = offShelf(r);
-          const es = off ? null : endState(r);
-          const soldOut = typeof r.stock === "number" && r.stock <= 0;
-          const short = r.cost - bal.spendable;
-          const locked = off || !!lockState(r);
-          const max = limitOf(r), used = max ? usedOf(r) : 0, full = !!max && used >= max;
-          let btn;
-          if (locked) btn = `<button class="btn btn-primary" disabled>${t("rw.redeem")}</button>`;   // 未开放 / 已下架：灰色、按不下去   // 未开放：一样的「兑换」按钮，只是变灰、按不下去
-          else if (full) btn = `<button class="btn btn-ghost" disabled>${t("rw.limitDone", { used, max })}</button>`;
-          else if (soldOut) btn = `<button class="btn btn-ghost" disabled>${t("rw.soldOut")}</button>`;
-          else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
-          else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
+          const s = cardState(r), id = esc(r.id);
           return `
-<div class="shop-item mall-item type-${r.type === "coupon" ? "coupon" : "gift"}${soldOut ? " sold-out" : ""}${locked ? " locked" : ""}">              <div class="ph">${r.image ? `<img src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">` : ty.icon}
-                ${lockOverlayHTML(r)}
-                ${es ? `<span class="ending-badge">⏰ ${esc(es.label)}</span>` : ""}</div>
+            <div class="shop-item mall-item type-${s.kind}${s.soldOut ? " sold-out" : ""}${s.locked ? " locked" : ""}">
+              <div class="ph" data-detail="${id}">${s.pic}</div>
               <div class="info">
-                <div class="name">${esc(r.name)}</div>
-                ${r.description ? `<div class="desc">${esc(r.description)}</div>` : ""}
-                <div class="sub">${t(ty.key)}${typeof r.stock === "number" ? " · " + t("rw.left", { n: Math.max(r.stock, 0) }) : ""}</div>
-                ${es ? `<div class="ending-line">${esc(t("shop.endingSoon"))} · ${esc(t("shop.endsOn", { d: fmtDate(es.end, true) }))}</div>` : ""}
-                ${max ? `<div class="sub">${esc(full && r.type === "coupon" ? t("rw.limitNext") : t("rw.limitLine", { max, used }))}</div>` : ""}
+                <div class="name" data-detail="${id}">${esc(r.name)}</div>
+                ${r.shortDesc ? `<div class="desc" data-detail="${id}">${esc(r.shortDesc)}</div>` : ""}
+                ${s.subs}
                 <div class="cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
-                ${btn}
+                ${s.btn}
               </div>
             </div>`;
         }).join("") : `<p class="empty">${t("rw.none")}</p>`;
+        if (dtId) openDetail(dtId);   // 详情开着的话也一起更新
         startLockTicker(id => rewards.find(x => x.id === id), render);   // 倒数，时间到自动开放
       }
 
-      $("cats").addEventListener("click", e => {
-        const c = e.target.dataset.cat;
-        if (!c) return;
-        currentCat = c;
-        render();
-      });
+      // ---------- 🛍️ 商品详情：图片、短说明、详细说明、兑换按钮 ----------
+      let dtId = null;
+      function openDetail(id) {
+        const r = rewards.find(x => x.id === id);
+        if (!r) { closeDetail(); return; }
+        dtId = id;
+        const s = cardState(r);
+        $("dtBody").innerHTML = `
+          <div class="dt-ph type-${s.kind}${s.locked ? " locked" : ""}">${s.pic}</div>
+          <div class="dt-info">
+            <h2>${esc(r.name)}</h2>
+            ${r.shortDesc ? `<div class="dt-short">${esc(r.shortDesc)}</div>` : ""}
+            ${r.description ? `<div class="dt-long">${esc(r.description)}</div>` : ""}
+            ${s.subs}
+            <div class="cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
+            ${s.btn}
+          </div>`;
+        $("dtModal").classList.remove("hidden");
+        document.body.classList.add("modal-open");
+      }
+      function closeDetail() {
+        dtId = null;
+        $("dtModal").classList.add("hidden");
+        document.body.classList.remove("modal-open");
+      }
+      $("dtClose").addEventListener("click", closeDetail);
+      $("dtModal").addEventListener("click", e => { if (e.target.id === "dtModal") closeDetail(); });
 
       // 兑换
       async function submitRedeem(r, address) {
@@ -177,15 +215,12 @@
         return ref.id;
       }
 
-      $("rewardGrid").addEventListener("click", async e => {
-        const id = e.target.dataset.redeem;
-        if (!id) return;
-        const r = rewards.find(x => x.id === id);
+           async function startRedeem(r, btn) {
         if (!r || lockState(r) || offShelf(r)) return;   // 未开放 / 已下架
         if (limitOf(r) && usedOf(r) >= limitOf(r)) return;   // 本期已换满
         const gift = r.type !== "coupon";   // 实体奖品：随单寄送，不用先填地址
         if (!confirm(t(gift ? "rw.confirmGift" : "rw.confirm", { name: r.name, cost: r.cost }))) return;
-        e.target.disabled = true;
+        btn.disabled = true;
         setMsg(t("rw.submitting"));
         try {
           const newId = await submitRedeem(r, null);
@@ -193,8 +228,24 @@
           location.href = "rewards.html#r-" + newId;   // 自动跳到兑换记录
         } catch (err) {
           setMsg(err.code === "permission-denied" ? t("rw.denied") : t("rw.fail") + err.message, "err");
-          e.target.disabled = false;
+          btn.disabled = false;
         }
+      }
+
+      // 卡片：按「兑换」直接兑换；点图片 / 名称 / 短说明打开详情
+      $("rewardGrid").addEventListener("click", e => {
+        const b = e.target.closest("[data-redeem]");
+        if (b) { startRedeem(rewards.find(x => x.id === b.dataset.redeem), b); return; }
+        const d = e.target.closest("[data-detail]");
+        if (d) openDetail(d.dataset.detail);
+      });
+      // 详情里的「兑换」
+      $("dtBody").addEventListener("click", e => {
+        const b = e.target.closest("[data-redeem]");
+        if (!b) return;
+        const r = rewards.find(x => x.id === b.dataset.redeem);
+        closeDetail();
+        startRedeem(r, b);
       });
 
       // ---------- 📦 选收货地址 ----------
