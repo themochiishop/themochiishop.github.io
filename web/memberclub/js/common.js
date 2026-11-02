@@ -244,6 +244,12 @@ export function redeemCode(id) {
 }
 export const DETAIL_COLLAPSE_DAYS = 3;   // 收货几天后，查询物流链接变灰（详情在收货后马上收起）
 
+// 📦 实体奖品寄送方式：withOrder 随单寄送（新的预设）、separate 单独寄出（旧的兑换有地址就当单独寄出）
+export function deliveryOf(r) {
+  if (r.delivery === "withOrder" || r.delivery === "separate") return r.delivery;
+  return r.address ? "separate" : "withOrder";
+}
+
 // 实体奖品进度：0 已申请 · 1 已通过 · 2 已发货 · 3 已签收 · 4 完成
 export const GIFT_STEPS = ["pending", "approved", "shipped", "received", "completed"];
 export function giftStep(r) {
@@ -854,6 +860,10 @@ function buildEvents() {
     const sh = toDate(r.shippedAt);
     if (sh) ev.push({ time: sh, icon: "🚚", title: t("notif.shipped", v),
       detail: r.shipping ? [r.shipping.carrierName, r.shipping.trackingNo].filter(Boolean).join(" · ") : "", link: "rewards.html" });
+    // 📍 管理员改成单独寄出，等会员填地址
+    const ar = toDate(r.addrRequestedAt);
+    if (ar && r.addrPending === true && ["approved", "problem"].includes(r.status))
+      ev.push({ time: ar, icon: "📍", title: t("notif.needAddr", v), detail: t("gift.needAddr"), link: "rewards.html#r-" + r.id });
     const pr = toDate(r.problemAt);
     if (pr && r.status === "problem") ev.push({ time: pr, icon: "⚠️", title: t("notif.problem", v), detail: r.problemNote || "", link: "rewards.html" });
     const cc = toDate(r.cancelledAt);
