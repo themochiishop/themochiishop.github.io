@@ -1084,3 +1084,11 @@ body.modal-open { overflow: hidden; }
 }
 @keyframes dtUp { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .dt-card { animation: none; } }
+
+/* ---------- 🏠 首页「最新上架」：图片统一正方形框，卡片等高、积分对齐 ---------- */
+/* 照片照样填满；扁的优惠券图完整显示，上下用深色渐层补满 */
+.home-new .shop-item { display: flex; flex-direction: column; }
+.home-new .shop-item .ph, .home-new .shop-item .ph:has(img) { aspect-ratio: 1 / 1; }
+.home-new .shop-item .ph img { width: 100%; height: 100%; object-fit: contain; }
+.home-new .shop-item .info { flex: 1; display: flex; flex-direction: column; }
+.home-new .shop-item .cost { margin-top: auto; padding-top: 4px; }
