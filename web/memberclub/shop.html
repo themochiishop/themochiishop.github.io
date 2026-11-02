@@ -114,7 +114,7 @@
           const short = r.cost - bal.spendable;
           const locked = !!lockState(r);
           let btn;
-          if (locked) btn = `<button class="btn btn-ghost" disabled>🔒 ${t("rw.notOpen")}</button>`;
+          if (locked) btn = `<button class="btn btn-primary" disabled>${t("rw.redeem")}</button>`;   // 未开放：一样的「兑换」按钮，只是变灰、按不下去
           else if (soldOut) btn = `<button class="btn btn-ghost" disabled>${t("rw.soldOut")}</button>`;
           else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
           else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
