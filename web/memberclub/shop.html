@@ -100,6 +100,7 @@
             .sort((a, b) => (offShelf(a) ? 1 : 0) - (offShelf(b) ? 1 : 0)   // 已下架排最后
               || (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || a.cost - b.cost);
           render();
+          openFromHash();
         } catch (e) {
           $("pageError").textContent = t("common.loadFail") + e.message;
           $("pageError").classList.remove("hidden");
@@ -204,6 +205,19 @@
       $("dtModal").addEventListener("click", e => {
         if (!e.target.closest("[data-redeem]")) closeDetail();
       });
+      // 🏠 从首页点商品进来（shop.html#i-奖品ID）：切到「全部」、捲到那个商品、打开详情
+      function openFromHash() {
+        const m = location.hash.match(/^#i-([\w-]+)$/);
+        if (!m) return;
+        history.replaceState(null, "", location.pathname + location.search);   // 拿掉 #i-，按「返回」才不会又打开
+        const r = rewards.find(x => x.id === m[1]);
+        if (!r || offShelf(r)) return;   // 已下架或找不到：只打开商城
+        if (currentCat !== "all") { currentCat = "all"; render(); }
+        const card = $("rewardGrid").querySelector(`[data-detail="${CSS.escape(r.id)}"]`);
+        if (card) card.closest(".shop-item").scrollIntoView({ block: "center" });
+        openDetail(r.id);
+      }
+
       // 分类按钮：切换分类
       $("cats").addEventListener("click", e => {
         const b = e.target.closest("[data-cat]");
