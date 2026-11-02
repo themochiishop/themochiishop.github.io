@@ -139,13 +139,27 @@
     '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
     '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg>'
   ];
+    /* 领奖说明里的 [文字](链接) → 可点击的链接 */
+  function addLinked(el, text) {
+    const re = /\[([^\]]+)\]\(((?:https:\/\/|\/)[^\s)]+)\)/g;
+    let last = 0, m;
+    while ((m = re.exec(text))) {
+      if (m.index > last) el.appendChild(document.createTextNode(text.slice(last, m.index)));
+      const a = document.createElement('a');
+      a.textContent = m[1]; a.href = m[2];
+      if (/^https:\/\//i.test(m[2])) { a.target = '_blank'; a.rel = 'noopener'; }
+      el.appendChild(a);
+      last = re.lastIndex;
+    }
+    if (last < text.length) el.appendChild(document.createTextNode(text.slice(last)));
+  }
   function renderTerms(text) {
     const box = $('#dTerms'); box.innerHTML = '';
     String(text || '').split(/\n+/).map(x => x.trim()).filter(Boolean).forEach((t, i) => {
       const row = mk('div', 'dt-line');
       const ic = mk('span', 'dt-ico'); ic.innerHTML = TERM_ICONS[Math.min(i, TERM_ICONS.length - 1)];
-      row.append(ic, mk('span', 'dt-txt', t));
-      box.appendChild(row);
+      const tx = mk('span', 'dt-txt'); addLinked(tx, t);
+      row.append(ic, tx);      box.appendChild(row);
     });
   }
   $('#menuBtn').onclick = () => $('#menu').classList.toggle('open');
