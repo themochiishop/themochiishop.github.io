@@ -1043,9 +1043,9 @@ a.feed-btn:hover { text-decoration: none; }
 .bar.thin { height: 6px; margin-top: 8px; }
 /* ---------- 🛍️ 商城商品卡 v4：图片照原比例、短说明、点开看详情 ---------- */
 /* 有图片：照图片原本的比例显示（券图扁的、正方形照片就是正方形），完整不裁切 */
-.mall-item .ph { background: radial-gradient(circle at 50% 40%, var(--card2), var(--bg)); }
-.mall-item .ph:has(img) { aspect-ratio: auto; }
-.mall-item .ph img { width: 100%; height: auto; object-fit: initial; }
+.shop-item .ph { background: radial-gradient(circle at 50% 40%, var(--card2), var(--bg)); }
+.shop-item .ph:has(img) { aspect-ratio: auto; }
+.shop-item .ph img { width: 100%; height: auto; object-fit: initial; }
 /* 可以点开的地方 */
 .mall-item [data-detail] { cursor: pointer; }
 .mall-item .name::after { content: " ›"; color: var(--accent); }
@@ -1074,6 +1074,7 @@ body.modal-open { overflow: hidden; }
 
 /* 📱 手机：从底部滑上来，上面有一条小横杠 */
 @media (max-width: 480px) {
+    .dt-card .modal-x { display: none; }
   #dtModal { align-items: flex-end; padding: 0; }
   .dt-card { max-width: 100%; max-height: 90vh; border-radius: 18px 18px 0 0; animation: dtUp .22s ease-out; }
   .dt-card::before {
