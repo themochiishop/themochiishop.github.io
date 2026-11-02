@@ -129,14 +129,15 @@
         else if (soldOut) btn = `<button class="btn btn-ghost" disabled>${t("rw.soldOut")}</button>`;
         else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
         else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
-        const subs = `
+              const subs = `
           <div class="sub">${t(ty.key)}${typeof r.stock === "number" ? " · " + t("rw.left", { n: Math.max(r.stock, 0) }) : ""}</div>
-          ${es ? `<div class="ending-line">${esc(t("shop.endingSoon"))} · ${esc(t("shop.endsOn", { d: fmtDate(es.end, true) }))}</div>` : ""}
-          ${max ? `<div class="sub">${esc(full && r.type === "coupon" ? t("rw.limitNext") : t("rw.limitLine", { max, used }))}</div>` : ""}`;
+          ${es ? `<div class="ending-line">${esc(t("shop.endingSoon"))} · ${esc(t("shop.endsOn", { d: fmtDate(es.end, true) }))}</div>` : ""}`;
+        // 🔁 限兑次数：只在详情里显示
+        const limitLine = max ? `<div class="sub">${esc(full && r.type === "coupon" ? t("rw.limitNext") : t("rw.limitLine", { max, used }))}</div>` : "";
         const pic = `${r.image ? `<img src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">` : ty.icon}
           ${lockOverlayHTML(r)}
           ${es ? `<span class="ending-badge">⏰ ${esc(es.label)}</span>` : ""}`;
-        return { kind: r.type === "coupon" ? "coupon" : "gift", soldOut, locked, btn, subs, pic };
+        return { kind: r.type === "coupon" ? "coupon" : "gift", soldOut, locked, btn, subs, limitLine, pic };
       }
 
       function render() {
@@ -170,11 +171,13 @@
         startLockTicker(id => rewards.find(x => x.id === id), render);   // 倒数，时间到自动开放
       }
 
-      // ---------- 🛍️ 商品详情：图片、短说明、详细说明、兑换按钮 ----------
+           // ---------- 🛍️ 商品详情：图片、短说明、详细说明、兑换按钮 ----------
+      // 点哪里都能关闭（「兑换」按钮除外）；手机按「返回」只会关掉详情，不会离开商城
       let dtId = null;
       function openDetail(id) {
         const r = rewards.find(x => x.id === id);
         if (!r) { closeDetail(); return; }
+        if (!dtId) history.pushState({ dt: 1 }, "");   // 多记一步，让「返回」先关详情
         dtId = id;
         const s = cardState(r);
         $("dtBody").innerHTML = `
@@ -183,20 +186,24 @@
             <h2>${esc(r.name)}</h2>
             ${r.shortDesc ? `<div class="dt-short">${esc(r.shortDesc)}</div>` : ""}
             ${r.description ? `<div class="dt-long">${esc(r.description)}</div>` : ""}
-            ${s.subs}
+            ${s.subs}${s.limitLine}
             <div class="cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
             ${s.btn}
           </div>`;
         $("dtModal").classList.remove("hidden");
         document.body.classList.add("modal-open");
       }
-      function closeDetail() {
+      function closeDetail(fromBack = false) {
+        if (!dtId) return;
         dtId = null;
         $("dtModal").classList.add("hidden");
         document.body.classList.remove("modal-open");
+        if (!fromBack && history.state && history.state.dt) history.back();   // 把多记的那一步拿掉
       }
-      $("dtClose").addEventListener("click", closeDetail);
-      $("dtModal").addEventListener("click", e => { if (e.target.id === "dtModal") closeDetail(); });
+      window.addEventListener("popstate", () => closeDetail(true));
+      $("dtModal").addEventListener("click", e => {
+        if (!e.target.closest("[data-redeem]")) closeDetail();
+      });
 
       // 兑换
       async function submitRedeem(r, address) {
