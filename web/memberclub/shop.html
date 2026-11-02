@@ -46,11 +46,11 @@
   <script type="module">
     import { db } from "./js/firebase-config.js";
     import {
-      collection, query, where, getDocs, addDoc, serverTimestamp
+      collection, query, where, getDocs, addDoc, serverTimestamp, Timestamp
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, esc, t, loadShopCats, catOf, catName, endState, fmtDate, MAX_ADDRESSES,
-      lockState, lockOverlayHTML, startLockTicker
+      lockState, lockOverlayHTML, startLockTicker, offShelf, showInShop, OFF_SHELF_DAYS
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
 
@@ -77,16 +77,22 @@
 
       async function load() {
         try {
-          const [b, rSnap, cs] = await Promise.all([
+          const cutoff = Timestamp.fromDate(new Date(Date.now() - OFF_SHELF_DAYS * 86400000));
+          const [b, rSnap, offSnap, cs] = await Promise.all([
             loadBalance(user.uid),
             getDocs(query(collection(db, "rewards"), where("active", "==", true))),
+            // ⛔ 最近 30 天内下架的：显示灰色「已下架」
+            getDocs(query(collection(db, "rewards"), where("delistedAt", ">=", cutoff))).catch(() => ({ docs: [] })),
             loadShopCats()
           ]);
           bal = b;
           shopCats = cs;
-          rewards = rSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-            .filter(r => !(endState(r) || {}).ended)   // 已过下架时间的不显示
-            .sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || a.cost - b.cost);
+          const seen = new Map();
+          [...rSnap.docs, ...offSnap.docs].forEach(d => seen.set(d.id, { id: d.id, ...d.data() }));
+          rewards = [...seen.values()]
+            .filter(r => showInShop(r))
+            .sort((a, b) => (offShelf(a) ? 1 : 0) - (offShelf(b) ? 1 : 0)   // 已下架排最后
+              || (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || a.cost - b.cost);
           render();
         } catch (e) {
           $("pageError").textContent = t("common.loadFail") + e.message;
@@ -109,12 +115,13 @@
         const list = rewards.filter(r => currentCat === "all" || catOf(r, shopCats) === currentCat);
         $("rewardGrid").innerHTML = list.length ? list.map(r => {
           const ty = TYPE[r.type] || TYPE.gift;
-          const es = endState(r);
+          const off = offShelf(r);
+          const es = off ? null : endState(r);
           const soldOut = typeof r.stock === "number" && r.stock <= 0;
           const short = r.cost - bal.spendable;
-          const locked = !!lockState(r);
+          const locked = off || !!lockState(r);
           let btn;
-          if (locked) btn = `<button class="btn btn-primary" disabled>${t("rw.redeem")}</button>`;   // 未开放：一样的「兑换」按钮，只是变灰、按不下去
+          if (locked) btn = `<button class="btn btn-primary" disabled>${t("rw.redeem")}</button>`;   // 未开放 / 已下架：灰色、按不下去   // 未开放：一样的「兑换」按钮，只是变灰、按不下去
           else if (soldOut) btn = `<button class="btn btn-ghost" disabled>${t("rw.soldOut")}</button>`;
           else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
           else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
@@ -164,7 +171,7 @@
         const id = e.target.dataset.redeem;
         if (!id) return;
         const r = rewards.find(x => x.id === id);
-        if (!r || lockState(r)) return;   // 未开放
+        if (!r || lockState(r) || offShelf(r)) return;   // 未开放 / 已下架
         const gift = r.type !== "coupon";   // 实体奖品：随单寄送，不用先填地址
         if (!confirm(t(gift ? "rw.confirmGift" : "rw.confirm", { name: r.name, cost: r.cost }))) return;
         e.target.disabled = true;
