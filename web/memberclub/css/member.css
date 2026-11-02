@@ -1041,24 +1041,44 @@ a.feed-btn:hover { text-decoration: none; }
 .tier-keep .tk-best { font-size: .74rem; padding: 2px 9px; border-radius: 999px; border: 1px solid rgba(212,175,55,.6); color: #f3d27a; }
 .tier-keep .tk-text { font-size: .8rem; color: var(--muted); margin-top: 6px; }
 .bar.thin { height: 6px; margin-top: 8px; }
-/* ---------- 🛍️ 商城商品卡 v2：优惠券图完整显示、说明不截断 ---------- */
-/* 🎫 优惠券：4:3 框，整张图完整显示（不裁切） */
+/* ---------- 🛍️ 商城商品卡 v3：短说明 + 点开看详情 ---------- */
+/* 🎫 优惠券：框的比例接近券图（约 5:2），刚好填满不留空 */
 .mall-item.type-coupon .ph {
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 5 / 2;
   background: radial-gradient(circle at 50% 40%, var(--card2), var(--bg));
 }
 .mall-item.type-coupon .ph img { object-fit: contain; }
-/* 🎁 实体奖品：维持原本正方形、填满方框，不用另外写 */
+/* 可以点开的地方 */
+.mall-item [data-detail] { cursor: pointer; }
+.mall-item .name::after { content: " ›"; color: var(--accent); }
 
-/* 说明全部显示，不再出现「…」 */
-.mall-item .desc {
-  display: block;
-  -webkit-line-clamp: unset;
-  overflow: visible;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
+/* 商品详情弹出框 */
+.dt-card { padding: 0; overflow-x: hidden; }
+.dt-card .modal-x { z-index: 3; background: rgba(11,16,32,.7); }
+.dt-ph {
+  position: relative; aspect-ratio: 1 / 1; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; font-size: 3rem;
+  background: radial-gradient(circle at 50% 40%, var(--card2), var(--bg));
 }
+.dt-ph.type-coupon { aspect-ratio: 5 / 2; }
+.dt-ph img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.dt-ph.locked img { filter: grayscale(.85); }
+.dt-info { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 6px; }
+.dt-info h2 { font-size: 1.1rem; margin: 0; }
+.dt-short { font-weight: 600; font-size: .9rem; }
+.dt-long {
+  color: var(--muted); font-size: .85rem; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere;
+  border-top: 1px dashed var(--line); padding-top: 10px; margin-top: 4px;
+}
+.dt-info .sub { font-size: .78rem; color: var(--muted); }
+.dt-info .cost { font-weight: 800; color: var(--accent); font-size: 1.15rem; margin: 6px 0 4px; }
+body.modal-open { overflow: hidden; }
+
+/* 📱 手机：从底部滑上来 */
 @media (max-width: 480px) {
   .mall-item.type-coupon .ph img { width: 100%; height: 100%; object-fit: contain; }
-  .mall-item .desc { font-size: .72rem; }
+  #dtModal { align-items: flex-end; padding: 0; }
+  .dt-card { max-width: 100%; max-height: 90vh; border-radius: 18px 18px 0 0; animation: dtUp .22s ease-out; }
 }
+@keyframes dtUp { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .dt-card { animation: none; } }
