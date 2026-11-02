@@ -266,6 +266,49 @@ export function endState(r, now = new Date()) {
   return { ended: false, end, label };
 }
 
+// ---------- 🔒 未开放的奖品 ----------
+// comingSoon=true：会员看得到但不能兑换。openAt 有填就到时间自动开放
+//   openMode "date"（普通）：只显示日期；"countdown"（倒数）：24 小时内每秒倒数
+// 回传 null（可以兑换）或 { label, countdown, at }
+export function lockState(r, now = new Date()) {
+  if (r.comingSoon !== true) return null;
+  const at = toDate(r.openAt);
+  if (at && at <= now) return null;
+  if (!at) return { label: t("shop.soon"), at: null, countdown: false };
+  const p = n => String(n).padStart(2, "0");
+  const day = `${at.getDate()}/${at.getMonth() + 1}`;
+  if (r.openMode === "countdown") {
+    const ms = at - now;
+    if (ms <= 24 * 3600000) {
+      const s = Math.floor(ms / 1000);
+      return { label: t("shop.opensIn", { t: `${p(Math.floor(s / 3600))}:${p(Math.floor(s / 60) % 60)}:${p(s % 60)}` }), at, countdown: true };
+    }
+    return { label: t("shop.opensOn", { d: `${day} ${p(at.getHours())}:${p(at.getMinutes())}` }), at, countdown: true };
+  }
+  return { label: t("shop.opensOn", { d: day }), at, countdown: false };
+}
+// 页面上所有 [data-lock-id] 的倒数每秒更新；时间到就叫 onOpen() 重画
+let lockTimer = null;
+export function startLockTicker(getReward, onOpen) {
+  clearInterval(lockTimer);
+  lockTimer = setInterval(() => {
+    let opened = false;
+    document.querySelectorAll("[data-lock-id]").forEach(el => {
+      const r = getReward(el.dataset.lockId);
+      if (!r) return;
+      const ls = lockState(r);
+      if (!ls) { opened = true; return; }
+      const lb = el.querySelector(".lock-label");
+      if (lb && lb.textContent !== ls.label) lb.textContent = ls.label;
+    });
+    if (opened) onOpen();
+  }, 1000);
+}
+export function lockOverlayHTML(r) {
+  const ls = lockState(r);
+  return ls ? `<span class="lock-overlay" data-lock-id="${esc(r.id)}"><span class="lock-label">${esc(ls.label)}</span></span>` : "";
+}
+
 // ---------- 绑定账号：每个账号的订单统计 ----------
 // 回传 { "shopee_alai": { orders, spend, points, last } }；退货的订单不算
 export function accountStats(orders) {
