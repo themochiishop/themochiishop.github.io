@@ -280,7 +280,7 @@ export function lockState(r, now = new Date()) {
   if (r.comingSoon !== true) return null;
   const at = toDate(r.openAt);
   if (at && at <= now) return null;
-  if (!at) return { label: t("shop.soon"), at: null, countdown: false };
+  if (!at) return { label: t("shop.lockSoon"), at: null, countdown: false };
   const p = n => String(n).padStart(2, "0");
   const day = `${at.getDate()}/${at.getMonth() + 1}`;
   if (r.openMode === "countdown") {
@@ -311,8 +311,24 @@ export function startLockTicker(getReward, onOpen) {
   }, 1000);
 }
 export function lockOverlayHTML(r) {
+  if (offShelf(r)) return `<span class="lock-overlay"><span class="lock-label">${esc(t("shop.offShelf"))}</span></span>`;
   const ls = lockState(r);
   return ls ? `<span class="lock-overlay" data-lock-id="${esc(r.id)}"><span class="lock-label">${esc(ls.label)}</span></span>` : "";
+}
+
+// ---------- ⛔ 已下架 ----------
+// 下架（或下架时间到了）之后，前台显示灰色「已下架」30 天，之后自动隐藏；隐藏的奖品前台看不到
+export const OFF_SHELF_DAYS = 30;
+export function offSince(r, now = new Date()) {
+  if (r.active === true) { const end = toDate(r.endAt); return end && end <= now ? end : null; }
+  if (r.hidden === true) return null;
+  return toDate(r.delistedAt);
+}
+export const offShelf = (r, now = new Date()) => !!offSince(r, now);
+export function showInShop(r, now = new Date()) {
+  if (r.active === true && !offShelf(r, now)) return true;
+  const since = offSince(r, now);
+  return !!since && now - since < OFF_SHELF_DAYS * 86400000;
 }
 
 // ---------- 绑定账号：每个账号的订单统计 ----------
