@@ -204,7 +204,13 @@
       $("dtModal").addEventListener("click", e => {
         if (!e.target.closest("[data-redeem]")) closeDetail();
       });
-
+      // 分类按钮：切换分类
+      $("cats").addEventListener("click", e => {
+        const b = e.target.closest("[data-cat]");
+        if (!b) return;
+        currentCat = b.dataset.cat;
+        render();
+      });
       // 兑换
       async function submitRedeem(r, address) {
         const data = {
