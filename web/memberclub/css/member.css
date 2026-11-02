@@ -1041,3 +1041,24 @@ a.feed-btn:hover { text-decoration: none; }
 .tier-keep .tk-best { font-size: .74rem; padding: 2px 9px; border-radius: 999px; border: 1px solid rgba(212,175,55,.6); color: #f3d27a; }
 .tier-keep .tk-text { font-size: .8rem; color: var(--muted); margin-top: 6px; }
 .bar.thin { height: 6px; margin-top: 8px; }
+/* ---------- 🛍️ 商城商品卡 v2：优惠券图完整显示、说明不截断 ---------- */
+/* 🎫 优惠券：4:3 框，整张图完整显示（不裁切） */
+.mall-item.type-coupon .ph {
+  aspect-ratio: 4 / 3;
+  background: radial-gradient(circle at 50% 40%, var(--card2), var(--bg));
+}
+.mall-item.type-coupon .ph img { object-fit: contain; }
+/* 🎁 实体奖品：维持原本正方形、填满方框，不用另外写 */
+
+/* 说明全部显示，不再出现「…」 */
+.mall-item .desc {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 480px) {
+  .mall-item.type-coupon .ph img { width: 100%; height: 100%; object-fit: contain; }
+  .mall-item .desc { font-size: .72rem; }
+}
