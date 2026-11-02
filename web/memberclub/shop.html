@@ -136,8 +136,7 @@
           else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
           else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
           return `
-            <div class="shop-item mall-item${soldOut ? " sold-out" : ""}${locked ? " locked" : ""}">
-              <div class="ph">${r.image ? `<img src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">` : ty.icon}
+<div class="shop-item mall-item type-${r.type === "coupon" ? "coupon" : "gift"}${soldOut ? " sold-out" : ""}${locked ? " locked" : ""}">              <div class="ph">${r.image ? `<img src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">` : ty.icon}
                 ${lockOverlayHTML(r)}
                 ${es ? `<span class="ending-badge">⏰ ${esc(es.label)}</span>` : ""}</div>
               <div class="info">
