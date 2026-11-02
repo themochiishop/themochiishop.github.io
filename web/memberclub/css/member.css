@@ -781,6 +781,26 @@ select {
 .gstep.now .dot { box-shadow: 0 0 0 4px rgba(255,111,174,.25); }
 .gstep .lbl { font-size: .7rem; color: var(--muted); font-weight: 700; }
 .gstep.done .lbl { color: var(--text); }
+/* 📍 单独寄出：多一步「填写地址」；等会员填时那一点闪烁 */
+.gift-steps.six { grid-template-columns: repeat(6, 1fr); }
+.gift-steps.six .gstep .lbl { font-size: .64rem; }
+.gstep.ask .dot { background: var(--accent); border-color: var(--accent); animation: askPulse 1.2s ease-in-out infinite; }
+.gstep.ask .lbl { color: var(--accent); }
+@keyframes askPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,111,174,.6); } 50% { box-shadow: 0 0 0 7px rgba(255,111,174,0); } }
+@media (prefers-reduced-motion: reduce) { .gstep.ask .dot { animation: none; } }
+.dlv-line { font-size: .78rem; font-weight: 700; color: var(--muted); margin: 2px 0 6px; }
+.gift-ask { border: 1px solid var(--accent); background: rgba(255,111,174,.08); border-radius: 12px; padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 8px; font-size: .86rem; margin: 6px 0; }
+.gift-ask .btn { width: 100%; }
+.ea-opt-h { font-size: .84rem; font-weight: 700; margin: 4px 0 6px; }
+.ea-sub { list-style: none; font-size: .76rem; color: var(--muted); margin: 6px 0 2px; }
+.ea-new { width: 100%; margin: 8px 0; text-align: left; }
+.ea-new.on { border-color: var(--accent); }
+/* 首页：等填地址的提醒 */
+.home-addr { display: flex; align-items: center; justify-content: space-between; gap: 10px; text-decoration: none; color: var(--text);
+  border: 1px solid var(--accent); background: rgba(255,111,174,.08); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px; font-weight: 700; font-size: .9rem; }
+.home-addr:hover { text-decoration: none; }
+.home-addr .go { color: var(--accent); white-space: nowrap; }
 .gstep .dt { font-size: .64rem; color: var(--muted); min-height: .8em; }
 .gift-ship, .gift-addr, .gift-receipt, .gift-problem {
   font-size: .82rem; margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--card2); line-height: 1.6;
