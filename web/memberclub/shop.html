@@ -49,7 +49,8 @@
       collection, query, where, getDocs, addDoc, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
-      requireMember, renderNav, loadBalance, esc, t, loadShopCats, catOf, catName, endState, fmtDate, MAX_ADDRESSES
+      requireMember, renderNav, loadBalance, esc, t, loadShopCats, catOf, catName, endState, fmtDate, MAX_ADDRESSES,
+      lockState, lockOverlayHTML, startLockTicker
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
 
@@ -111,13 +112,16 @@
           const es = endState(r);
           const soldOut = typeof r.stock === "number" && r.stock <= 0;
           const short = r.cost - bal.spendable;
+          const locked = !!lockState(r);
           let btn;
-          if (soldOut) btn = `<button class="btn btn-ghost" disabled>${t("rw.soldOut")}</button>`;
+          if (locked) btn = `<button class="btn btn-ghost" disabled>🔒 ${t("rw.notOpen")}</button>`;
+          else if (soldOut) btn = `<button class="btn btn-ghost" disabled>${t("rw.soldOut")}</button>`;
           else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
           else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
           return `
-            <div class="shop-item mall-item${soldOut ? " sold-out" : ""}">
+            <div class="shop-item mall-item${soldOut ? " sold-out" : ""}${locked ? " locked" : ""}">
               <div class="ph">${r.image ? `<img src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">` : ty.icon}
+                ${lockOverlayHTML(r)}
                 ${es ? `<span class="ending-badge">⏰ ${esc(es.label)}</span>` : ""}</div>
               <div class="info">
                 <div class="name">${esc(r.name)}</div>
@@ -129,6 +133,7 @@
               </div>
             </div>`;
         }).join("") : `<p class="empty">${t("rw.none")}</p>`;
+        startLockTicker(id => rewards.find(x => x.id === id), render);   // 倒数，时间到自动开放
       }
 
       $("cats").addEventListener("click", e => {
@@ -158,7 +163,7 @@
         const id = e.target.dataset.redeem;
         if (!id) return;
         const r = rewards.find(x => x.id === id);
-        if (!r) return;
+        if (!r || lockState(r)) return;   // 未开放
         if (r.type !== "coupon") { openAddrModal(r); return; }   // 实体奖品：先选地址
         if (!confirm(t("rw.confirm", { name: r.name, cost: r.cost }))) return;
         e.target.disabled = true;
