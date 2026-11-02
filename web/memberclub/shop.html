@@ -50,7 +50,7 @@
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, esc, t, loadShopCats, catOf, catName, endState, fmtDate, MAX_ADDRESSES,
-      lockState, lockOverlayHTML, startLockTicker, offShelf, showInShop, OFF_SHELF_DAYS
+      lockState, lockOverlayHTML, startLockTicker, offShelf, showInShop, OFF_SHELF_DAYS, toDate
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
 
@@ -100,6 +100,14 @@
         }
       }
 
+      // 🔁 每位会员限兑次数：这一期（换新码之后）已经兑换几次，拒绝和取消的不算
+      function usedOf(r) {
+        const since = toDate(r.roundSince);
+        return bal.redemptions.filter(x => x.rewardId === r.id && !["rejected", "cancelled"].includes(x.status)
+          && (!since || !x.createdAt || x.createdAt >= since)).length;
+      }
+      const limitOf = r => typeof r.perMember === "number" && r.perMember > 0 ? r.perMember : null;
+
       function render() {
         $("myPts").textContent = bal.spendable.toLocaleString();
 
@@ -120,8 +128,10 @@
           const soldOut = typeof r.stock === "number" && r.stock <= 0;
           const short = r.cost - bal.spendable;
           const locked = off || !!lockState(r);
+          const max = limitOf(r), used = max ? usedOf(r) : 0, full = !!max && used >= max;
           let btn;
           if (locked) btn = `<button class="btn btn-primary" disabled>${t("rw.redeem")}</button>`;   // 未开放 / 已下架：灰色、按不下去   // 未开放：一样的「兑换」按钮，只是变灰、按不下去
+          else if (full) btn = `<button class="btn btn-ghost" disabled>${t("rw.limitDone", { used, max })}</button>`;
           else if (soldOut) btn = `<button class="btn btn-ghost" disabled>${t("rw.soldOut")}</button>`;
           else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
           else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
@@ -135,6 +145,7 @@
                 ${r.description ? `<div class="desc">${esc(r.description)}</div>` : ""}
                 <div class="sub">${t(ty.key)}${typeof r.stock === "number" ? " · " + t("rw.left", { n: Math.max(r.stock, 0) }) : ""}</div>
                 ${es ? `<div class="ending-line">${esc(t("shop.endingSoon"))} · ${esc(t("shop.endsOn", { d: fmtDate(es.end, true) }))}</div>` : ""}
+                ${max ? `<div class="sub">${esc(full && r.type === "coupon" ? t("rw.limitNext") : t("rw.limitLine", { max, used }))}</div>` : ""}
                 <div class="cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
                 ${btn}
               </div>
@@ -172,6 +183,7 @@
         if (!id) return;
         const r = rewards.find(x => x.id === id);
         if (!r || lockState(r) || offShelf(r)) return;   // 未开放 / 已下架
+        if (limitOf(r) && usedOf(r) >= limitOf(r)) return;   // 本期已换满
         const gift = r.type !== "coupon";   // 实体奖品：随单寄送，不用先填地址
         if (!confirm(t(gift ? "rw.confirmGift" : "rw.confirm", { name: r.name, cost: r.cost }))) return;
         e.target.disabled = true;
