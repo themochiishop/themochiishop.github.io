@@ -182,9 +182,15 @@
 
         // ---------- 最新上架的兑换商品 ----------
         rewards(sec) {
-          const list = rewards.slice()
-            .sort((a, b) => (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0))
-            .slice(0, sec.count || 4);
+          // 预设按创建时间（最新在前）；后台「首页设定」可以自订顺序，之后新增的奖品自动排在最上面
+          const byNew = (a, b) => (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0);
+          const nr = cfg.newRewards || {};
+          let list = rewards.slice().sort(byNew);
+          if (nr.mode === "custom" && Array.isArray(nr.order)) {
+            const pos = Object.fromEntries(nr.order.map((id, i) => [id, i]));
+            list = [...list.filter(r => !(r.id in pos)), ...list.filter(r => r.id in pos).sort((a, b) => pos[a.id] - pos[b.id])];
+          }
+          list = list.slice(0, sec.count || 4);
           if (!list.length) return "";
           return `
             <div class="card">
