@@ -708,11 +708,23 @@ a.home-feed:hover { text-decoration: none; border-color: var(--accent); }
 }
 .ending-line { font-size: .72rem; color: var(--warn); font-weight: 700; }
 
+/* ---------- 🔒 未开放：图片盖一层灰色 ---------- */
+.lock-overlay {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 6px;
+  background: rgba(11,16,32,.42);
+}
+.lock-overlay .lock-label {
+  background: rgba(19,26,46,.92); border: 1px solid var(--line); color: var(--text); border-radius: 999px;
+  padding: 5px 12px; font-size: .78rem; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums;
+}
+.shop-item.locked .ph img { filter: grayscale(.85); }
+
 /* 首页你好框：手机上也往右缩进（和电脑端一样） */
 @media (max-width: 480px) {
   .home-top .home-hero > div { padding-left: 10px; }
   .ending-badge { font-size: .62rem; padding: 2px 6px; top: 4px; left: 4px; }
   .ending-line { font-size: .66rem; }
+  .lock-overlay .lock-label { font-size: .66rem; padding: 4px 8px; }
 }
 
 /* ---------- 弹出框 ---------- */
