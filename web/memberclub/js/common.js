@@ -671,9 +671,84 @@ export function invalidateMemberCache() {
   try { Object.keys(sessionStorage).filter(k => k.startsWith(BOOT_KEY)).forEach(k => sessionStorage.removeItem(k)); } catch (e) {}
 }
 
+// ---------- 👁 会员视角（管理员预览，只读） ----------
+// 后台「会员详情 › 用会员视角查看」→ 前台 ?viewAs=会员UID；只有管理员能用，同一个分页里切换页面都维持
+// 用管理员权限读那位会员的资料；所有会改资料的按钮都挡住
+const VIEW_KEY = "mochiiViewAs";
+const PREVIEW_PAGES = ["home", "rewards", "prizes", "points"];   // 目前支援的页面，其他的之后再补
+export let PREVIEW = null;
+function readViewAs() {
+  try {
+    const q = new URLSearchParams(location.search).get("viewAs");
+    if (q) {
+      sessionStorage.setItem(VIEW_KEY, JSON.stringify({ uid: q }));
+      const u = new URL(location.href); u.searchParams.delete("viewAs");
+      history.replaceState(null, "", u.pathname + u.search + u.hash);
+    }
+    return JSON.parse(sessionStorage.getItem(VIEW_KEY) || "null");
+  } catch (e) { return null; }
+}
+function exitPreview() {
+  try { sessionStorage.removeItem(VIEW_KEY); } catch (e) {}
+  window.close();   // 从后台开的新分页：直接关掉
+  setTimeout(() => location.replace("home.html"), 200);
+}
+const PREVIEW_BLOCK = "[data-cancel],[data-editaddr],[data-receive],#rcvSubmit,#eaSubmit,#eaNew,[data-got],[data-claim],[data-pzaddr],#pzSubmit,#bellReadAll,[data-redeem],[data-like],[data-follow],button[type=submit]";
+function previewBanner(name, supported) {
+  const bar = document.createElement("div");
+  bar.className = "preview-bar";
+  bar.innerHTML = `<span>👁 <b>${esc(name)}</b> 的视角 · 只读</span><button type="button">退出</button>`;
+  bar.querySelector("button").onclick = exitPreview;
+  document.body.appendChild(bar);
+  document.body.classList.add("preview-mode");
+  // 挡住所有会改资料的操作
+  const stop = e => {
+    if (e.target.closest(".preview-bar")) return;
+    if (e.type === "submit" || e.target.closest(PREVIEW_BLOCK)) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      toast("👁 预览模式不能操作");
+    }
+  };
+  document.addEventListener("click", stop, true);
+  document.addEventListener("submit", stop, true);
+  if (!supported) {
+    const main = document.querySelector("main") || document.body;
+    main.innerHTML = `<div class="card" style="text-align:center;padding:30px 16px">
+      <div style="font-size:2rem">👁</div>
+      <h2 style="margin:8px 0">这一页暂时不支援会员视角</h2>
+      <p class="muted">目前可以看：首页、兑换记录、中奖记录、积分明细</p>
+      <a class="btn btn-primary" href="home.html" style="margin-top:12px">回首页</a></div>`;
+  }
+}
+async function startPreview(admin, va, onReady) {
+  const page = (location.pathname.split("/").pop() || "home.html").replace(/\.html$/, "") || "home";
+  const supported = PREVIEW_PAGES.includes(page);
+  const snap = await getDoc(doc(db, "members", va.uid));
+  if (!snap.exists()) { alert("找不到这位会员"); exitPreview(); return; }
+  const member = snap.data();
+  PREVIEW = { uid: va.uid, name: member.name || "会员", adminUid: admin.uid };
+  document.body.classList.remove("loading");
+  previewBanner(PREVIEW.name, supported);
+  if (!supported) return;
+  // 假的 user：uid 换成那位会员（只拿来读资料）
+  const user = { uid: va.uid, email: member.email || "", displayName: member.name || "", isPreview: true };
+  onReady(user, member);
+  initBell(user, member);
+}
+
 export function requireMember(onReady, opts = {}) {
   onAuthStateChanged(auth, async user => {
     if (!user) { location.replace("index.html"); return; }
+    const va = readViewAs();
+    if (va && va.uid) {
+      const adm = await getDoc(doc(db, "admins", user.uid)).catch(() => null);
+      if (adm && adm.exists()) {
+        try { await startPreview(user, va, onReady); }
+        catch (e) { console.error(e); alert("会员视角载入失败：" + e.message); }
+        return;
+      }
+      try { sessionStorage.removeItem(VIEW_KEY); } catch (e) {}   // 不是管理员：忽略
+    }
     const key = BOOT_KEY + user.uid;
     let cached = null;
     if (!opts.fresh) { try { cached = JSON.parse(sessionStorage.getItem(key) || "null"); } catch (e) {} }
@@ -1100,6 +1175,7 @@ export function initBell(user, member) {
     bell.highlightSince = bell.seenAt;
     bell.seenAt = new Date();
     renderBell();
+    if (PREVIEW) return;   // 👁 会员视角：不帮会员标已读
     patchMemberCache(user.uid, { notifSeenAt: { seconds: Math.floor(Date.now() / 1000) } });
     try { await updateDoc(doc(db, "members", user.uid), { notifSeenAt: serverTimestamp() }); }
     catch (err) { console.warn("notifSeenAt", err); }
