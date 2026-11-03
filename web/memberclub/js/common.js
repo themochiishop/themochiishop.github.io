@@ -893,6 +893,7 @@ function buildEvents() {
   });
   // 🏆 每月抽奖中奖：中奖、发货、取消
   bell.prizes.forEach(p => {
+    if (p.legacy) return;   // 后台补上的旧记录（之前已经寄出）：不通知
     const v = { name: p.prizeName };
     const won = toDate(p.createdAt);
     if (won) ev.push({ time: won, icon: "🏆", title: t("notif.prizeWon", v),
