@@ -29,7 +29,7 @@ const TEXT = {
     tierPerk: (m, b) => `积分 ×${m} · 生日礼 ${b} 分`,
     noPerks: "目前没有开放中的额外福利。",
     tier: [
-      ["会员等级怎么计算？", L => `按<b>最近 365 天的有效消费</b>计算，所有绑定账号的消费会合并，取消和退货的订单不算。等级每小时自动更新一次。${tierList(L)}`],
+      ["会员等级怎么计算？", L => `按<b>最近 365 天的有效消费</b>计算，所有绑定账号的消费会合并，取消和退货的订单不算。订单或绑定有变动后，等级约 30 分钟内自动更新。${tierList(L)}`],
       ["等级会下降吗？", () => `升级后，新等级<b>有效 12 个月</b>，期间不会降级。到期时看近一年的消费：达到该等级门槛的<b>一半</b>，就自动再续 12 个月；不到一半，<b>只会降一级</b>（例如金卡变银卡），不会一下子掉回 Mochii 会员。到期前 30 天，铃铛会提醒你还差多少可以保级。你达到过的最高等级会一直显示在等级页。`],
       ["Black Elite 是什么？", () => `${BLACK_CROWN} Black Elite 是 Mochii Member Club 最高的身份，采<b>邀请制</b>，由我们邀请长期支持的会员加入，没有有效期。享有积分 ×2、生日礼 888 分，以及专属的会员封面。`],
       ["升级后，积分加成从什么时候开始？", () => `升级后的<b>新订单</b>才按新等级的加成计算，已经计过分的订单不会重算。绑定账号时补算的过往订单，按绑定当时的等级计算。`],
@@ -40,7 +40,7 @@ const TEXT = {
     points: [
       ["购物怎么得积分？", () => `每 RM1 得 1 分，再乘以你的等级加成，小数舍去。例如 ×1.2 加成时买 RM65，可得 78 分。`],
       ["为什么积分是「待确认」？", () => `订单日期起 ${PENDING_DAYS} 天内是待确认期，期间如取消或退货，积分会自动取消。${PENDING_DAYS} 天后自动转为可用，铃铛会通知你。`],
-      ["下单后多久会看到积分？", () => `订单由我们人工录入系统，一般在 1–2 天内出现，有时会更久。积分和订单记录会同时更新。`],
+      ["下单后多久会看到积分？", () => `订单由我们人工录入系统，一般在 1 天内出现；遇到网络或系统问题等情况，有时会稍微延迟。录入后积分和订单记录会同时更新。<br>新积分会先显示为「待确认」，订单时间满 ${PENDING_DAYS} 天后会转为可用积分，即可用于兑换奖品；若订单提早确认完成，积分也会提早转为可用。`],
       ["绑定前的订单算积分吗？", () => `算。绑定账号后，系统里已有的过往订单都会补算积分；订单日期已超过 ${PENDING_DAYS} 天的，补算后马上可用。`],
       ["有多个账号怎么算？", () => `同一位会员可以绑定多个 Shopee / TikTok 账号，没有数量限制。所有账号的积分合并成一个余额，等级消费也合并计算。每个账号只能被一位会员绑定。`],
       ["什么情况会扣积分？", () => `<ul><li><b>订单取消或退货</b>：该订单的积分扣回，即使已经转为可用。</li><li><b>订单金额更正</b>：按正确金额重新计算，多退少补。</li><li><b>解除绑定</b>：该账号订单的积分扣回（记录显示「订单转出」）；重新绑定后会再加回来。</li><li><b>兑换奖品</b>、<b>积分过期</b>（见下面）。</li></ul>`],
@@ -51,10 +51,10 @@ const TEXT = {
     ],
     bind: [
       ["为什么要填单号？", () => `用来确认这个账号是你的，防止别人用你的用户名领积分。`],
-      ["刚下单，绑定失败？", () => `新订单需要 1–2 天才会录入系统，请用较早的订单，或稍后再试。`],
+      ["刚下单，绑定失败？", () => `新订单一般需要 1 天才会录入系统，请用较早的订单，或稍后再试。`],
       ["可以绑定几个账号？", () => `没有限制。Shopee 和 TikTok 都可以，同一个平台多个账号也可以，所有账号的积分和消费都会合并计算。Shopee 和 TikTok 都绑定，还能领额外福利。`],
       ["显示账号已经被绑定？", () => `每个用户名只能绑定一位会员。如果不是你绑定的，请联系我们处理。`],
-      ["绑定后多久有积分？", () => `系统每小时计算一次，绑定后最多一小时，过往订单的积分就会出现。`],
+      ["绑定后多久有积分？", () => `绑定后约 30 分钟内，过往订单的积分就会出现。`],
       ["可以解除绑定吗？", () => `请联系我们。解除后，该账号订单的积分会扣回，绑定记录会保留在「已解除的账号」里。`],
       ["改了平台用户名怎么办？", () => `系统是用用户名配对订单的。改名后的新订单可能配对不到，请用新用户名再绑定一次，或联系我们帮你处理。`],
     ],
@@ -99,7 +99,7 @@ const TEXT = {
     tierPerk: (m, b) => `points ×${m} · birthday gift ${b} pts`,
     noPerks: "There are no extra perks open right now.",
     tier: [
-      ["How is my tier calculated?", L => `By your <b>valid spending in the last 365 days</b>, combined across all your linked accounts. Cancelled and returned orders don't count. Tiers update every hour.${tierList(L)}`],
+      ["How is my tier calculated?", L => `By your <b>valid spending in the last 365 days</b>, combined across all your linked accounts. Cancelled and returned orders don't count. Tiers update within about 30 minutes of any order or account change.${tierList(L)}`],
       ["Can my tier go down?", () => `After an upgrade, your new tier <b>lasts 12 months</b> and won't drop during that time. When it ends, we look at your last 12 months of spending: reach <b>half</b> of your tier's level and it renews for another 12 months; otherwise you move down <b>one tier only</b> (e.g. Gold to Silver), never straight back to Mochii Member. The bell reminds you 30 days before it ends, with how much more you need. Your highest tier ever stays on your tier page.`],
       ["What is Black Elite?", () => `${BLACK_CROWN} Black Elite is the highest status in Mochii Member Club. It's <b>by invitation</b> — we invite our most loyal members — and it doesn't expire. It comes with points ×2, an 888-point birthday gift and an exclusive profile cover.`],
       ["When does my points bonus start after upgrading?", () => `Your new tier's bonus applies to <b>new orders</b> after the upgrade. Orders that already earned points aren't recalculated. Past orders added when you link an account use your tier at that time.`],
@@ -110,7 +110,7 @@ const TEXT = {
     points: [
       ["How do I earn points from purchases?", () => `1 point for every RM1, multiplied by your tier bonus, rounded down. For example, RM65 with a ×1.2 bonus earns 78 points.`],
       ["Why are my points “pending”?", () => `Points are pending for ${PENDING_DAYS} days from the order date. If the order is cancelled or returned in that time, the points are cancelled automatically. After ${PENDING_DAYS} days they become available and you'll get a 🔔 notification.`],
-      ["How long until I see my points?", () => `We record orders manually, so they usually appear within 1–2 days, sometimes longer. Your points and orders update together.`],
+      ["How long until I see my points?", () => `We record orders manually, so they usually appear within 1 day; occasionally a network or system issue may cause a short delay. Once recorded, your points and orders update together.<br>New points show as “pending” at first and become available ${PENDING_DAYS} days after the order date, ready to redeem for rewards. If an order is confirmed as completed early, its points become available early too.`],
       ["Do orders before I linked my account count?", () => `Yes. Once you link an account, past orders in our system are counted too. Orders more than ${PENDING_DAYS} days old are available straight away.`],
       ["I have several accounts — how does it work?", () => `You can link as many Shopee / TikTok accounts as you like. Points from all of them go into one balance, and their spending counts together for your tier. Each account can only be linked to one member.`],
       ["When are points deducted?", () => `<ul><li><b>Cancelled or returned orders</b>: points for that order are removed, even if they were already available.</li><li><b>Order amount corrections</b>: points are recalculated on the correct amount.</li><li><b>Unlinking an account</b>: points from its orders are removed (shown as “Order unlinked”); they come back if you link it again.</li><li><b>Redeeming rewards</b> and <b>expired points</b> (see below).</li></ul>`],
@@ -121,10 +121,10 @@ const TEXT = {
     ],
     bind: [
       ["Why do I need an order number?", () => `It confirms the account is really yours, so no one else can claim points with your username.`],
-      ["Just ordered and linking failed?", () => `New orders take 1–2 days to enter our system. Try an older order, or try again later.`],
+      ["Just ordered and linking failed?", () => `New orders usually take about 1 day to enter our system. Try an older order, or try again later.`],
       ["How many accounts can I link?", () => `As many as you like — Shopee, TikTok, and more than one account on the same platform. Points and spending from all of them are combined. Linking both Shopee and TikTok also earns an extra perk.`],
       ["It says the account is already linked?", () => `Each username can only be linked to one member. If it wasn't you, please contact us.`],
-      ["How soon do I get points after linking?", () => `Points are calculated every hour, so points for your past orders appear within an hour of linking.`],
+      ["How soon do I get points after linking?", () => `Points for your past orders appear within about 30 minutes of linking.`],
       ["Can I unlink an account?", () => `Please contact us. Once unlinked, points from that account's orders are removed, and the record stays under “Removed links”.`],
       ["I changed my platform username?", () => `We match orders by username, so new orders under a new username may not match. Link the new username too, or contact us for help.`],
     ],
@@ -169,7 +169,7 @@ const TEXT = {
     tierPerk: (m, b) => `mata ×${m} · hadiah hari jadi ${b} mata`,
     noPerks: "Tiada ganjaran tambahan dibuka buat masa ini.",
     tier: [
-      ["Bagaimana tahap ahli dikira?", L => `Berdasarkan <b>perbelanjaan sah dalam 365 hari lepas</b>, digabungkan bagi semua akaun yang dipautkan. Pesanan yang dibatalkan dan dipulangkan tidak dikira. Tahap dikemas kini setiap jam.${tierList(L)}`],
+      ["Bagaimana tahap ahli dikira?", L => `Berdasarkan <b>perbelanjaan sah dalam 365 hari lepas</b>, digabungkan bagi semua akaun yang dipautkan. Pesanan yang dibatalkan dan dipulangkan tidak dikira. Tahap dikemas kini dalam kira-kira 30 minit selepas sebarang perubahan pesanan atau akaun.${tierList(L)}`],
       ["Bolehkah tahap saya turun?", () => `Selepas naik tahap, tahap baharu anda <b>sah 12 bulan</b> dan tidak akan turun dalam tempoh itu. Apabila tamat, kami lihat perbelanjaan 12 bulan lepas: capai <b>separuh</b> daripada syarat tahap anda dan ia disambung 12 bulan lagi; jika tidak, anda turun <b>satu tahap sahaja</b> (cth. Emas ke Perak), tidak terus ke Ahli Mochii. Loceng akan mengingatkan anda 30 hari sebelum tamat, berserta jumlah yang diperlukan. Tahap tertinggi anda akan sentiasa dipaparkan di halaman tahap.`],
       ["Apakah Black Elite?", () => `${BLACK_CROWN} Black Elite ialah status tertinggi dalam Mochii Member Club. Ia <b>melalui jemputan</b> — kami menjemput ahli yang paling setia — dan tiada tarikh tamat. Ia memberi mata ×2, hadiah hari jadi 888 mata dan kulit profil eksklusif.`],
       ["Bilakah bonus mata bermula selepas naik tahap?", () => `Bonus tahap baharu terpakai pada <b>pesanan baharu</b> selepas naik tahap. Pesanan yang sudah dapat mata tidak dikira semula. Pesanan lama yang ditambah semasa memautkan akaun menggunakan tahap anda pada masa itu.`],
@@ -180,7 +180,7 @@ const TEXT = {
     points: [
       ["Bagaimana mengumpul mata daripada pembelian?", () => `1 mata bagi setiap RM1, didarab dengan bonus tahap anda, dibundarkan ke bawah. Contohnya RM65 dengan bonus ×1.2 memberi 78 mata.`],
       ["Kenapa mata saya “belum disahkan”?", () => `Mata belum disahkan selama ${PENDING_DAYS} hari dari tarikh pesanan. Jika pesanan dibatalkan atau dipulangkan dalam tempoh itu, mata dibatalkan secara automatik. Selepas ${PENDING_DAYS} hari ia menjadi tersedia dan anda akan menerima 🔔 pemberitahuan.`],
-      ["Berapa lama sebelum mata dipaparkan?", () => `Pesanan direkodkan secara manual, jadi biasanya dipaparkan dalam 1–2 hari, kadang-kadang lebih lama. Mata dan pesanan dikemas kini serentak.`],
+      ["Berapa lama sebelum mata dipaparkan?", () => `Pesanan direkodkan secara manual, jadi biasanya dipaparkan dalam 1 hari; sekali-sekala masalah rangkaian atau sistem boleh menyebabkan sedikit kelewatan. Selepas direkodkan, mata dan pesanan dikemas kini serentak.<br>Mata baharu dipaparkan sebagai “belum disahkan” dahulu dan menjadi tersedia ${PENDING_DAYS} hari selepas tarikh pesanan, sedia untuk ditebus. Jika pesanan disahkan selesai lebih awal, matanya juga tersedia lebih awal.`],
       ["Adakah pesanan sebelum saya memautkan akaun dikira?", () => `Ya. Selepas memautkan akaun, pesanan lama dalam sistem kami turut dikira. Pesanan yang lebih daripada ${PENDING_DAYS} hari terus tersedia.`],
       ["Saya ada beberapa akaun — bagaimana?", () => `Anda boleh memautkan seberapa banyak akaun Shopee / TikTok. Mata daripada semua akaun masuk ke satu baki, dan perbelanjaannya digabungkan untuk tahap anda. Setiap akaun hanya boleh dipautkan kepada seorang ahli.`],
       ["Bilakah mata ditolak?", () => `<ul><li><b>Pesanan dibatalkan atau dipulangkan</b>: mata pesanan itu ditolak, walaupun sudah tersedia.</li><li><b>Pembetulan jumlah pesanan</b>: mata dikira semula ikut jumlah yang betul.</li><li><b>Menyahpautkan akaun</b>: mata daripada pesanannya ditolak (dipaparkan sebagai “Pesanan dinyahpaut”); ia dikembalikan jika dipautkan semula.</li><li><b>Menebus ganjaran</b> dan <b>mata luput</b> (lihat di bawah).</li></ul>`],
@@ -191,10 +191,10 @@ const TEXT = {
     ],
     bind: [
       ["Kenapa perlu nombor pesanan?", () => `Ia mengesahkan akaun itu benar-benar milik anda, supaya orang lain tidak boleh menuntut mata dengan nama pengguna anda.`],
-      ["Baru membuat pesanan dan gagal memautkan?", () => `Pesanan baharu mengambil masa 1–2 hari untuk masuk ke sistem kami. Cuba pesanan yang lebih lama, atau cuba lagi kemudian.`],
+      ["Baru membuat pesanan dan gagal memautkan?", () => `Pesanan baharu biasanya mengambil masa kira-kira 1 hari untuk masuk ke sistem kami. Cuba pesanan yang lebih lama, atau cuba lagi kemudian.`],
       ["Berapa banyak akaun boleh dipautkan?", () => `Tiada had — Shopee, TikTok, dan lebih daripada satu akaun pada platform yang sama. Mata dan perbelanjaan daripada semua akaun digabungkan. Memautkan kedua-dua Shopee dan TikTok juga memberi ganjaran tambahan.`],
       ["Dikatakan akaun sudah dipautkan?", () => `Setiap nama pengguna hanya boleh dipautkan kepada seorang ahli. Jika bukan anda, sila hubungi kami.`],
-      ["Berapa cepat saya dapat mata selepas memautkan?", () => `Mata dikira setiap jam, jadi mata untuk pesanan lama dipaparkan dalam masa sejam selepas memautkan.`],
+      ["Berapa cepat saya dapat mata selepas memautkan?", () => `Mata untuk pesanan lama dipaparkan dalam kira-kira 30 minit selepas memautkan.`],
       ["Bolehkah saya menyahpautkan akaun?", () => `Sila hubungi kami. Selepas dinyahpaut, mata daripada pesanan akaun itu ditolak, dan rekodnya kekal di bawah “Pautan yang telah dibuang”.`],
       ["Saya menukar nama pengguna platform?", () => `Kami memadankan pesanan ikut nama pengguna, jadi pesanan baharu dengan nama pengguna baharu mungkin tidak sepadan. Pautkan nama pengguna baharu juga, atau hubungi kami untuk bantuan.`],
     ],
