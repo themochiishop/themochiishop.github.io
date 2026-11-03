@@ -90,7 +90,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
     import {
-      requireMember, renderNav, esc, fmtDate, t, toDate, prizeDeadline, PRIZE_AUTO_COMPLETE_DAYS,
+      requireMember, renderNav, esc, fmtDate, t, tn, toDate, prizeDeadline, PRIZE_AUTO_COMPLETE_DAYS,
       addressHTML, redeemCode, toast, lang, SOCIAL_ICONS, bindWaTags
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, addressCardHTML } from "./js/address.js";
@@ -262,7 +262,7 @@
                   <span class="redeem-no">${redeemCode(p.id)}</span>
                 </div>
                 <div class="meta">${p.drawMonth ? esc(t("pz.from", { m: p.drawMonth })) + " · " : ""}${fmtDate(toDate(p.createdAt))}</div>
-                ${p.legacy ? `<div class="meta">📦 ${esc(t("pz.legacyNote"))}</div>` : p.note ? `<div class="meta">💬 ${esc(p.note)}</div>` : ""}
+                ${p.legacy ? `<div class="meta">📦 ${esc(t("pz.legacyNote"))}</div>` : p.note ? `<div class="meta">💬 ${esc(tn(p.note, p.noteI18n))}</div>` : ""}
               </div>
             </div>
             ${bar}
