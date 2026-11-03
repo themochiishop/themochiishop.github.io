@@ -262,7 +262,7 @@
                   <span class="redeem-no">${redeemCode(p.id)}</span>
                 </div>
                 <div class="meta">${p.drawMonth ? esc(t("pz.from", { m: p.drawMonth })) + " · " : ""}${fmtDate(toDate(p.createdAt))}</div>
-                ${p.note ? `<div class="meta">💬 ${esc(p.note)}</div>` : ""}
+                ${p.legacy ? `<div class="meta">📦 ${esc(t("pz.legacyNote"))}</div>` : p.note ? `<div class="meta">💬 ${esc(p.note)}</div>` : ""}
               </div>
             </div>
             ${bar}
