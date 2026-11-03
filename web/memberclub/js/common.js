@@ -5,10 +5,10 @@ import {
   doc, getDoc, setDoc, collection, collectionGroup, query, where, getDocs, orderBy, limit,
   onSnapshot, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { t, applyI18n, langSwitchHTML, bindLangSwitch, translateReason, lang } from "./i18n.js";
+import { t, tn, applyI18n, langSwitchHTML, bindLangSwitch, translateReason, lang } from "./i18n.js";
 import { ft } from "./feed-i18n.js";
 
-export { t, applyI18n, translateReason, lang } from "./i18n.js";
+export { t, tn, applyI18n, translateReason, lang } from "./i18n.js";
 
 // ---------- 单号格式规则（必须和 Google 表格同步脚本的 MS_PLATFORMS 一致） ----------
 export const PLATFORMS = [
@@ -942,10 +942,10 @@ function buildEvents() {
     const at = toDate(r.decidedAt);
     const v = { name: r.rewardName };
     if (at && r.status === "rejected") {
-      ev.push({ time: at, icon: "❌", title: t("notif.rejected", v), detail: r.note || "", link: "rewards.html" });
+      ev.push({ time: at, icon: "❌", title: t("notif.rejected", v), detail: tn(r.note, r.noteI18n), link: "rewards.html" });
     } else if (at && r.status !== "pending") {
       ev.push({ time: at, icon: "🎁", title: t(r.kind === "gift" ? "notif.approvedGift" : "notif.approved", v),
-        detail: r.couponCode ? t("notif.code", { code: r.couponCode }) : (r.note || ""), link: "rewards.html" });
+        detail: r.couponCode ? t("notif.code", { code: r.couponCode }) : tn(r.note, r.noteI18n), link: "rewards.html" });
     }
     // 📦 实体奖品：发货、配送异常、取消、完成、快自动完成
     const sh = toDate(r.shippedAt);
