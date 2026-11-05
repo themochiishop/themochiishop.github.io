@@ -245,3 +245,14 @@ h1{color:#281039;font-weight:850}
 .panel:has(.whatsapp-symbol) {
   padding: 20px;
 }
+/* Mochii Club 标题缩小 */
+.panel.primary .club-title {
+  font-size: 24px !important;
+}
+
+/* 手机端再小一点 */
+@media (max-width: 380px) {
+  .panel.primary .club-title {
+    font-size: 22px !important;
+  }
+}
