@@ -256,3 +256,24 @@ h1{color:#281039;font-weight:850}
     font-size: 22px !important;
   }
 }
+/* 手机端：四种语言整齐排列 */
+@media (max-width: 600px) {
+
+  .langs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    max-width: 340px;
+    margin: 0 auto 24px;
+  }
+
+  .langs button {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 10px 6px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+}
