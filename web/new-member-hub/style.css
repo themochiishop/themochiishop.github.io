@@ -202,3 +202,46 @@ h1{color:#281039;font-weight:850}
     font-size: 24px;
   }
 }
+/* ===== 优化卡片上下间距 ===== */
+
+/* 会员卡：Logo、标题、说明文字 */
+.panel.primary .top {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* Mochii Club 标题 */
+.panel.primary #member-title {
+  margin: 0 0 6px !important;
+  line-height: 1.2;
+}
+
+/* 会员说明文字 */
+.panel.primary #member-desc {
+  margin: 0 !important;
+  line-height: 1.5;
+}
+
+/* WhatsApp Channel 标题 */
+.panel:has(.whatsapp-symbol) #channel-title {
+  margin: 0 0 6px;
+}
+
+/* WhatsApp Channel 说明文字 */
+.panel:has(.whatsapp-symbol) #channel-desc {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* WhatsApp 卡片内容与按钮 */
+.panel:has(.whatsapp-symbol) .top {
+  margin-bottom: 16px;
+}
+
+/* 两张卡片统一内边距 */
+.panel.primary,
+.panel:has(.whatsapp-symbol) {
+  padding: 20px;
+}
