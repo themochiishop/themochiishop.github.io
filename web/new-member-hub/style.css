@@ -132,3 +132,25 @@ h1{color:#281039;font-weight:850}
   height: 31px;
   filter: brightness(0) invert(1);
 }
+/* Mochii Club 品牌标题 */
+.club-title {
+  font-size: 28px !important;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.club-title .mochii-text {
+  color: #FFFFFF;
+}
+
+.club-title .club-text {
+  color: #FF6FAE;
+}
+
+@media (max-width: 380px) {
+  .club-title {
+    font-size: 24px !important;
+  }
+}
