@@ -154,45 +154,50 @@ h1{color:#281039;font-weight:850}
     font-size: 24px !important;
   }
 }
-/* Mochii Club 标题与说明文字分行 */
-.panel.primary .top > div:last-child {
+/* Mochii Club 正确排版 */
+
+.panel.primary .top {
   display: flex;
-  flex-direction: column;
-  min-width: 0;
+  align-items: flex-start;
+  gap: 18px;
 }
 
-.panel.primary #member-title {
-  margin-bottom: 12px;
+/* Logo 固定尺寸 */
+.panel.primary .club-symbol {
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
 }
 
-.panel.primary #member-desc {
-  display: block;
-  width: 100%;
-  margin: 0 0 18px;
-}
-
-
-/* 标题和说明文字共用右侧一栏 */
-.panel.primary .top > div:last-child {
-  grid-column: 2;
+/* 标题与说明文字共用左边界 */
+.panel.primary .club-content {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  flex: 1;
   min-width: 0;
 }
 
-.panel.primary #member-title {
+/* 标题 */
+.panel.primary .club-title {
   margin: 0 0 12px;
   text-align: left;
+  font-size: 28px;
+  line-height: 1.2;
 }
 
+/* 说明文字：与 Mochii 的 M 左对齐 */
 .panel.primary #member-desc {
+  display: block;
   width: 100%;
   margin: 0 0 18px;
   text-align: left;
   line-height: 1.7;
 }
 
-.panel.primary #member-desc {
-  grid-column: 1 / -1;
+/* 手机端 */
+@media (max-width: 380px) {
+  .panel.primary .club-title {
+    font-size: 24px;
+  }
 }
