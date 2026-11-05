@@ -154,3 +154,30 @@ h1{color:#281039;font-weight:850}
     font-size: 24px !important;
   }
 }
+/* Mochii Club 标题与说明文字分行 */
+.panel.primary .top > div:last-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.panel.primary #member-title {
+  margin-bottom: 12px;
+}
+
+.panel.primary #member-desc {
+  display: block;
+  width: 100%;
+  margin: 0 0 18px;
+}
+
+/* 让 Logo、标题、说明文字分成两行 */
+.panel.primary .top {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: start;
+}
+
+.panel.primary #member-desc {
+  grid-column: 1 / -1;
+}
