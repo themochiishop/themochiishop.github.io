@@ -83,7 +83,7 @@ h1{color:#281039;font-weight:850}
 .panel:not(.primary):has(.whatsapp-symbol){background:#effcf3}
 .whatsapp-symbol{background:transparent;color:#078e42}
 .panel:has(.whatsapp-symbol) .cta.secondary{background:#078e42;border-radius:12px}
-.support-heading{font-size:24px;font-weight:850;color:#281039;margin-top:30px}
+.support-heading{font-size:21px;font-weight:850;color:#281039;margin-top:30px}
 .support{border-radius:23px;padding:18px 12px;text-align:center;display:flex;flex-direction:column;align-items:center}
 .support-icon{display:grid;place-items:center;width:49px;height:49px;margin:2px auto 3px}
 .support .shop-icon{color:#e95d91}
