@@ -89,7 +89,13 @@ h1{color:#281039;font-weight:850}
 .support:nth-child(2) .help-icon{color:#7c5cff}
 .support strong{font-size:14px;min-height:40px;display:flex;align-items:center;justify-content:center}
 .support small{font-size:12px;min-height:38px}
-.support .support-button,.support:nth-child(2) .support-button{background:#078e42;border-radius:12px;width:100%;margin-top:auto;padding:12px 6px}
+.support .support-button,.support:nth-child(2) .support-button{
+    background: #078e42;
+    border-radius: 12px;
+    width: 100%;
+    margin-top: 5px;
+    padding: 10px 6px;
+}
 .support:hover .support-button{background:#067537}
 .foot{margin-top:23px}
 @media(max-width:350px){.support-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.support{padding:12px 7px}.support strong{font-size:12px}.support .support-button{font-size:11px}}
