@@ -47,3 +47,16 @@ h1{text-align:center;font-size:clamp(28px,7vw,37px);line-height:1.13;letter-spac
 a:focus-visible,button:focus-visible{outline:3px solid var(--purple);outline-offset:3px}
 @media(max-width:350px){main{padding-left:14px;padding-right:14px}.support-grid{grid-template-columns:1fr}.support small{min-height:0}}
 @media(prefers-reduced-motion:no-preference){button,.cta,.support{transition:transform .15s ease,background-color .15s ease}button:active,.cta:active,.support:active{transform:scale(.985)}}
+
+/* Club identity + WhatsApp channel + clickable support buttons */
+.primary .club-symbol{padding:0;overflow:hidden;background:#fff;border:1px solid #ff6fae55}
+.club-symbol img{width:100%;height:100%;display:block;object-fit:cover}
+.panel:not(.primary):has(.whatsapp-symbol){border-color:#bfe8ce;background:#f7fff9}
+.whatsapp-symbol{background:#e1f7e9;color:#128c4a}
+.panel:has(.whatsapp-symbol) h2{color:#075e34}
+.panel:has(.whatsapp-symbol) .cta.secondary{background:#128c4a;color:#fff}
+.panel:has(.whatsapp-symbol) .cta.secondary:hover{background:#0c743b}
+.support-button{display:block;margin-top:12px;padding:10px 7px;text-align:center;border-radius:9px;background:#e0628a;color:#fff;font-size:12px;font-weight:800}
+.support:nth-child(2) .support-button{background:#7c5cff}
+.support:hover .support-button{filter:brightness(.93)}
+.support:focus-visible{outline:3px solid #7c5cff;outline-offset:3px}
