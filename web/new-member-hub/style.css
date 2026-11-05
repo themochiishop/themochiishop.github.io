@@ -111,3 +111,18 @@ h1{color:#281039;font-weight:850}
   height: 32px;
   overflow: visible;
 }
+.whatsapp-symbol {
+  width: 52px;
+  height: 52px;
+  background: #25D366;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.whatsapp-symbol img {
+  width: 31px;
+  height: 31px;
+  filter: brightness(0) invert(1);
+}
