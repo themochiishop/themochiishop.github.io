@@ -60,3 +60,8 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--purple);outline-off
 .support:nth-child(2) .support-button{background:#7c5cff}
 .support:hover .support-button{filter:brightness(.93)}
 .support:focus-visible{outline:3px solid #7c5cff;outline-offset:3px}
+
+/* Unified WhatsApp support buttons */
+.support .support-button,.support:nth-child(2) .support-button{background:#128c4a;color:#fff}
+.support:hover .support-button{background:#0c743b;filter:none}
+.support .support-button{margin-top:14px}
