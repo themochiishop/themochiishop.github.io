@@ -171,11 +171,33 @@ h1{color:#281039;font-weight:850}
   margin: 0 0 18px;
 }
 
-/* 让 Logo、标题、说明文字分成两行 */
+/* Logo 左边，标题和说明文字右边上下排列 */
 .panel.primary .top {
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
+  grid-template-columns: 80px minmax(0, 1fr);
+  column-gap: 18px;
   align-items: start;
+}
+
+/* 标题和说明文字共用右侧一栏 */
+.panel.primary .top > div:last-child {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.panel.primary #member-title {
+  margin: 0 0 12px;
+  text-align: left;
+}
+
+.panel.primary #member-desc {
+  width: 100%;
+  margin: 0 0 18px;
+  text-align: left;
+  line-height: 1.7;
 }
 
 .panel.primary #member-desc {
