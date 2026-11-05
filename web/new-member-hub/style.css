@@ -171,13 +171,6 @@ h1{color:#281039;font-weight:850}
   margin: 0 0 18px;
 }
 
-/* Logo 左边，标题和说明文字右边上下排列 */
-.panel.primary .top {
-  display: grid;
-  grid-template-columns: 80px minmax(0, 1fr);
-  column-gap: 18px;
-  align-items: start;
-}
 
 /* 标题和说明文字共用右侧一栏 */
 .panel.primary .top > div:last-child {
