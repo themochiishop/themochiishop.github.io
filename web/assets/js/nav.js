@@ -93,12 +93,12 @@ if (c.live) {
 
 // Mochii Club 专属双色文字
 if (c.label.trim().toLowerCase() === 'mochii club') {
-  t.appendChild(document.createTextNode('Mochii '));
-
+t.appendChild(document.createTextNode('Mochii'));
   const pink = document.createElement('span');
   pink.className = 'mochii-club-pink';
   pink.textContent = 'Club';
   t.appendChild(pink);
+  pink.style.marginLeft = '4px';
 } else {
   t.appendChild(document.createTextNode(c.label));
 }
