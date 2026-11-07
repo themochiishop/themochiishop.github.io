@@ -679,3 +679,7 @@ footer a[href^="mailto:"]:hover { color: #fff; text-decoration: underline; }
 /* ===== 领奖说明里的链接 ===== */
 .draw-terms a { color: var(--pink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .draw-terms a:hover { color: #c94f76; }
+/* ===== Mochii Club 子菜单专属双色文字 ===== */
+.nav ul.sub a .sub-t .mochii-club-pink {
+  color: #EC5AA5;
+}
