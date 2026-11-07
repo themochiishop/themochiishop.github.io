@@ -643,6 +643,7 @@ a.home-feed:hover { text-decoration: none; border-color: var(--accent); }
 .mall-item.sold-out .ph { opacity: .5; }
 
 /* ---------- 🧾 券码框 ---------- */
+.code-hint { font-size: .74rem; color: var(--muted); margin: 4px 0 0 2px; line-height: 1.4; }
 .code-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 @media (max-width: 480px) {
