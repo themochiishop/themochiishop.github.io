@@ -82,10 +82,28 @@ function makeDropdown(x, here, kids) {
   kids.forEach(c => {
     const a = makeLink(c, here, 'active');
     a.textContent = '';
-    const t = document.createElement('span'); t.className = 'sub-t';
-    if (c.live) { const d = document.createElement('i'); d.className = 'sub-live'; t.appendChild(d); }
-    t.appendChild(document.createTextNode(c.label));
-    a.appendChild(t);
+  const t = document.createElement('span');
+t.className = 'sub-t';
+
+if (c.live) {
+  const d = document.createElement('i');
+  d.className = 'sub-live';
+  t.appendChild(d);
+}
+
+// Mochii Club 专属双色文字
+if (c.label.trim().toLowerCase() === 'mochii club') {
+  t.appendChild(document.createTextNode('Mochii '));
+
+  const pink = document.createElement('span');
+  pink.className = 'mochii-club-pink';
+  pink.textContent = 'Club';
+  t.appendChild(pink);
+} else {
+  t.appendChild(document.createTextNode(c.label));
+}
+
+a.appendChild(t);
     if (c.note) { const n = document.createElement('small'); n.textContent = c.note; a.appendChild(n); }
     const s = document.createElement('li'); s.appendChild(a); sub.appendChild(s);
   });
