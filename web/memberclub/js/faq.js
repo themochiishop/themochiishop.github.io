@@ -73,7 +73,7 @@ const TEXT = {
     ],
     prize: [
       ["怎么知道我有没有中奖？", () => `每月抽奖结束后，得奖名单会放在网站的 <a href="/monthly-draw/" target="_blank" rel="noopener">Monthly Draw</a> 页面。我们把奖品放进你的俱乐部后，「中奖记录」和首页会出现，铃铛也会通知你。`],
-      ["中奖后要怎么领奖？", () => `<ol><li>在「我的 → 绑定账号」绑定你中奖的那张订单。</li><li>私讯客服说你已经注册好了。</li><li>奖品出现在「中奖记录」后，按「领取奖品」。奖品会在你下次下单时一起寄出；体积较大的奖品会单独寄，领取时要填收货地址。</li></ol>`],
+      ["中奖后要怎么领奖？", () => `<ol><li>在「我的 → 个人资料 → 关联平台」绑定你中奖的那张订单。</li><li>等待管理员确认并绑定中奖订单。</li><li>奖品出现在「中奖记录」后，按「领取奖品」。奖品会在你下次下单时一起寄出；体积较大的奖品会单独寄，领取时要填收货地址。</li></ol>`],
       ["领奖有期限吗？", () => `有。奖品放进来后 <b>30 天</b>内要按「领取奖品」，期限显示在每个奖品下面，到期前 7 天铃铛会提醒你。过期会自动作废；来不及的话，请在期限前联系客服。`],
       ["奖品怎么寄？「随单发送」是什么？", () => `奖品<b>默认随单发送</b>：领取后，你下次在 Shopee 或 TikTok 下单时，奖品会和你买的商品放在同一个包裹寄出，顺便挑点喜欢的吧！只有奖品体积较大、放不进订单包裹时，我们才会<b>单独寄出</b>，这类奖品领取时要填收货地址。`],
       ["领取后多久寄出？怎么查？", () => `随单发送的奖品，会在你下一张订单发货时一起寄出；单独寄出的奖品，审核通过后尽快寄出。进度条会显示到哪一步，每一步铃铛都会通知；发货后会显示运单号和查询链接。`],
@@ -145,7 +145,7 @@ const TEXT = {
     ],
     prize: [
       ["How do I know if I won?", () => `After each Monthly Draw, the winners are posted on the <a href="/monthly-draw/" target="_blank" rel="noopener">Monthly Draw</a> page. Once we add your prize to the club, it appears in "My Prizes" and on the home page, and the bell notifies you.`],
-      ["I won — how do I claim my prize?", () => `<ol><li>Link the order you won with under "Me → Linked Accounts".</li><li>Message our customer service to let us know you've joined.</li><li>When the prize appears in "My Prizes", tap "Claim prize". It ships with your next order; large prizes are sent separately, so you'll enter a delivery address when claiming.</li></ol>`],
+      ["I won — how do I claim my prize?", () => `<ol><li>Link the order you won with under "Me → Profile → Linked Platforms".</li><li>Wait for our admin to confirm and link your winning order.</li><li>When the prize appears in "My Prizes", tap "Claim prize". It ships with your next order; large prizes are sent separately, so you'll enter a delivery address when claiming.</li></ol>`],
       ["Is there a deadline?", () => `Yes. Please tap "Claim prize" within <b>30 days</b> of it being added — the date is shown under each prize, and the bell reminds you 7 days before. Unclaimed prizes expire automatically; if you need more time, contact us before the deadline.`],
       ["How is my prize sent? What does \"ships with your order\" mean?", () => `Prizes <b>ship with your next order</b> by default: after you claim, the next time you order on Shopee or TikTok, your prize goes in the same parcel — a great time to pick something you like! Only prizes too large for an order parcel are <b>sent separately</b>; for those, you'll enter a delivery address when claiming.`],
       ["How soon is it shipped? How do I track it?", () => `A prize that ships with your order goes out with your next order; a prize sent separately ships as soon as it's approved. The progress bar shows each step and the bell notifies you; once shipped, the tracking number and link appear.`],
@@ -217,7 +217,7 @@ const TEXT = {
     ],
     prize: [
       ["Bagaimana saya tahu jika saya menang?", () => `Selepas setiap Cabutan Bulanan, senarai pemenang dipaparkan di halaman <a href="/monthly-draw/" target="_blank" rel="noopener">Monthly Draw</a>. Selepas kami tambah hadiah ke kelab anda, ia muncul di "Hadiah Saya" dan halaman utama, dan loceng akan memaklumkan anda.`],
-      ["Saya menang — bagaimana nak tuntut?", () => `<ol><li>Pautkan pesanan yang menang di "Saya → Pautan Akaun".</li><li>Mesej khidmat pelanggan kami bahawa anda sudah mendaftar.</li><li>Apabila hadiah muncul di "Hadiah Saya", ketik "Tuntut hadiah". Ia dihantar bersama pesanan anda yang seterusnya; hadiah yang besar dihantar berasingan, jadi anda perlu isi alamat semasa menuntut.</li></ol>`],
+      ["Saya menang — bagaimana nak tuntut?", () => `<ol><li>Pautkan pesanan yang menang di "Saya → Profil → Platform Dipautkan".</li><li>Tunggu admin kami mengesahkan dan memautkan pesanan anda yang menang.</li><li>Apabila hadiah muncul di "Hadiah Saya", ketik "Tuntut hadiah". Ia dihantar bersama pesanan anda yang seterusnya; hadiah yang besar dihantar berasingan, jadi anda perlu isi alamat semasa menuntut.</li></ol>`],
       ["Ada tarikh akhir?", () => `Ya. Sila ketik "Tuntut hadiah" dalam <b>30 hari</b> selepas ia ditambah — tarikhnya dipaparkan di bawah setiap hadiah, dan loceng akan mengingatkan 7 hari sebelumnya. Hadiah yang tidak dituntut akan tamat tempoh secara automatik; jika perlukan masa, hubungi kami sebelum tarikh akhir.`],
       ["Bagaimana hadiah dihantar? Apa maksud \"dihantar bersama pesanan\"?", () => `Secara lalai, hadiah <b>dihantar bersama pesanan anda yang seterusnya</b>: selepas dituntut, kali seterusnya anda membeli di Shopee atau TikTok, hadiah dimasukkan dalam bungkusan yang sama — masa yang sesuai untuk pilih barang kegemaran anda! Hanya hadiah yang terlalu besar untuk bungkusan pesanan akan <b>dihantar berasingan</b>; untuk hadiah ini, anda perlu isi alamat semasa menuntut.`],
       ["Bila ia dihantar? Bagaimana nak jejak?", () => `Hadiah yang dihantar bersama pesanan akan dihantar dengan pesanan anda yang seterusnya; hadiah berasingan dihantar secepat mungkin selepas diluluskan. Bar kemajuan menunjukkan setiap langkah dan loceng memaklumkan anda; selepas dihantar, nombor penjejakan dan pautan akan dipaparkan.`],

@@ -982,7 +982,7 @@ function buildEvents() {
     const cc = toDate(p.cancelledAt);
     if (cc && p.status === "cancelled") ev.push({ time: cc, icon: p.autoExpired ? "⌛" : "↩️",
       title: t(p.autoExpired ? "notif.prizeExpired" : "notif.prizeCancelled", v),
-      detail: p.autoExpired ? "" : p.cancelNote || "", link: "prizes.html" });
+      detail: p.autoExpired ? "" : tn(p.cancelNote, p.cancelNoteI18n), link: "prizes.html" });
     const end = p.status === "unclaimed" ? prizeDeadline(p) : null;
     if (end && end > now) ev.push({ time: new Date(end.getTime() - PRIZE_REMIND_DAYS * 86400000), icon: "⏰",
       title: t("notif.prizeExpiring", v), detail: t("pz.deadline", { d: fmtDate(end) }), link: "prizes.html" });
