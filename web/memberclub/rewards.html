@@ -119,6 +119,12 @@
         }
       }
 
+      // 💡 优惠码使用提示：奖品资料的 couponFormat 记着是哪个平台的券（自订格式 / 找不到 → 两个平台都写）
+      function codeHint(r) {
+        const p = { shopee: "Shopee", tiktok: "TikTok" }[(rewardInfo[r.rewardId] || {}).couponFormat];
+        return p ? t("rw.codeHint", { p }) : t("rw.codeHintAny");
+      }
+
       // 商品图片：没有图片就显示类型图标
       function thumb(r) {
         const info = rewardInfo[r.rewardId] || {};
@@ -215,7 +221,8 @@
                   <span class="redeem-no">${redeemCode(r.id)}</span>
                 </div>
                 <div class="meta">${t("unit.pts", { n: r.cost })} · ${t("rw.appliedOn", { d: fmtDate(r.createdAt) })}${r.decidedAt && r.kind !== "gift" ? " · " + t("rw.decidedOn", { d: fmtDate(r.decidedAt) }) : ""}</div>
-                ${r.couponCode ? `<div class="code"><span class="code-txt">${t("rw.code")} <b>${esc(r.couponCode)}</b></span> <button class="btn btn-ghost btn-inline" data-copy="${esc(r.couponCode)}">${t("rw.copy")}</button></div>` : ""}
+                ${r.couponCode ? `<div class="code"><span class="code-txt">${t("rw.code")} <b>${esc(r.couponCode)}</b></span> <button class="btn btn-ghost btn-inline" data-copy="${esc(r.couponCode)}">${t("rw.copy")}</button></div>
+                <div class="code-hint">💡 ${esc(codeHint(r))}</div>` : ""}
                 ${r.note ? `<div class="meta">${t("rw.note")}${esc(tn(r.note, r.noteI18n))}</div>` : ""}
                 ${r.adminCancelled && r.cancelNote ? `<div class="meta">${esc(r.cancelNote)}</div>` : ""}
               </div>
