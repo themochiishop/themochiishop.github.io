@@ -6,6 +6,7 @@
   <meta name="color-scheme" content="dark">
   <title>Mochii Feed · Mochii Club</title>
   <link rel="stylesheet" href="css/member.css">
+  <script src="js/theme-init.js"></script>
   <style>
     /* ===== 沿用原本 Feed 的瀑布流卡片布局 ===== */
     .feed-page { max-width: 860px; margin: 0 auto; padding: 14px 6px 90px; }
@@ -365,8 +366,8 @@
       collection, collectionGroup, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit, startAfter,
       getCountFromServer, writeBatch, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-    import { renderNav, initBell, esc, toDate, toast, compressImage, isInternalMember, t, lang, BLACK_CROWN } from "./js/common.js";
-    import { applyI18n, langSwitchHTML, bindLangSwitch } from "./js/i18n.js";
+    import { renderNav, initBell, esc, toDate, toast, compressImage, isInternalMember, t, lang, BLACK_CROWN, fillContacts, claimBonuses, toastBonuses, invalidateMemberCache } from "./js/common.js";
+    import { applyI18n, langSwitchHTML, bindLangSwitch, settingsHTML, bindSettings } from "./js/i18n.js";
     import { ft } from "./js/feed-i18n.js";
 
     const $ = id => document.getElementById(id);
@@ -544,9 +545,10 @@
       $("topbar").innerHTML = `
         <div class="topbar-inner">
           <a class="brand" href="index.html"><img class="brand-logo" src="img/member.jpg" alt=""><span>Mochii <b>Club</b></span></a>
-          <div class="topbar-tools">${langSwitchHTML()}</div>
+          <div class="topbar-tools">${settingsHTML()}</div>
         </div>`;
-      bindLangSwitch($("topbar"));
+      bindSettings($("topbar"));
+      fillContacts($("topbar"));
     }
 
     function renderHint() {
@@ -1331,6 +1333,9 @@
       $("eSave").disabled = true;
       try {
         await syncMyFeed({ avatar: draftAvatar, bio: $("eBio").value.trim().slice(0, 60) });
+        // 🖼️ 第一次上传自己的头像 → 送积分（系统头像、名字第一个字不算）
+        if (/^data:image\//.test(draftAvatar || "")) claimBonuses(me.user.uid, { withAvatar: true })
+          .then(r => { if (r.claimed.length) { invalidateMemberCache(); toastBonuses(r.claimed); } }).catch(e => console.warn("avatar bonus", e));
         closeModal("editor");
         toast(ft("saved"));
         await renderProfileHead();

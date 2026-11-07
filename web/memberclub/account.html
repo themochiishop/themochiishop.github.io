@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n-title="acc.pageTitle">Member Tier · The Mochii Shop</title>
   <link rel="stylesheet" href="css/member.css">
+  <script src="js/theme-init.js"></script>
 </head>
 <body class="loading">
   <header id="topbar"></header>
@@ -181,7 +182,7 @@
 
       // ---------- 🎁 额外福利（后台可设定） ----------
       const got = new Set(bal.ledger.map(x => (BONUSES.find(b => b.reason === x.reason) || {}).key).filter(Boolean));
-      const HREF = { welcome: "profile.html#bind", birthday: "profile.html", whatsapp: "profile.html#phone", platform2: "profile.html#bind" };
+      const HREF = { welcome: "profile.html#bind", birthday: "profile.html", whatsapp: "profile.html#phone", platform2: "profile.html#bind", avatar: "feed.html#me" };
       const tasks = activeBonuses().map(b => ({ key: b.key, href: HREF[b.key], ok: got.has(b.key) }));
       $("welcomeLine").textContent = bonusActive("welcome") ? t("acc.welcomeBonus", { n: bonusPoints("welcome") }) : "";
       const custom = customPerks();

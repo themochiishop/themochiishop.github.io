@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n-title="rw.pageTitle">Rewards · The Mochii Shop</title>
   <link rel="stylesheet" href="css/member.css">
+  <script src="js/theme-init.js"></script>
 </head>
 <body class="loading">
   <header id="topbar"></header>
@@ -217,10 +218,10 @@
               ${thumb(r)}
               <div class="redeem-body">
                 <div class="redeem-top">
-                  <div class="title">${esc(r.rewardName)} ${statusTag(r)}</div>
+                  <div class="title">${esc(r.rewardName)}${r.variantName ? ` <span class="tag">🎨 ${esc(r.variantName)}</span>` : ""} ${statusTag(r)}</div>
                   <span class="redeem-no">${redeemCode(r.id)}</span>
                 </div>
-                <div class="meta">${t("unit.pts", { n: r.cost })} · ${t("rw.appliedOn", { d: fmtDate(r.createdAt) })}${r.decidedAt && r.kind !== "gift" ? " · " + t("rw.decidedOn", { d: fmtDate(r.decidedAt) }) : ""}</div>
+                <div class="meta">${r.gift ? "🎁 " + esc(t("rw.perkGift", { why: r.giftReason || "" })) : t("unit.pts", { n: r.cost })} · ${t("rw.appliedOn", { d: fmtDate(r.createdAt) })}${r.decidedAt && r.kind !== "gift" ? " · " + t("rw.decidedOn", { d: fmtDate(r.decidedAt) }) : ""}</div>
                 ${r.couponCode ? `<div class="code"><span class="code-txt">${t("rw.code")} <b>${esc(r.couponCode)}</b></span> <button class="btn btn-ghost btn-inline" data-copy="${esc(r.couponCode)}">${t("rw.copy")}</button></div>
                 <div class="code-hint">💡 ${esc(codeHint(r))}</div>` : ""}
                 ${r.note ? `<div class="meta">${t("rw.note")}${esc(tn(r.note, r.noteI18n))}</div>` : ""}

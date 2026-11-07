@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n-title="pzp.pageTitle">My Prizes · Mochii Club</title>
   <link rel="stylesheet" href="css/member.css">
+  <script src="js/theme-init.js"></script>
 </head>
 <body class="loading">
   <header id="topbar"></header>
@@ -252,6 +253,9 @@
         const dlv = p.delivery === "separate" ? "separate" : "withOrder";
         const deadline = prizeDeadline(p);
         const left = deadline ? (deadline - Date.now()) / 86400000 : 99;
+        // 🔗 合并寄出：同一组的其他奖品
+        const sib = bundleOf(p).filter(x => x.id !== p.id);
+        const toClaim = p.status === "unclaimed" ? bundleOf(p).filter(x => x.status === "unclaimed").length : 0;
         return `
           <li id="p-${esc(p.id)}" class="redeem-li gift-item pz-item pz-${esc(p.status)}">
             <div class="redeem-row">
@@ -266,6 +270,7 @@
               </div>
             </div>
             ${bar}
+            ${sib.length ? `<div class="pz-bundle">🔗 ${esc(t("pz.bundle", { names: sib.map(x => x.prizeName).join("、") }))}</div>` : ""}
             <div class="pz-dlv">
               <span class="pz-dlv-ico">${dlv === "separate" ? "🚚" : "📦"}</span>
               <div><b>${t("pz.dlv." + dlv)}</b><div class="muted">${t("pz.dlv." + dlv + "Sub")}</div></div>
@@ -284,10 +289,12 @@
             ${p.status === "shipped" && toDate(p.shippedAt) ? `<div class="muted gift-auto">${esc(t("pz.autoNote", { d: fmtDate(new Date(toDate(p.shippedAt).getTime() + PRIZE_AUTO_COMPLETE_DAYS * 86400000)) }))}</div>` : ""}
             ${p.status === "completed" && p.autoCompleted ? `<div class="muted gift-auto">✅ ${esc(t("gift.autoDone"))}</div>` : ""}
             ${p.status === "cancelled" ? (p.autoExpired ? `<div class="meta">⏰ ${esc(t("pz.expiredNote"))}</div>` : p.cancelNote ? `<div class="meta">${esc(tn(p.cancelNote, p.cancelNoteI18n))}</div>` : "") : ""}
-            ${p.status === "unclaimed" ? `<button class="btn btn-primary gift-confirm pz-claim" data-claim="${esc(p.id)}">${t("pz.claim")}</button>` : ""}
+            ${p.status === "unclaimed" ? `<button class="btn btn-primary gift-confirm pz-claim" data-claim="${esc(p.id)}">${toClaim > 1 ? t("pz.claimAll", { n: toClaim }) : t("pz.claim")}</button>` : ""}
             ${p.status === "shipped" ? `<button class="btn btn-primary gift-confirm" data-got="${esc(p.id)}">${t("pz.receivedBtn")}</button>` : ""}
           </li>`;
       }
+
+      const bundleOf = p => p.bundleId ? prizes.filter(x => x.bundleId === p.bundleId && x.status !== "cancelled") : [p];
 
       function renderPrizes() {
         const active = prizes.filter(p => ["unclaimed", "claimed", "approved", "shipped"].includes(p.status));
@@ -345,12 +352,13 @@
         $("pzModal").querySelector("h2").textContent = t(edit ? "gift.editAddr" : "pz.claimTitle");
         $("pzSubmit").textContent = t(edit ? "prof.save" : "pz.claimBtn");
         const sep = p.delivery === "separate";
-        $("pzInfo").innerHTML = `
+        const group = edit ? [p] : bundleOf(p).filter(x => x.status === "unclaimed");
+        $("pzInfo").innerHTML = group.map(x => `
           <div class="redeem-row" style="margin-top:6px">
-            ${p.prizeImage ? `<img class="redeem-thumb" src="${esc(p.prizeImage)}" alt="">` : `<span class="redeem-thumb">🏆</span>`}
-            <div class="redeem-body"><div class="title">${esc(p.prizeName)}</div>
+            ${x.prizeImage ? `<img class="redeem-thumb" src="${esc(x.prizeImage)}" alt="">` : `<span class="redeem-thumb">🏆</span>`}
+            <div class="redeem-body"><div class="title">${esc(x.prizeName)}</div>
               <div class="meta">${t("pz.dlv." + (sep ? "separate" : "withOrder"))}</div></div>
-          </div>`;
+          </div>`).join("");
         $("pzAddr").classList.toggle("hidden", !sep);
         $("pzWithOrder").classList.toggle("hidden", sep);
         if (sep) {
@@ -376,7 +384,10 @@
         }
         $("pzSubmit").disabled = true;
         try {
-          await updateDoc(doc(db, "prizeWins", pzId), data);
+          // 🔗 合并寄出：同一组还没领取的奖品一起领取（用同一个地址）
+          const ids = pzEdit ? [pzId] : bundleOf(p).filter(x => x.status === "unclaimed" && x.delivery === p.delivery).map(x => x.id);
+          if (!ids.includes(pzId)) ids.unshift(pzId);
+          for (const id of ids) await updateDoc(doc(db, "prizeWins", id), data);
           $("pzModal").classList.add("hidden");
           if (!pzEdit) toast(t("pz.claimed"));
         } catch (err) { pzMsg(t("pz.fail") + err.message, "err"); }

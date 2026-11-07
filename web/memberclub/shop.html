@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title data-i18n-title="shop.pageTitle">Rewards Mall · Mochii Club</title>
   <link rel="stylesheet" href="css/member.css">
+  <script src="js/theme-init.js"></script>
 </head>
 <body class="loading">
   <header id="topbar"></header>
@@ -107,6 +108,23 @@
         }
       }
 
+      // 🎨 款式（后台「商城奖品」设定）：照顺序排好
+      const varsOf = r => r.type === "coupon" ? [] : Object.entries(r.variants || {}).map(([id, v]) => ({ id, ...v }))
+        .filter(v => v.name).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      // 滑动时更新 1/5；左右箭头（电脑用）
+      document.addEventListener("scroll", e => {
+        const tr = e.target.closest && e.target.closest(".vtrack");
+        if (!tr) return;
+        const sl = tr.parentElement, n = tr.children.length;
+        const i = Math.max(0, Math.min(n - 1, Math.round(tr.scrollLeft / Math.max(1, tr.clientWidth))));
+        sl.dataset.idx = i;
+        sl.querySelector(".vcount").textContent = `${i + 1}/${n}`;
+      }, true);
+      function slideTo(sl, dir) {
+        const tr = sl.querySelector(".vtrack");
+        tr.scrollBy({ left: dir * tr.clientWidth, behavior: "smooth" });
+      }
+
       // 🔁 每位会员限兑次数：这一期（换新码之后）已经兑换几次，拒绝和取消的不算
       function usedOf(r) {
         const since = toDate(r.roundSince);
@@ -135,7 +153,13 @@
           ${es ? `<div class="ending-line">${esc(t("shop.endingSoon"))} · ${esc(t("shop.endsOn", { d: fmtDate(es.end, true) }))}</div>` : ""}`;
         // 🔁 限兑次数：只在详情里显示
         const limitLine = max ? `<div class="sub">${esc(full && r.type === "coupon" ? t("rw.limitNext") : t("rw.limitLine", { max, used }))}</div>` : "";
-        const pic = `${r.image ? `<img src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">` : ty.icon}
+        const vs = varsOf(r);
+        // 🎨 有款式：主图 + 每一款图片可以左右滑动，下面显示 1/5、2/5…
+        const one = (img, alt) => img ? `<img src="${esc(img)}" alt="${esc(alt)}" loading="lazy">` : ty.icon;
+        const pic = `${vs.length ? `<div class="vslider" data-vs="${esc(r.id)}" data-idx="0">
+            <div class="vtrack">${[{ image: r.image, name: "" }, ...vs].map((v, i) => `<div class="vslide">${one(v.image || (i ? "" : r.image), v.name || r.name)}${i ? `<span class="vname">${esc(v.name)}${typeof v.stock === "number" && v.stock <= 0 ? " · " + esc(t("rw.soldOut")) : ""}</span>` : ""}</div>`).join("")}</div>
+            <button type="button" class="vnav prev" data-vnav="-1" aria-label="prev">‹</button><button type="button" class="vnav next" data-vnav="1" aria-label="next">›</button>
+            <span class="vcount">1/${vs.length + 1}</span></div>` : one(r.image, r.name)}
           ${lockOverlayHTML(r)}
           ${es ? `<span class="ending-badge">⏰ ${esc(es.label)}</span>` : ""}`;
         return { kind: r.type === "coupon" ? "coupon" : "gift", soldOut, locked, btn, subs, limitLine, pic };
@@ -226,7 +250,7 @@
         render();
       });
       // 兑换
-      async function submitRedeem(r, address) {
+      async function submitRedeem(r, address, variant) {
         const data = {
           uid: user.uid,
           rewardId: r.id,
@@ -238,19 +262,29 @@
         };
         if (data.kind === "gift") data.delivery = "withOrder";   // 预设随单寄送；要单独寄出由管理员在审核时改
         if (address) data.address = address;
+        if (variant) { data.variantId = variant.id; data.variantName = variant.name; }
         const ref = await addDoc(collection(db, "redemptions"), data);
         return ref.id;
       }
 
-           async function startRedeem(r, btn) {
+           async function startRedeem(r, btn, slide = 0) {
         if (!r || lockState(r) || offShelf(r)) return;   // 未开放 / 已下架
         if (limitOf(r) && usedOf(r) >= limitOf(r)) return;   // 本期已换满
         const gift = r.type !== "coupon";   // 实体奖品：随单寄送，不用先填地址
-        if (!confirm(t(gift ? "rw.confirmGift" : "rw.confirm", { name: r.name, cost: r.cost }))) return;
+        // 🎨 有款式：正在看哪一款就是哪一款；在主图上就先选款式
+        const vs = varsOf(r);
+        let variant = null;
+        if (vs.length) {
+          variant = slide > 0 ? vs[slide - 1] : await pickVariant(r);
+          if (!variant) return;
+          if (typeof variant.stock === "number" && variant.stock <= 0) { setMsg(t("rw.variantOut", { v: variant.name }), "err"); return; }
+        }
+        const shown = variant ? `${r.name}（${variant.name}）` : r.name;
+        if (!confirm(t(gift ? "rw.confirmGift" : "rw.confirm", { name: shown, cost: r.cost }))) return;
         btn.disabled = true;
         setMsg(t("rw.submitting"));
         try {
-          const newId = await submitRedeem(r, null);
+          const newId = await submitRedeem(r, null, variant);
           setMsg(t(gift ? "rw.submittedGift" : "rw.submitted", { name: r.name }), "ok");
           location.href = "rewards.html#r-" + newId;   // 自动跳到兑换记录
         } catch (err) {
@@ -261,19 +295,55 @@
 
       // 卡片：按「兑换」直接兑换；点图片 / 名称 / 短说明打开详情
       $("rewardGrid").addEventListener("click", e => {
+        const nv = e.target.closest("[data-vnav]");
+        if (nv) { e.stopPropagation(); slideTo(nv.closest(".vslider"), +nv.dataset.vnav); return; }
         const b = e.target.closest("[data-redeem]");
-        if (b) { startRedeem(rewards.find(x => x.id === b.dataset.redeem), b); return; }
+        if (b) { startRedeem(rewards.find(x => x.id === b.dataset.redeem), b, slideIdx(b.closest(".shop-item"))); return; }
         const d = e.target.closest("[data-detail]");
         if (d) openDetail(d.dataset.detail);
       });
       // 详情里的「兑换」
       $("dtBody").addEventListener("click", e => {
+        const nv = e.target.closest("[data-vnav]");
+        if (nv) { e.stopPropagation(); slideTo(nv.closest(".vslider"), +nv.dataset.vnav); return; }
         const b = e.target.closest("[data-redeem]");
         if (!b) return;
         const r = rewards.find(x => x.id === b.dataset.redeem);
+        const idx = slideIdx($("dtBody"));
         closeDetail();
-        startRedeem(r, b);
+        startRedeem(r, b, idx);
       });
+      const slideIdx = root => { const sl = root && root.querySelector(".vslider"); return sl ? +sl.dataset.idx || 0 : 0; };
+
+      // 🎨 选款式（在主图上按兑换时）
+      function pickVariant(r) {
+        return new Promise(resolve => {
+          let m = document.getElementById("vpModal");
+          if (!m) {
+            document.body.insertAdjacentHTML("beforeend", `<div id="vpModal" class="modal hidden" role="dialog" aria-modal="true">
+              <div class="modal-card"><button type="button" class="modal-x" data-vp="x" aria-label="close">✕</button>
+              <h2>${esc(t("rw.pickVariant"))}</h2><p class="muted" id="vpName" style="font-size:.85rem;margin-bottom:10px"></p>
+              <div class="vp-grid" id="vpGrid"></div></div></div>`);
+            m = document.getElementById("vpModal");
+          }
+          $("vpName").textContent = r.name;
+          const vs = varsOf(r);
+          $("vpGrid").innerHTML = vs.map((v, i) => {
+            const out = typeof v.stock === "number" && v.stock <= 0;
+            return `<button type="button" class="vp-item" data-vp="${i}" ${out ? "disabled" : ""}>
+              ${v.image || r.image ? `<img src="${esc(v.image || r.image)}" alt="">` : `<span class="vp-ph">🎁</span>`}
+              <span>${esc(v.name)}${out ? `<small>${esc(t("rw.soldOut"))}</small>` : ""}</span></button>`;
+          }).join("");
+          const done = v => { m.classList.add("hidden"); m.onclick = null; resolve(v); };
+          m.onclick = e => {
+            if (e.target === m) return done(null);
+            const b = e.target.closest("[data-vp]");
+            if (!b) return;
+            done(b.dataset.vp === "x" ? null : vs[+b.dataset.vp]);
+          };
+          m.classList.remove("hidden");
+        });
+      }
 
       // ---------- 📦 选收货地址 ----------
       let addresses = Array.isArray(member.addresses) ? member.addresses.slice() : [];
