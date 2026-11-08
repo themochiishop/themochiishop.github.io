@@ -393,8 +393,8 @@ export function homeCardHTML(st, { bound, reward } = {}) {
   if (st.kind !== "status") return "";
   const r = reward || {};
   const status = r.status || st.status;
-  // 已完成：签收 7 天后首页就不再显示（兑换记录里一直看得到）
-  if (status === "completed" && toMs(r.completedAt) && Date.now() - toMs(r.completedAt) > 7 * 86400000) return "";
+  // 已完成：签收 3 天后首页就不再显示（兑换记录里一直看得到）
+  if (status === "completed" && toMs(r.completedAt) && Date.now() - toMs(r.completedAt) > 3 * 86400000) return "";
   const cost = r.cost ?? (S ? S.cost : 30);
   const dl = toMs(r.deadline) ?? st.deadline;
   const order = (r.linkedOrder && r.linkedOrder.orderNo) || "";
