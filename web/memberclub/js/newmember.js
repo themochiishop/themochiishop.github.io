@@ -501,7 +501,9 @@ export function bellEvents(member) {
 export function rewardsNote(r, member) {
   if (!r.newMember) return "";
   const n = (member && member.nmr) || {};
-  const status = n.rid === r.nmrId && n.status ? n.status : null;
+  // 已寄出 / 已完成 / 已取消：以兑换记录本身为准（会员资料可能是几分钟前的暂存）
+  const byRed = { shipped: "shipped", completed: "shipped", cancelled: "cancelled", rejected: "cancelled" }[r.status];
+  const status = byRed || (n.rid === r.nmrId && n.status ? n.status : null);
   if (!status) return "";
   return `<div class="nm-rw">${esc(nt("rwNote", { status: nt("lbl." + status) }))} <a href="home.html">${esc(nt("rwSee"))}</a></div>`;
 }
