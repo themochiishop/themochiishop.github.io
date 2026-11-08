@@ -5,7 +5,7 @@ import {
   doc, getDoc, setDoc, collection, collectionGroup, query, where, getDocs, orderBy, limit,
   onSnapshot, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { t, tn, applyI18n, langSwitchHTML, bindLangSwitch, settingsHTML, bindSettings, translateReason, lang } from "./i18n.js";
+import { t, tn, applyI18n, langSwitchHTML, bindLangSwitch, settingsHTML, bindSettings, translateReason, lang, soundOn, playChime } from "./i18n.js";
 import { ft } from "./feed-i18n.js";
 
 export { t, tn, applyI18n, translateReason, lang } from "./i18n.js";
@@ -864,7 +864,7 @@ export function renderNav(active) {
       </div>
       <div id="bellPanel" class="bell-panel hidden">
         <div class="bell-head">
-          <span class="bell-h-l">🔔 ${t("notif.title")}<span id="bellLive" class="bell-live-pills"></span></span>
+          <span class="bell-h-l"><span class="bh-t">🔔 ${t("notif.title")}</span><span id="bellLive" class="bell-live-pills"></span></span>
           <button type="button" id="bellReadAll" class="bell-readall">${t("notif.readAll")}</button>
         </div>
         <div id="bellTabs" class="bell-tabs"></div>
@@ -969,7 +969,7 @@ function speedUpNav(el) {
 window.addEventListener("pageshow", () => document.body.classList.remove("navigating"));
 
 // ---------- 🔔 通知铃铛：积分进账、积分可用、兑换批准/拒绝 ----------
-const bell = { cat: "all", live: [], ledger: [], redemptions: [], announcements: [], messages: [], bindLogs: [], prizes: [], feed: [], replies: [], reports: [], uid: "", member: null, seenAt: null, highlightSince: null };
+const bell = { cat: "all", live: [], soundReady: false, lastTop: 0, lastLive: "", ledger: [], redemptions: [], announcements: [], messages: [], bindLogs: [], prizes: [], feed: [], replies: [], reports: [], uid: "", member: null, seenAt: null, highlightSince: null };
 const ANNOUNCE_DAYS = 60; // 公告在铃铛里显示多少天
 
 function buildEvents() {
@@ -1139,6 +1139,7 @@ function bellCatOf(e) {
 // 🔴 正在直播：读 Mochii Hub 写的直播状态（首页也读同一份，公开资料）。每分钟一次，页面在背景时暂停
 const LIVE_DB = "https://admin-status-c3bdb-default-rtdb.asia-southeast1.firebasedatabase.app/homepage/config";
 const LIVE_PLATS = { shopee: "Shopee", tiktok: "TikTok", facebook: "Facebook" };
+const LIVE_LOGO = { shopee: "/assets/images/logo-shopee.png", tiktok: "/assets/images/tiktok.png", facebook: "/assets/images/Facebook_logo.png" };
 // 直播连结的顺序和网站首页一样：Hub 这场贴的链接 → 网站设定的平台连结 → 预设连结
 const LIVE_META = {
   shopee:   { key: "liveShopee", def: "https://my.shp.ee/k4VoTpQc" },
@@ -1202,7 +1203,15 @@ function renderBell() {
   document.getElementById("bellBtn").classList.toggle("is-live", bell.live.length > 0);
   // 「🔔 通知」标题后面的小标签：LIVE on Shopee（按了直接去直播间）
   const lv = document.getElementById("bellLive");
-  if (lv) lv.innerHTML = bell.live.map(x => `<a class="live-pill" href="${esc(x.url)}" target="_blank" rel="noopener"><i aria-hidden="true"></i>${esc(t("notif.live", { p: x.name }))}</a>`).join("");
+  // 只写「● LIVE」+ 平台小图标（三种语言都一样短，标题列不会被挤成两行）；两个平台就两个图标，按哪个去哪个直播间
+  if (lv) lv.innerHTML = bell.live.length ? `<span class="live-pill"><i aria-hidden="true"></i>LIVE${bell.live.map(x =>
+    `<a href="${esc(x.url)}" target="_blank" rel="noopener" title="${esc(t("notif.live", { p: x.name }))}" aria-label="${esc(t("notif.live", { p: x.name }))}"><img src="${LIVE_LOGO[x.k]}" alt="${esc(x.name)}"></a>`).join("")}</span>` : "";
+  // 🔔 通知声音：有新通知（或刚开始直播）才响；页面刚打开时的旧通知不响
+  const top = events.length ? events[0].time.getTime() : 0;
+  const liveKey = bell.live.map(x => x.k).join(",");
+  if (bell.soundReady && soundOn() && ((top > bell.lastTop && (!bell.seenAt || events[0].time > bell.seenAt)) || (liveKey && liveKey !== bell.lastLive))) playChime();
+  if (top > bell.lastTop) bell.lastTop = top;
+  bell.lastLive = liveKey;
   const liveHTML = "";
   // 🗂️ 分类标签：每类显示未读数字
   const tabs = document.getElementById("bellTabs");
@@ -1253,6 +1262,8 @@ export function initBell(user, member) {
   // 💬 回复通知：最近 30 天、回复我的帖子或 @我 的回复
   bell.uid = user.uid;
   startLiveWatch();
+  // 打开页面 4 秒后才开始响（先让资料载入完，旧通知、本来就在直播都不响）
+  setTimeout(() => { bell.soundReady = true; }, 4000);
   panel.addEventListener("click", e => {
     const b = e.target.closest("[data-bcat]");
     if (!b) return;

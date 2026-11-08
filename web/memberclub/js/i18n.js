@@ -226,7 +226,7 @@ const DICT = {
     "home.viewAll": "View all ➔",
     "home.news": "Club news",
     "home.newRewards": "New in the Rewards Mall",
-    "notif.readAll": "Mark all read",
+    "notif.readAll": "Read all",
     "notif.today": "Today",
     "notif.earlier": "Earlier",
     "task.manual": "Given by our team",
@@ -531,6 +531,9 @@ const DICT = {
     "pz.claimAll": "Claim all {n} prizes",
     "notif.live": "LIVE on {p}",
     "set.clubSub": "WhatsApp · Club questions",
+    "set.sound": "Notification sound",
+    "set.on": "On",
+    "set.off": "Off",
     "set.shopSub": "WhatsApp · Orders & products",
     "rw.vpConfirm": "Redeem · {cost} pts",
     "rw.vpGiftNote": "📦 Packed with your next order. Points are only deducted once approved.",
@@ -785,7 +788,7 @@ const DICT = {
     "home.viewAll": "Lihat semua ➔",
     "home.news": "Berita kelab",
     "home.newRewards": "Baharu di Pusat Ganjaran",
-    "notif.readAll": "Tanda semua dibaca",
+    "notif.readAll": "Baca semua",
     "notif.today": "Hari ini",
     "notif.earlier": "Sebelum ini",
     "task.manual": "Diberi oleh pasukan kami",
@@ -1090,6 +1093,9 @@ const DICT = {
     "pz.claimAll": "Tuntut kesemua {n} hadiah",
     "notif.live": "LIVE on {p}",
     "set.clubSub": "WhatsApp · Soalan kelab",
+    "set.sound": "Bunyi notifikasi",
+    "set.on": "Hidup",
+    "set.off": "Tutup",
     "set.shopSub": "WhatsApp · Pesanan & produk",
     "rw.vpConfirm": "Tebus · {cost} mata",
     "rw.vpGiftNote": "📦 Dibungkus bersama pesanan anda yang seterusnya. Mata hanya ditolak selepas diluluskan.",
@@ -1649,6 +1655,9 @@ const DICT = {
     "pz.claimAll": "一次领取 {n} 个奖品",
     "notif.live": "LIVE on {p}",
     "set.clubSub": "WhatsApp · 俱乐部问题",
+    "set.sound": "通知声音",
+    "set.on": "开",
+    "set.off": "关",
     "set.shopSub": "WhatsApp · 订单、商品问题",
     "rw.vpConfirm": "确认兑换 · {cost} 积分",
     "rw.vpGiftNote": "📦 会和你的下一张订单一起寄出，审核通过才扣分。",
@@ -1763,6 +1772,40 @@ export function setTheme(th) {
   else document.documentElement.removeAttribute("data-theme");
   try { localStorage.setItem(THEME_KEY, th); } catch (e) {}
 }
+// ---------- 🔔 通知声音（预设关闭；开着俱乐部网页时，有新通知「叮」一声）----------
+// 声音用网页自己产生（Web Audio），不用放音档。浏览器规定会员要先在页面点过一下才能发声
+const SOUND_KEY = "mochii_sound";
+export function soundOn() { try { return localStorage.getItem(SOUND_KEY) === "on"; } catch (e) { return false; } }
+export function setSound(on) { try { localStorage.setItem(SOUND_KEY, on ? "on" : "off"); } catch (e) {} }
+let audioCtx = null;
+function ctx() {
+  if (!audioCtx) { const C = window.AudioContext || window.webkitAudioContext; if (C) audioCtx = new C(); }
+  return audioCtx;
+}
+// 会员第一次点页面时把声音准备好（之后才能自动响）
+if (typeof document !== "undefined" && document.addEventListener) {
+  const unlock = () => { try { const c = ctx(); if (c && c.state === "suspended") c.resume(); } catch (e) {} };
+  document.addEventListener("pointerdown", unlock, { once: true, capture: true });
+}
+export function playChime() {
+  try {
+    const c = ctx();
+    if (!c) return;
+    if (c.state === "suspended") c.resume();
+    const t0 = c.currentTime + 0.02;
+    // 两个音「叮～咚」：轻柔的正弦波，0.5 秒内淡出
+    [[1046.5, 0], [1318.5, 0.14]].forEach(([f, d]) => {
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = "sine"; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t0 + d);
+      g.gain.exponentialRampToValueAtTime(0.18, t0 + d + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + d + 0.5);
+      o.connect(g); g.connect(c.destination);
+      o.start(t0 + d); o.stop(t0 + d + 0.55);
+    });
+  } catch (e) {}
+}
+
 export function settingsHTML() {
   const th = currentTheme();
   return `<div class="set-dd">
@@ -1775,6 +1818,13 @@ export function settingsHTML() {
         <div class="set-row">
           <button type="button" data-settheme="light" class="${th === "light" ? "on" : ""}">☀️ ${t("set.light")}</button>
           <button type="button" data-settheme="dark" class="${th === "dark" ? "on" : ""}">🌙 ${t("set.dark")}</button>
+        </div>
+      </div>
+      <div class="set-sec">
+        <div class="set-h">🔔 ${t("set.sound")}</div>
+        <div class="set-row">
+          <button type="button" data-setsound="on" class="${soundOn() ? "on" : ""}">🔔 ${t("set.on")}</button>
+          <button type="button" data-setsound="off" class="${soundOn() ? "" : "on"}">🔕 ${t("set.off")}</button>
         </div>
       </div>
       <div class="set-sec">
@@ -1807,6 +1857,13 @@ export function bindSettings(root = document) {
       if (tb) {
         setTheme(tb.dataset.settheme);
         panel.querySelectorAll("[data-settheme]").forEach(b => b.classList.toggle("on", b === tb));
+        return;
+      }
+      const sb = e.target.closest("[data-setsound]");
+      if (sb) {
+        setSound(sb.dataset.setsound === "on");
+        panel.querySelectorAll("[data-setsound]").forEach(b => b.classList.toggle("on", b === sb));
+        if (sb.dataset.setsound === "on") playChime();   // 打开时响一声给会员听
         return;
       }
       const lb = e.target.closest("[data-setlang]");
