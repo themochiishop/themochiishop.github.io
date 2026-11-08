@@ -894,24 +894,62 @@ export async function fillContacts(root = document) {
   const box = root.querySelector(".set-dd [data-contacts]");
   if (!box) return;
   let c = null;
-  try { c = JSON.parse(sessionStorage.getItem("mochii_contacts") || "null"); } catch (e) {}
+  try { c = JSON.parse(sessionStorage.getItem("mochii_contacts2") || "null"); } catch (e) {}
   if (!c) {
     try {
       const s = await getDoc(doc(db, "settings", "help"));
       const d = s.exists() ? s.data() : {};
-      c = { club: d.waClub || "", clubLabel: d.waClubLabel || null, store: d.waStore ?? d.whatsapp ?? "", storeLabel: d.waStoreLabel || null };
-      try { sessionStorage.setItem("mochii_contacts", JSON.stringify(c)); } catch (e) {}
+      c = { club: d.waClub || "", store: d.waStore ?? d.whatsapp ?? "", clubNote: d.waClubNote || null, storeNote: d.waStoreNote || null };
+      try { sessionStorage.setItem("mochii_contacts2", JSON.stringify(c)); } catch (e) {}
     } catch (e) { console.warn("contacts", e); return; }
   }
   const num = v => String(v || "").replace(/\D/g, "");
-  const label = (obj, key) => (obj && (obj[lang] || obj.zh)) || t(key);
-  // 名称固定：Club Tech Support / Mochii Shop Support（三种语言都一样），下面一行小字说明负责什么
-  const btns = [[num(c.club), "Club Tech Support", "🛠️", t("set.clubSub")], [num(c.store), "Mochii Shop Support", "🛍️", t("set.shopSub")]]
-    .filter(([n]) => n)
-    .map(([n, l, ic, sub]) => `<a class="set-wa" href="https://wa.me/${esc(n)}" target="_blank" rel="noopener"><span class="ic" aria-hidden="true">${ic}</span><span class="tx"><b>${esc(l)}</b><small>${esc(sub)}</small></span></a>`);
-  box.innerHTML = btns.join("");
-  box.closest(".set-contact").classList.toggle("hidden", !btns.length);
+  // 问题标签：后台「商店帮助 › 联系我们按钮」的「负责处理」（和帮助中心一样，没有当前语言就用中文）
+  const tagsOf = obj => String((obj && (obj[lang] || obj.zh)) || "").split(/[,，、;；]+/).map(x => x.trim()).filter(Boolean);
+  const tagText = x => lang === "zh" ? `【${x}】\n你好，我想问关于${x}的问题 🙏`
+    : lang === "ms" ? `[${x}]\nHai, saya ada soalan tentang ${x} 🙏`
+    : `[${x}]\nHi, I have a question about ${x} 🙏`;
+  const item = (n, title, ic, sub, note) => {
+    if (!n) return "";
+    const head = `<span class="ic" aria-hidden="true">${ic}</span><span class="tx"><b>${esc(title)}</b><small>${esc(sub)}</small></span>`;
+    const tags = tagsOf(note);
+    if (!tags.length) return `<a class="set-wa" href="https://wa.me/${esc(n)}" target="_blank" rel="noopener">${head}</a>`;
+    // 有问题标签：做成下拉选单，预设收起；点标签 = 跳出小视窗先写问题（bindWaTags），没登录就直接开 WhatsApp
+    return `<div class="set-wa-item">
+      <button type="button" class="set-wa" data-wa-toggle aria-expanded="false">${head}<span class="chev" aria-hidden="true">▾</span></button>
+      <div class="set-wa-tags hidden">
+        ${tags.map(x => `<a class="cn-tag" data-tag="${esc(x)}" data-num="${esc(n)}" href="https://wa.me/${esc(n)}?text=${encodeURIComponent(tagText(x))}" target="_blank" rel="noopener">${esc(x)}</a>`).join("")}
+        <a class="set-wa-direct" href="https://wa.me/${esc(n)}" target="_blank" rel="noopener">${esc(t("set.chat"))}</a>
+      </div></div>`;
+  };
+  const html = [item(num(c.club), "Club Tech Support", "🛠️", t("set.clubSub"), c.clubNote),
+    item(num(c.store), "Mochii Shop Support", "🛍️", t("set.shopSub"), c.storeNote)].filter(Boolean);
+  box.innerHTML = html.join("");
+  box.closest(".set-contact").classList.toggle("hidden", !html.length);
+  if (!box.dataset.dd) {
+    box.dataset.dd = "1";
+    const closeAll = except => box.querySelectorAll(".set-wa-item.open").forEach(it => {
+      if (it === except) return;
+      it.classList.remove("open");
+      it.querySelector(".set-wa-tags").classList.add("hidden");
+      it.querySelector("[data-wa-toggle]").setAttribute("aria-expanded", "false");
+    });
+    box.addEventListener("click", e => {
+      const tg = e.target.closest("[data-wa-toggle]");
+      if (!tg) return;
+      const it = tg.closest(".set-wa-item"), open = !it.classList.contains("open");
+      closeAll(it);
+      it.classList.toggle("open", open);
+      it.querySelector(".set-wa-tags").classList.toggle("hidden", !open);
+      tg.setAttribute("aria-expanded", String(open));
+    });
+    // 点标签区域以外的地方 → 收起
+    document.addEventListener("click", e => { if (!e.target.closest(".set-wa-item")) closeAll(null); }, true);
+  }
+  // 已登录：点标签先跳出小视窗写问题（和帮助中心一样）
+  if (navUser) root.querySelectorAll(".set-panel").forEach(p => bindWaTags(p, navUser.user, navUser.member));
 }
+let navUser = null;   // initBell 时记下来，设定面板的问题标签要用
 
 // ---------- 📱 手机：往下捲时，主分类只留图标（节省空间）；捲回顶部再显示文字 ----------
 let compactNavInit = false;
@@ -1281,6 +1319,8 @@ export function initBell(user, member) {
     err => console.warn("prizeWins", err));
   // 💬 回复通知：最近 30 天、回复我的帖子或 @我 的回复
   bell.uid = user.uid;
+  navUser = { user, member };
+  document.querySelectorAll(".set-panel").forEach(p => bindWaTags(p, user, member));
   startLiveWatch();
   // 资料载入后才开始判断要不要响（2.5 秒）；之后有新通知随时会响
   setTimeout(() => { bell.soundReady = true; renderBell(); }, 2500);
