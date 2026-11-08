@@ -5,7 +5,7 @@ import {
   doc, getDoc, setDoc, collection, collectionGroup, query, where, getDocs, orderBy, limit,
   onSnapshot, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { t, tn, applyI18n, langSwitchHTML, bindLangSwitch, translateReason, lang } from "./i18n.js";
+import { t, tn, applyI18n, langSwitchHTML, bindLangSwitch, settingsHTML, bindSettings, translateReason, lang } from "./i18n.js";
 import { ft } from "./feed-i18n.js";
 
 export { t, tn, applyI18n, translateReason, lang } from "./i18n.js";
@@ -64,8 +64,22 @@ export const TIERS = [
   { id: "black",   icon: "♛", minSpend: null, multiplier: 2,   birthday: 888, invite: true },  // 邀请制：后台「会员详情」开通
 ];
 // 保级规则（必须和 Google 表格同步脚本的 MS_TIER_VALID_MONTHS / MS_TIER_KEEP_RATIO 一致）
-export const TIER_VALID_MONTHS = 12;
-export const TIER_KEEP_RATIO = 0.5;
+export let TIER_VALID_MONTHS = 12;
+export let TIER_KEEP_RATIO = 0.5;
+// ⚙️ 后台「会员等级」改过的门槛、倍数、生日积分（存在 settings/perks.tiers，跟福利设定一起读，不多花读取次数）
+function applyTierCfg(cfg) {
+  const tc = cfg && cfg.tiers;
+  if (tc && typeof tc === "object") TIERS.forEach(tr => {
+    const c = tc[tr.id];
+    if (!c) return;
+    if (!tr.invite && typeof c.minSpend === "number" && c.minSpend >= 0) tr.minSpend = c.minSpend;
+    if (typeof c.multiplier === "number" && c.multiplier > 0) tr.multiplier = c.multiplier;
+    if (typeof c.birthday === "number" && c.birthday >= 0) tr.birthday = c.birthday;
+  });
+  const r = cfg && cfg.tierRules;
+  if (r && typeof r.validMonths === "number" && r.validMonths > 0) TIER_VALID_MONTHS = r.validMonths;
+  if (r && typeof r.keepRatio === "number" && r.keepRatio > 0 && r.keepRatio <= 1) TIER_KEEP_RATIO = r.keepRatio;
+}
 export const TIER_REMIND_DAYS = 30;   // 到期前几天开始提醒
 export const tierById = id => TIERS.find(x => x.id === id) || TIERS[0];
 
@@ -499,6 +513,8 @@ export const BONUSES = [
   { key: "birthday",  id: "profile_birthday",  points: 10, reason: "完善资料：生日" },
   { key: "whatsapp",  id: "profile_whatsapp",  points: 10, reason: "完善资料：WhatsApp 通知" },
   { key: "platform2", id: "profile_platform2", points: 20, reason: "完善资料：绑定第二个平台" },
+  // 🖼️ 上传自己的头像（系统头像、名字第一个字不算）：只在保存头像时检查（onSave），平常换页不多读资料
+  { key: "avatar",    id: "profile_avatar",    points: 20, reason: "完善资料：上传头像", onSave: true },
 ];
 
 let perkCfg = null;
@@ -508,6 +524,7 @@ export async function loadPerks(force = false) {
     const snap = await getDoc(doc(db, "settings", "perks"));
     perkCfg = snap.exists() ? snap.data() : {};
   } catch (e) { perkCfg = perkCfg || {}; }
+  applyTierCfg(perkCfg);
   return perkCfg;
 }
 export function bonusPoints(key) {
@@ -531,7 +548,7 @@ export function customPerks() {
 }
 
 // 检查并领取所有符合条件的奖励；回传 { done: 已领过的 key, claimed: 这次新领的 [{key, points}] }
-export async function claimBonuses(uid) {
+export async function claimBonuses(uid, opts = {}) {
   await loadPerks();
   const mine = c => getDocs(query(collection(db, c), where("uid", "==", uid)));
   const [mSnap, bSnap, lSnap] = await Promise.all([getDoc(doc(db, "members", uid)), mine("bindings"), mine("pointsLedger")]);
@@ -554,6 +571,7 @@ export async function claimBonuses(uid) {
       birthday: member.birthday ? [] : null,
       whatsapp: member.waOptIn === true && member.phone ? [] : null,
       platform2: [],
+      avatar: [],
     };
   } else {
     const first = binds[0];
@@ -563,8 +581,16 @@ export async function claimBonuses(uid) {
       birthday: member.birthday ? [first.id] : null,
       whatsapp: member.waOptIn === true && member.phone ? [first.id] : null,
       platform2: other ? [first.id, other.id] : null,
+      avatar: [first.id],
     };
   }
+  // 🖼️ 头像：只有 opts.withAvatar（刚保存头像）才去读 Feed 资料，确认是自己上传的照片
+  if (opts.withAvatar && !have.has("profile_avatar_" + uid) && eligible.avatar) {
+    try {
+      const f = await getDoc(doc(db, "memberFeed", uid));
+      if (!(f.exists() && /^data:image\//.test(f.data().avatar || ""))) eligible.avatar = null;
+    } catch (e) { eligible.avatar = null; }
+  } else eligible.avatar = null;
 
   for (const b of activeBonuses()) {
     const pts = bonusPoints(b.key);
@@ -780,7 +806,7 @@ export function requireMember(onReady, opts = {}) {
       let doneList = [];
       try { doneList = JSON.parse(localStorage.getItem(doneKey) || "[]"); } catch (e) {}
       if (!Array.isArray(doneList)) doneList = [];
-      if (!activeBonuses().every(b => doneList.includes(b.key))) {
+      if (!activeBonuses().filter(b => !b.onSave).every(b => doneList.includes(b.key))) {
         claimBonuses(user.uid).then(r => {
           try { localStorage.setItem(doneKey, JSON.stringify(r.done)); } catch (e) {}
           if (r.claimed.length) invalidateMemberCache();
@@ -792,6 +818,7 @@ export function requireMember(onReady, opts = {}) {
     try {
       if (cached && cached.member) {
         perkCfg = cached.perks || {};
+        applyTierCfg(perkCfg);
         start(cached.member);
         fresh.catch(e => console.warn("refresh", e));
       } else {
@@ -833,13 +860,14 @@ export function renderNav(active) {
       <div class="topbar-tools">
         <a href="feed.html" id="feedBtn" class="bell feed-btn" aria-label="Mochii Feed" title="Mochii Feed">✨<span id="feedDot" class="bell-badge feed-dot" hidden></span></a>
         <button type="button" id="bellBtn" class="bell" aria-label="${t("notif.title")}">🔔<span id="bellBadge" class="bell-badge" hidden></span></button>
-        ${langSwitchHTML()}
+        ${settingsHTML()}
       </div>
       <div id="bellPanel" class="bell-panel hidden">
         <div class="bell-head">
           <span>🔔 ${t("notif.title")}</span>
           <button type="button" id="bellReadAll" class="bell-readall">${t("notif.readAll")}</button>
         </div>
+        <div id="bellTabs" class="bell-tabs"></div>
         <ul id="bellList" class="bell-list"></ul>
       </div>
     </div>
@@ -854,9 +882,34 @@ export function renderNav(active) {
         ${group.sub.map(([k, href, key]) => `<a href="${href}" data-k="${k}" class="${k === active ? "active" : ""}">${key.startsWith("fd:") ? ft(key.slice(3)) : t(key)}</a>`).join("")}
       </nav>
     </div>` : ""}`;
-  bindLangSwitch(el);
+  bindSettings(el);
+  fillContacts(el);
   speedUpNav(el);
   initCompactNav();
+}
+
+// ---------- 💬 设定面板的「联系」：Club 客服 + 商店客服（后台「商店帮助 › 联系我们按钮」的号码）----------
+// 读 settings/help 一次，存在这个分页（sessionStorage），换页不用再读
+export async function fillContacts(root = document) {
+  const box = root.querySelector(".set-dd [data-contacts]");
+  if (!box) return;
+  let c = null;
+  try { c = JSON.parse(sessionStorage.getItem("mochii_contacts") || "null"); } catch (e) {}
+  if (!c) {
+    try {
+      const s = await getDoc(doc(db, "settings", "help"));
+      const d = s.exists() ? s.data() : {};
+      c = { club: d.waClub || "", clubLabel: d.waClubLabel || null, store: d.waStore ?? d.whatsapp ?? "", storeLabel: d.waStoreLabel || null };
+      try { sessionStorage.setItem("mochii_contacts", JSON.stringify(c)); } catch (e) {}
+    } catch (e) { console.warn("contacts", e); return; }
+  }
+  const num = v => String(v || "").replace(/\D/g, "");
+  const label = (obj, key) => (obj && (obj[lang] || obj.zh)) || t(key);
+  const btns = [[num(c.club), label(c.clubLabel, "help.waClub"), "🛠️"], [num(c.store), label(c.storeLabel, "help.waStore"), "🛍️"]]
+    .filter(([n]) => n)
+    .map(([n, l, ic]) => `<a class="set-wa" href="https://wa.me/${esc(n)}" target="_blank" rel="noopener">${ic} ${esc(l)}</a>`);
+  box.innerHTML = btns.join("");
+  box.closest(".set-contact").classList.toggle("hidden", !btns.length);
 }
 
 // ---------- 📱 手机：往下捲时，主分类只留图标（节省空间）；捲回顶部再显示文字 ----------
@@ -915,7 +968,7 @@ function speedUpNav(el) {
 window.addEventListener("pageshow", () => document.body.classList.remove("navigating"));
 
 // ---------- 🔔 通知铃铛：积分进账、积分可用、兑换批准/拒绝 ----------
-const bell = { ledger: [], redemptions: [], announcements: [], bindLogs: [], prizes: [], feed: [], replies: [], reports: [], uid: "", member: null, seenAt: null, highlightSince: null };
+const bell = { cat: "all", live: [], ledger: [], redemptions: [], announcements: [], messages: [], bindLogs: [], prizes: [], feed: [], replies: [], reports: [], uid: "", member: null, seenAt: null, highlightSince: null };
 const ANNOUNCE_DAYS = 60; // 公告在铃铛里显示多少天
 
 function buildEvents() {
@@ -944,7 +997,7 @@ function buildEvents() {
     if (at && r.status === "rejected") {
       ev.push({ time: at, icon: "❌", title: t("notif.rejected", v), detail: tn(r.note, r.noteI18n), link: "rewards.html" });
     } else if (at && r.status !== "pending") {
-      ev.push({ time: at, icon: "🎁", title: t(r.kind === "gift" ? "notif.approvedGift" : "notif.approved", v),
+      ev.push({ time: at, icon: "🎁", title: r.gift ? t("notif.perkGift", { ...v, why: r.giftReason || "" }) : t(r.kind === "gift" ? "notif.approvedGift" : "notif.approved", v),
         detail: r.couponCode ? t("notif.code", { code: r.couponCode }) : tn(r.note, r.noteI18n), link: "rewards.html" });
     }
     // 📦 实体奖品：发货、配送异常、取消、完成、快自动完成
@@ -1009,9 +1062,11 @@ function buildEvents() {
     if (l.action === "unbind") ev.push({ time: at, icon: "✂️", title: t("notif.unlinked", v), detail: t("notif.unlinkedDetail"), link: "profile.html#bind" });
   });
   // 📢 管理员公告（有当前语言的版本就用那个）
-  bell.announcements.forEach(a => {
+  // 🎯 只发给我的公告（memberMessages）也一起显示，同样只显示 60 天
+  const annSince = Date.now() - ANNOUNCE_DAYS * 86400000;
+  [...bell.announcements, ...bell.messages].forEach(a => {
     const at = toDate(a.createdAt);
-    if (!at) return;
+    if (!at || at.getTime() < annSince) return;
     const loc = (a.i18n && a.i18n[lang]) || {};
     ev.push({
       time: at,
@@ -1066,7 +1121,43 @@ function buildEvents() {
     ev.push({ time: at, icon: "💬", title: ft(c.replyToUid === bell.uid ? "notifReplyYou" : "notifReplyPost", { name: c.authorName || "" }),
       detail: String(c.text || "").slice(0, 80), link: "feed.html#p-" + c.postId + "~" + c.id });   // ~回复ID：打开后跳到那条回复
   });
-  return ev.filter(e => e.time <= now).sort((a, b) => b.time - a.time).slice(0, 50);
+  return ev.filter(e => e.time <= now).sort((a, b) => b.time - a.time).slice(0, 50).map(e => ({ ...e, cat: bellCatOf(e) }));
+}
+
+// 🗂️ 通知分类：积分（含等级）｜兑换（兑换、中奖、运输）｜Feed｜公告；其他（例如绑定）只在「全部」
+const BELL_CATS = ["all", "points", "redeem", "feed", "notice"];
+function bellCatOf(e) {
+  const l = String(e.link || "");
+  if (e.announce) return "notice";
+  if (/^(rewards|prizes)\.html/.test(l)) return "redeem";
+  if (/^feed\.html/.test(l) || e.icon === "🚩") return "feed";
+  if (!l || /^(account|points)\.html/.test(l)) return "points";
+  return "other";
+}
+
+// 🔴 正在直播：读 Mochii Hub 写的直播状态（首页也读同一份，公开资料）。每分钟一次，页面在背景时暂停
+const LIVE_DB = "https://admin-status-c3bdb-default-rtdb.asia-southeast1.firebasedatabase.app/homepage/config";
+const LIVE_PLATS = { shopee: "Shopee", tiktok: "TikTok", facebook: "Facebook" };
+const LIVE_FALLBACK = "https://www.themochiishop.com/live-stream/";
+async function checkLive() {
+  try {
+    const get = async k => { const r = await fetch(`${LIVE_DB}/${k}.json`, { cache: "no-store" }); return r.ok ? r.json() : null; };
+    const [plats, until, urls] = await Promise.all([get("livePlatforms"), get("liveUntil"), get("liveUrls")]);
+    const end = Number(until) || 0;
+    const list = end && Date.now() >= end ? [] : String(plats || "").split(",").filter(k => LIVE_PLATS[k]);
+    const u = urls && typeof urls === "object" ? urls : {};
+    const safe = x => /^https:\/\//i.test(String(x || "")) ? String(x) : LIVE_FALLBACK;
+    bell.live = list.map(k => ({ k, name: LIVE_PLATS[k], url: safe(u[k]) }));
+  } catch (e) { bell.live = []; }
+  renderBell();
+}
+function startLiveWatch() {
+  if (startLiveWatch.on) return;
+  startLiveWatch.on = true;
+  let tm = 0;
+  const tick = () => { clearTimeout(tm); if (document.visibilityState === "visible") { checkLive(); tm = setTimeout(tick, 60000); } };
+  document.addEventListener("visibilitychange", tick);
+  tick();
 }
 
 // 只允许站内页面或 https 链接
@@ -1097,7 +1188,19 @@ function renderBell() {
   const hl = bell.highlightSince;
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
   let group = "";
-  list.innerHTML = events.length ? events.map(e => {
+  // 🔴 直播中：铃铛加红点，面板最上面固定一条
+  document.getElementById("bellBtn").classList.toggle("is-live", bell.live.length > 0);
+  const liveHTML = bell.live.length ? `<li class="bell-live"><span class="live-dot" aria-hidden="true"></span>
+      <div class="bell-body"><div class="bell-title">${esc(t("notif.live", { p: bell.live.map(x => x.name).join(" + ") }))}</div>
+        <div class="live-links">${bell.live.map(x => `<a class="btn btn-primary btn-inline btn-xs" href="${esc(x.url)}" target="_blank" rel="noopener">▶ ${esc(x.name)}</a>`).join("")}</div></div></li>` : "";
+  // 🗂️ 分类标签：每类显示未读数字
+  const tabs = document.getElementById("bellTabs");
+  if (tabs) tabs.innerHTML = BELL_CATS.map(c => {
+    const n = events.filter(e => (c === "all" || e.cat === c) && (!hl || e.time > hl)).length;
+    return `<button type="button" data-bcat="${c}" class="${bell.cat === c ? "on" : ""}">${esc(t("notif.cat." + c))}${n ? `<span class="n">${n > 9 ? "9+" : n}</span>` : ""}</button>`;
+  }).join("");
+  const shown = bell.cat === "all" ? events : events.filter(e => e.cat === bell.cat);
+  list.innerHTML = liveHTML + (shown.length ? shown.map(e => {
     const g = e.time >= todayStart ? "today" : "earlier";
     const head = g !== group ? `<li class="bell-group">${t("notif." + g)}</li>` : "";
     group = g;
@@ -1115,7 +1218,7 @@ function renderBell() {
       </div>
       ${isNew ? '<span class="bell-dot" aria-hidden="true"></span>' : ""}
     </li>`;
-  }).join("") : `<li class="bell-empty">🔕<br>${t("notif.empty")}</li>`;
+  }).join("") : `<li class="bell-empty">🔕<br>${t("notif.empty")}</li>`);
 }
 
 function fmtTime(d) {
@@ -1138,6 +1241,14 @@ export function initBell(user, member) {
     err => console.warn("prizeWins", err));
   // 💬 回复通知：最近 30 天、回复我的帖子或 @我 的回复
   bell.uid = user.uid;
+  startLiveWatch();
+  panel.addEventListener("click", e => {
+    const b = e.target.closest("[data-bcat]");
+    if (!b) return;
+    e.stopPropagation();
+    bell.cat = b.dataset.bcat;
+    renderBell();
+  });
   const replySince = new Date(Date.now() - 30 * 86400000);
   const rep = { a: [], b: [] };
   const onRep = k => s => {
@@ -1159,6 +1270,10 @@ export function initBell(user, member) {
     err => console.warn("feedPosts", err));
   onSnapshot(mine("bindingLogs"), s => { bell.bindLogs = s.docs.map(d => d.data()); renderBell(); },
     err => console.warn("bindingLogs", err));
+  // 🎯 指定会员的公告：只读得到发给自己的（规则：uid 在 uids 里）
+  onSnapshot(query(collection(db, "memberMessages"), where("uids", "array-contains", user.uid)),
+    s => { bell.messages = s.docs.map(d => ({ id: d.id, ...d.data() })); renderBell(); },
+    err => console.warn("memberMessages", err));
   const since = new Date(Date.now() - ANNOUNCE_DAYS * 86400000);
   onSnapshot(
     query(collection(db, "announcements"), where("createdAt", ">=", since), orderBy("createdAt", "desc"), limit(20)),
@@ -1168,11 +1283,15 @@ export function initBell(user, member) {
 
   btn.addEventListener("click", async e => {
     e.stopPropagation();
+    document.querySelectorAll(".set-panel").forEach(p => p.classList.add("hidden"));   // 和设定面板不同时打开
     const opening = panel.classList.contains("hidden");
     panel.classList.toggle("hidden");
     if (!opening) return;
     // 打开时：新通知保持高亮，同时把「已读时间」存起来（换手机也同步）
     bell.highlightSince = bell.seenAt;
+    // 打开时自动切到「最新一则未读通知」那一类；没有未读就维持上次的分类
+    const newest = buildEvents().find(x => !bell.highlightSince || x.time > bell.highlightSince);
+    if (newest) bell.cat = newest.cat === "other" ? "all" : newest.cat;
     bell.seenAt = new Date();
     renderBell();
     if (PREVIEW) return;   // 👁 会员视角：不帮会员标已读

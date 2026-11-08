@@ -7,7 +7,7 @@ const DICT = {
     "wa.askTitle": "💬 {tag}",
     "wa.askLabel": "What would you like to ask? (optional)",
     "wa.askPh": "e.g. I won last month but haven't seen my prize yet",
-    "wa.askNote": "Your member name and linked accounts are added automatically so we can look you up.",
+    "wa.askNote": "Your member name and linked platforms are added automatically so we can look you up.",
     "wa.askSend": "Send on WhatsApp ➔",
     "pzp.askTitle": "Still have questions about your prize?",
     "pzp.askSub": "Can't see your prize, or have a question about claiming or delivery? Message us directly.",
@@ -300,6 +300,9 @@ const DICT = {
     "bonus.birthday": "Birthday added",
     "bonus.whatsapp": "WhatsApp updates on",
     "bonus.platform2": "Second platform linked",
+    "bonus.avatar": "Profile photo uploaded",
+    "task.avatar": "Upload your own profile photo (in Mochii Feed)",
+    "reason.profileAvatar": "📝 Profile bonus: profile photo",
     "task.title": "🎁 Extra perks",
     "task.sub": "Complete these to get bonus points instantly",
     "task.welcome": "Link a Shopee / TikTok account (welcome bonus)",
@@ -372,7 +375,7 @@ const DICT = {
     "acc.view": "View",
     "acc.pending": "Pending points",
     "acc.nextUnlock": "Next unlocks on {d}",
-    "acc.bound": "Linked accounts",
+    "acc.bound": "Linked platforms",
     "acc.notBound": "Not linked yet",
     "acc.tabLedger": "Points history",
     "acc.tabOrders": "Orders",
@@ -447,7 +450,7 @@ const DICT = {
     "bind.fail": "Couldn't link: ",
     "bind.linkedOn": "Linked on {d}",
     "bind.verified": "Verified",
-    "bind.none": "No linked accounts yet",
+    "bind.none": "No linked platforms yet",
     "bind.summary": "{n} accounts linked · {o} orders · {p} pts earned in total",
     "bind.viaOrder": "verified with order {no}",
     "bind.viaAdmin": "linked by The Mochii Shop team",
@@ -520,6 +523,24 @@ const DICT = {
     "rw.code": "Code:",
     "rw.copy": "Copy",
     "rw.codeHint": "Copy it and paste it at {p} checkout",
+    "rw.perkGift": "Gift from us: {why}",
+    "set.title": "Settings",
+    "rw.pickVariant": "Which style would you like?",
+    "rw.variantOut": "Sorry, {v} is out of stock",
+    "pz.bundle": "Ships together with: {names}",
+    "pz.claimAll": "Claim all {n} prizes",
+    "notif.live": "🔴 We're live now on {p}!",
+    "notif.cat.all": "All",
+    "notif.cat.points": "Points",
+    "notif.cat.redeem": "Redeem",
+    "notif.cat.feed": "Feed",
+    "notif.cat.notice": "News",
+    "set.theme": "Appearance",
+    "set.light": "Light",
+    "set.dark": "Dark",
+    "set.lang": "Language",
+    "set.contact": "Contact us",
+    "notif.perkGift": "You got a gift: {name} ({why})",
     "rw.codeHintAny": "Copy it and paste it at Shopee or TikTok checkout",
     "rw.copied": "Copied ✓",
     "rw.note": "Note: ",
@@ -833,6 +854,9 @@ const DICT = {
     "bonus.birthday": "Hari jadi ditetapkan",
     "bonus.whatsapp": "Makluman WhatsApp dihidupkan",
     "bonus.platform2": "Platform kedua dipautkan",
+    "bonus.avatar": "Gambar profil dimuat naik",
+    "task.avatar": "Muat naik gambar profil sendiri (di Mochii Feed)",
+    "reason.profileAvatar": "📝 Bonus profil: gambar profil",
     "task.title": "🎁 Ganjaran tambahan",
     "task.sub": "Lengkapkan untuk terus dapat mata bonus",
     "task.welcome": "Pautkan akaun Shopee / TikTok (bonus selamat datang)",
@@ -1053,6 +1077,24 @@ const DICT = {
     "rw.code": "Kod:",
     "rw.copy": "Salin",
     "rw.codeHint": "Salin dan tampal semasa checkout di {p}",
+    "rw.perkGift": "Hadiah daripada kami: {why}",
+    "set.title": "Tetapan",
+    "rw.pickVariant": "Pilih gaya yang anda mahu",
+    "rw.variantOut": "Maaf, {v} sudah habis",
+    "pz.bundle": "Dihantar bersama: {names}",
+    "pz.claimAll": "Tuntut kesemua {n} hadiah",
+    "notif.live": "🔴 Kami sedang live di {p}!",
+    "notif.cat.all": "Semua",
+    "notif.cat.points": "Mata",
+    "notif.cat.redeem": "Tebusan",
+    "notif.cat.feed": "Feed",
+    "notif.cat.notice": "Berita",
+    "set.theme": "Paparan",
+    "set.light": "Cerah",
+    "set.dark": "Gelap",
+    "set.lang": "Bahasa",
+    "set.contact": "Hubungi kami",
+    "notif.perkGift": "Anda dapat hadiah: {name} ({why})",
     "rw.codeHintAny": "Salin dan tampal semasa checkout di Shopee atau TikTok",
     "rw.copied": "Disalin ✓",
     "rw.note": "Nota: ",
@@ -1073,7 +1115,7 @@ const DICT = {
     "wa.askTitle": "💬 {tag}",
     "wa.askLabel": "你想问什么？（可以不填）",
     "wa.askPh": "例如：我上个月中奖了，但还没看到奖品",
-    "wa.askNote": "会自动附上你的会员名字和绑定账号，方便我们查询。",
+    "wa.askNote": "会自动附上你的会员名字和关联平台，方便我们查询。",
     "wa.askSend": "发送到 WhatsApp ➔",
     "pzp.askTitle": "还有关于中奖的问题？",
     "pzp.askSub": "看不到奖品、领取或寄送有疑问，直接联系我们。",
@@ -1172,7 +1214,7 @@ const DICT = {
     "help.club.points": "积分",
     "help.club.tier": "等级",
     "help.club.redeem": "兑换",
-    "help.club.bind": "绑定账号",
+    "help.club.bind": "关联平台",
     "help.club.account": "我的账号",
     "help.store.order": "订单",
     "help.store.shipping": "出货与物流",
@@ -1189,7 +1231,7 @@ const DICT = {
     "prof.nameEmpty": "请填写昵称",
     "prof.nameConfirm": "把昵称改成「{name}」？改了之后 {n} 天内不能再改。",
     "tag.internal": "🏷️ 内部会员",
-    "home.noOrderInternal": "你是内部会员，不需要绑定账号。积分由店主在后台发放。",
+    "home.noOrderInternal": "你是内部会员，不需要关联平台。积分由店主在后台发放。",
     "addr.pickStateFirst": "请先选州属",
     "addr.cityOther": "其他（自己填写）",
     "addr.cityOtherPh": "请填写城市 / 市镇",
@@ -1320,7 +1362,7 @@ const DICT = {
     "rw.goShop": "去兑换商城 ➔",
     "nav.account": "会员等级",
     "nav.rewards": "兑换记录",
-    "nav.bind": "绑定账号",
+    "nav.bind": "关联平台",
     "nav.profile": "个人资料",
     "common.loading": "载入中…",
     "common.loadFail": "载入失败：",
@@ -1366,19 +1408,22 @@ const DICT = {
     "bonus.birthday": "已填写生日",
     "bonus.whatsapp": "已开启 WhatsApp 通知",
     "bonus.platform2": "已绑定第二个平台",
+    "bonus.avatar": "已上传头像",
+    "task.avatar": "上传自己的头像（在 Mochii Feed）",
+    "reason.profileAvatar": "📝 完善资料：上传头像",
     "task.title": "🎁 额外福利",
     "task.sub": "完成就马上送积分",
     "task.welcome": "绑定 Shopee / TikTok 账号（新会员欢迎礼）",
     "task.birthday": "填写生日",
     "task.whatsapp": "开启 WhatsApp 通知",
     "task.platform2": "Shopee 和 TikTok 都绑定",
-    "task.needBind": "（绑定账号后）",
+    "task.needBind": "（关联平台后）",
     "acc.welcomeBonus": "🎁 现在绑定，马上送 {n} 分欢迎礼！",
     "acc.expiring": "{n} 分将于 {d} 过期",
     "acc.useNow": "马上去用 ➔",
     "acc.expiryRule": "积分自转为可用起 {m} 个月内有效，兑换时先扣最早的积分。",
-    "prof.waBonus": "✨ 开启 WhatsApp 通知送 {n} 分（需已绑定账号）",
-    "prof.bdayBonus": "✨ 填写生日送 {n} 分（需已绑定账号）",
+    "prof.waBonus": "✨ 开启 WhatsApp 通知送 {n} 分（需已关联平台）",
+    "prof.bdayBonus": "✨ 填写生日送 {n} 分（需已关联平台）",
     "common.error": "发生错误：",
 
     "auth.invalid": "电子邮件或密码不正确",
@@ -1431,14 +1476,14 @@ const DICT = {
     "acc.member": "会员",
     "acc.sub": "积分在下单 14 天后转为可用，期间如退货将自动取消",
     "acc.bindCallout": "👋 你还没有绑定 Shopee / TikTok 账号。绑定后，过去和以后的订单都会自动累积积分！",
-    "acc.goBind": "去绑定账号 ➔",
+    "acc.goBind": "去关联平台 ➔",
     "acc.available": "可用积分",
     "acc.goRedeem": "去兑换奖品 ➔",
     "acc.reserved": "另有 {n} 分兑换审核中",
     "acc.view": "查看",
     "acc.pending": "待确认积分",
     "acc.nextUnlock": "下一笔于 {d} 可用",
-    "acc.bound": "已绑定账号",
+    "acc.bound": "已关联平台",
     "acc.notBound": "尚未绑定",
     "acc.tabLedger": "积分记录",
     "acc.tabOrders": "订单记录",
@@ -1493,7 +1538,7 @@ const DICT = {
     "reason.adjust": "调整：",
     "reason.redeem": "兑换：",
 
-    "bind.pageTitle": "绑定账号 · The Mochii Shop",
+    "bind.pageTitle": "关联平台 · The Mochii Shop",
     "bind.title": "绑定购物账号",
     "bind.sub": "绑定 Shopee / TikTok 账号后，订单会自动累积积分",
     "bind.new": "新增绑定",
@@ -1586,6 +1631,24 @@ const DICT = {
     "rw.code": "券码：",
     "rw.copy": "复制",
     "rw.codeHint": "复制后，在 {p} 下单结账（checkout）时粘贴使用",
+    "rw.perkGift": "福利赠送：{why}",
+    "set.title": "设定",
+    "rw.pickVariant": "要兑换哪一款？",
+    "rw.variantOut": "抱歉，{v} 已经换完了",
+    "pz.bundle": "会和这些奖品一起寄出：{names}",
+    "pz.claimAll": "一次领取 {n} 个奖品",
+    "notif.live": "🔴 正在 {p} 直播中！",
+    "notif.cat.all": "全部",
+    "notif.cat.points": "积分",
+    "notif.cat.redeem": "兑换",
+    "notif.cat.feed": "Feed",
+    "notif.cat.notice": "公告",
+    "set.theme": "外观",
+    "set.light": "浅色",
+    "set.dark": "深色",
+    "set.lang": "语言",
+    "set.contact": "联系我们",
+    "notif.perkGift": "你获得了福利：{name}（{why}）",
     "rw.codeHintAny": "复制后，在 Shopee 或 TikTok 下单结账（checkout）时粘贴使用",
     "rw.copied": "已复制 ✓",
     "rw.note": "备注：",
@@ -1676,6 +1739,68 @@ export function langSwitchHTML() {
   </div>`;
 }
 
+// ---------- ⚙️ 右上角设定：外观（浅色 / 深色）· 语言 · 联系 ----------
+// 按钮是「一半国旗、一半齿轮」；点开和铃铛一样的面板。联系区的 WhatsApp 由 common.js 的 fillContacts() 填入
+const THEME_KEY = "mochii_theme";
+export function currentTheme() { return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"; }
+export function setTheme(th) {
+  if (th === "light") document.documentElement.setAttribute("data-theme", "light");
+  else document.documentElement.removeAttribute("data-theme");
+  try { localStorage.setItem(THEME_KEY, th); } catch (e) {}
+}
+export function settingsHTML() {
+  const th = currentTheme();
+  return `<div class="set-dd">
+    <button type="button" class="set-btn" aria-haspopup="true" aria-label="${t("set.title")}" title="${t("set.title")}">
+      <span class="set-ico"><img class="set-flag" src="${FLAGS[lang].img}" alt=""><span class="set-gear" aria-hidden="true">⚙️</span></span>
+    </button>
+    <div class="set-panel hidden" role="dialog" aria-label="${t("set.title")}">
+      <div class="set-sec">
+        <div class="set-h">🎨 ${t("set.theme")}</div>
+        <div class="set-row">
+          <button type="button" data-settheme="light" class="${th === "light" ? "on" : ""}">☀️ ${t("set.light")}</button>
+          <button type="button" data-settheme="dark" class="${th === "dark" ? "on" : ""}">🌙 ${t("set.dark")}</button>
+        </div>
+      </div>
+      <div class="set-sec">
+        <div class="set-h">🌐 ${t("set.lang")}</div>
+        <div class="set-row">
+          ${LANGS.map(([code, label]) => `<button type="button" data-setlang="${code}" class="${code === lang ? "on" : ""}" title="${FLAGS[code].name}">${flagImg(code)}<span>${label}</span></button>`).join("")}
+        </div>
+      </div>
+      <div class="set-sec set-contact hidden">
+        <div class="set-h">💬 ${t("set.contact")}</div>
+        <div class="set-row" data-contacts></div>
+      </div>
+    </div>
+  </div>`;
+}
+export function bindSettings(root = document) {
+  root.querySelectorAll(".set-dd").forEach(dd => {
+    if (dd.dataset.bound) return;
+    dd.dataset.bound = "1";
+    const btn = dd.querySelector(".set-btn"), panel = dd.querySelector(".set-panel");
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const bp = document.getElementById("bellPanel");
+      if (bp) bp.classList.add("hidden");   // 和铃铛不同时打开
+      panel.classList.toggle("hidden");
+    });
+    panel.addEventListener("click", e => {
+      e.stopPropagation();
+      const tb = e.target.closest("[data-settheme]");
+      if (tb) {
+        setTheme(tb.dataset.settheme);
+        panel.querySelectorAll("[data-settheme]").forEach(b => b.classList.toggle("on", b === tb));
+        return;
+      }
+      const lb = e.target.closest("[data-setlang]");
+      if (lb && lb.dataset.setlang !== lang) setLang(lb.dataset.setlang);
+    });
+    document.addEventListener("click", e => { if (!dd.contains(e.target)) panel.classList.add("hidden"); });
+  });
+}
+
 // 语言按钮：平常只显示目前语言，点了才展开选单
 export function bindLangSwitch(root = document) {
   root.querySelectorAll(".lang-dd").forEach(dd => {
@@ -1717,6 +1842,7 @@ export function translateReason(reason) {
   if (r === "完善资料：生日") return t("reason.profileBirthday");
   if (r === "完善资料：WhatsApp 通知") return t("reason.profileWhatsapp");
   if (r === "完善资料：绑定第二个平台") return t("reason.profilePlatform2");
+  if (r === "完善资料：上传头像") return t("reason.profileAvatar");
   if (r === "积分过期") return t("reason.expired");
   if (r.startsWith("关注我们：")) return t("reason.follow", { p: r.slice(5) });
   return r;
