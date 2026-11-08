@@ -1225,21 +1225,26 @@ body.preview-mode .toast { bottom: 72px; }
 .vp-item img, .vp-item .vp-ph { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
 .vp-item small { display: block; color: var(--bad); font-weight: 600; }
 
-/* 🔴 「🔔 通知」标题后面的 LIVE 小标签 */
-.bell-h-l { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
-.bell-live-pills { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+/* 🔴 「🔔 通知」标题后面的 LIVE 小标签：● LIVE + 平台小图标；标题列一定一行 */
+.bell-head { flex-wrap: nowrap; }
+.bell-h-l { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; white-space: nowrap; overflow: hidden; }
+.bell-live-pills { display: inline-flex; flex-shrink: 0; }
 .bell-live-pills:empty { display: none; }
 .live-pill {
-  display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;
-  background: rgba(239,68,68,.16); border: 1px solid rgba(239,68,68,.5); color: #f87171; font-size: .7rem; font-weight: 800; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 5px; padding: 2px 4px 2px 8px; border-radius: 999px; white-space: nowrap;
+  background: rgba(239,68,68,.16); border: 1px solid rgba(239,68,68,.5); color: #f87171; font-size: .68rem; font-weight: 800; letter-spacing: .03em;
 }
-.live-pill:hover { text-decoration: none; background: rgba(239,68,68,.26); }
 .live-pill i { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; animation: liveDot 1.4s ease-in-out infinite; }
+.live-pill a { display: inline-flex; width: 20px; height: 20px; border-radius: 50%; overflow: hidden; background: #fff; border: 1px solid rgba(239,68,68,.35); }
+.live-pill a img { width: 100%; height: 100%; object-fit: contain; }
+.live-pill a:hover { transform: scale(1.08); }
 :root[data-theme="light"] .live-pill { color: #dc2626; }
 @media (prefers-reduced-motion: reduce) { .live-pill i { animation: none; } }
+@media (max-width: 380px) { .bell-head { font-size: .92rem; } }
 
 /* 🎨 选款式：点选（粉色框）→ 下面按确认兑换 */
 .vp-item.on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,111,174,.35); background: rgba(255,111,174,.08); }
 .vp-foot { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
 .vp-foot .muted { font-size: .8rem; }
-.bell-head .bell-readall { white-space: nowrap; flex-shrink: 0; align-self: flex-start; }
+.bell-head .bell-readall { white-space: nowrap; flex-shrink: 0; }
+.bh-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
