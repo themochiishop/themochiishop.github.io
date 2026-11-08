@@ -425,7 +425,7 @@ export function shopCardHTML(st, { bal, bound } = {}) {
     return `<a class="card nm-card nm-shop done" id="nm" href="rewards.html#r-nm_${esc(st.rid)}">
       <span class="nm-thumb">${giftImg() ? `<img src="${esc(giftImg())}" alt="">` : "🎁"}</span>
       <div class="nm-tx"><div class="nm-tag">${esc(nt("shopTitle"))}</div><div class="nm-body">${esc(giftName())} · ${esc(nt("lbl." + st.status))}</div></div>
-      <span class="btn btn-ghost btn-inline btn-xs">${esc(nt("shopDone"))}</span></a>`;
+      <div class="nm-act"><span class="btn btn-ghost btn-inline">${esc(nt("shopDone"))} ➔</span></div></a>`;
   }
   if (st.kind !== "offer") return "";
   const cost = S.cost;
