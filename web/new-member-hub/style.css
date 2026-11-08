@@ -277,3 +277,10 @@ h1{color:#281039;font-weight:850}
   }
 
 }
+
+/* 🎉 新会员奖励（New Member Special） */
+.nm-special{margin:0 0 16px;padding:13px 14px;border-radius:14px;background:linear-gradient(135deg,rgba(255,111,174,.18),rgba(124,92,255,.16));border:1px solid rgba(255,111,174,.45);text-align:center}
+.nm-special[hidden]{display:none}
+.nm-badge{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.08em;color:#fff;background:linear-gradient(135deg,#ff6fae,#7c5cff);border-radius:999px;padding:4px 12px;margin-bottom:8px}
+.panel .nm-line{font-size:14px;font-weight:700;line-height:1.55;color:#fff;margin:0 0 4px}
+.nm-note{display:block;font-size:12px;color:#c9cfe2;line-height:1.5}

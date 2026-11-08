@@ -12,7 +12,9 @@ const strings = {
     shopDesc: 'Products, orders, delivery and parcels',
     member: 'Member Club Support',
     memberHelp: 'Accounts, points and technical help',
-    foot: 'Member benefits and promotions are subject to applicable terms.'
+    foot: 'Member benefits and promotions are subject to applicable terms.',
+    nmLine: 'Link your Shopee / TikTok account to get {cost} welcome points and redeem a {gift}!',
+    nmNote: 'Your gift ships with your next eligible order.'
   },
 
   zh: {
@@ -27,7 +29,9 @@ const strings = {
     shopDesc: '商品、订单、物流及包裹问题',
     member: '会员俱乐部客服',
     memberHelp: '会员账号、积分及技术支援',
-    foot: '会员福利及促销活动以适用条款为准。'
+    foot: '会员福利及促销活动以适用条款为准。',
+    nmLine: '绑定 Shopee / TikTok 账号，领取 {cost} 分迎新礼，兑换 {gift}！',
+    nmNote: '礼品随你下一笔符合条件的订单寄出。'
   },
 
   ms: {
@@ -42,7 +46,9 @@ const strings = {
     shopDesc: 'Produk, pesanan, penghantaran dan bungkusan',
     member: 'Sokongan Kelab Ahli',
     memberHelp: 'Akaun, mata ganjaran dan bantuan teknikal',
-    foot: 'Manfaat ahli dan promosi tertakluk pada terma yang berkenaan.'
+    foot: 'Manfaat ahli dan promosi tertakluk pada terma yang berkenaan.',
+    nmLine: 'Pautkan akaun Shopee / TikTok anda untuk {cost} mata alu-aluan dan tebus {gift}!',
+    nmNote: 'Hadiah dihantar bersama pesanan layak anda yang seterusnya.'
   },
 
   ta: {
@@ -57,7 +63,9 @@ const strings = {
     shopDesc: 'பொருட்கள், ஆர்டர்கள், டெலிவரி மற்றும் பார்சல்கள்',
     member: 'உறுப்பினர் மன்ற உதவி',
     memberHelp: 'கணக்குகள், புள்ளிகள் மற்றும் தொழில்நுட்ப உதவி',
-    foot: 'உறுப்பினர் சலுகைகளும் விளம்பரங்களும் பொருந்தும் விதிமுறைகளுக்கு உட்பட்டவை.'
+    foot: 'உறுப்பினர் சலுகைகளும் விளம்பரங்களும் பொருந்தும் விதிமுறைகளுக்கு உட்பட்டவை.',
+    nmLine: 'உங்கள் Shopee / TikTok கணக்கை இணைத்து {cost} வரவேற்பு புள்ளிகளைப் பெற்று, {gift}-ஐப் பெற்றுக்கொள்ளுங்கள்!',
+    nmNote: 'பரிசு உங்கள் அடுத்த தகுதியான ஆர்டருடன் அனுப்பப்படும்.'
   }
 };
 
@@ -77,6 +85,40 @@ const ids = {
   foot: 'foot'
 };
 
+// 🎉 新会员奖励（New Member Special）：读会员系统的活动设定（公开资料），启用中才显示
+const nm = { on: false, cost: 30, gift: 'Home Diffuser', i18n: {} };
+let curLang = 'en';
+function paintNm() {
+  const box = document.getElementById('nm-special');
+  if (!box) return;
+  box.hidden = !nm.on;
+  if (!nm.on) return;
+  const t = strings[curLang] || strings.en;
+  const gift = (nm.i18n[curLang] && nm.i18n[curLang].name) || nm.gift;
+  document.getElementById('nm-line').textContent = (t.nmLine || strings.en.nmLine)
+    .split('{cost}').join(nm.cost).split('{gift}').join(gift);
+  document.getElementById('nm-note').textContent = t.nmNote || strings.en.nmNote;
+}
+fetch('https://firestore.googleapis.com/v1/projects/member-system-27ae0/databases/(default)/documents/settings/newMember')
+  .then(r => (r.ok ? r.json() : null))
+  .then(d => {
+    const f = (d && d.fields) || {};
+    nm.on = !!(f.active && f.active.booleanValue === true);
+    if (f.cost && f.cost.integerValue) nm.cost = Number(f.cost.integerValue);
+    const g = f.gift && f.gift.mapValue && f.gift.mapValue.fields;
+    if (g && g.name && g.name.stringValue) nm.gift = g.name.stringValue;
+    const gi = g && g.i18n && g.i18n.mapValue && g.i18n.mapValue.fields;
+    if (gi) Object.keys(gi).forEach(l => {
+      const v = gi[l].mapValue && gi[l].mapValue.fields;
+      if (v && v.name && v.name.stringValue) nm.i18n[l] = { name: v.name.stringValue };
+    });
+    paintNm();
+  })
+  .catch(() => {});
+
+// 📦 从包裹卡片扫进来：记下来源，加入会员时一起记录（会员系统读同一个网域的 localStorage）
+try { localStorage.setItem('mochiiFromCard', String(Date.now())); } catch (e) {}
+
 // Language switching
 function setLanguage(lang) {
   const t = strings[lang] || strings.en;
@@ -88,6 +130,9 @@ function setLanguage(lang) {
       element.textContent = t[key];
     }
   }
+
+  curLang = lang;
+  paintNm();
 
   // Update HTML language
   document.documentElement.lang =
