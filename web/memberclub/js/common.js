@@ -5,7 +5,7 @@ import {
   doc, getDoc, setDoc, collection, collectionGroup, query, where, getDocs, orderBy, limit,
   onSnapshot, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-import { t, tn, applyI18n, langSwitchHTML, bindLangSwitch, settingsHTML, bindSettings, translateReason, lang, soundOn, playChime } from "./i18n.js";
+import { t, tn, applyI18n, langSwitchHTML, bindLangSwitch, settingsHTML, bindSettings, translateReason, lang, soundOn, playChime, CHIME_KEY } from "./i18n.js";
 import { ft } from "./feed-i18n.js";
 
 export { t, tn, applyI18n, translateReason, lang } from "./i18n.js";
@@ -969,7 +969,7 @@ function speedUpNav(el) {
 window.addEventListener("pageshow", () => document.body.classList.remove("navigating"));
 
 // ---------- 🔔 通知铃铛：积分进账、积分可用、兑换批准/拒绝 ----------
-const bell = { cat: "all", live: [], soundReady: false, lastTop: 0, lastLive: "", ledger: [], redemptions: [], announcements: [], messages: [], bindLogs: [], prizes: [], feed: [], replies: [], reports: [], uid: "", member: null, seenAt: null, highlightSince: null };
+const bell = { cat: "all", live: [], soundReady: false, liveChecked: false, ledger: [], redemptions: [], announcements: [], messages: [], bindLogs: [], prizes: [], feed: [], replies: [], reports: [], uid: "", member: null, seenAt: null, highlightSince: null };
 const ANNOUNCE_DAYS = 60; // 公告在铃铛里显示多少天
 
 function buildEvents() {
@@ -1160,6 +1160,7 @@ async function checkLive() {
     await Promise.all(need.map(async k => { site[k] = await get(LIVE_META[k].key).catch(() => null); }));
     bell.live = list.map(k => ({ k, name: LIVE_PLATS[k], url: ok(u[k]) ? String(u[k]) : ok(site[k]) ? String(site[k]) : LIVE_META[k].def }));
   } catch (e) { bell.live = []; }
+  bell.liveChecked = true;
   renderBell();
 }
 function startLiveWatch() {
@@ -1169,6 +1170,30 @@ function startLiveWatch() {
   const tick = () => { clearTimeout(tm); if (document.visibilityState === "visible") { checkLive(); tm = setTimeout(tick, 60000); } };
   document.addEventListener("visibilitychange", tick);
   tick();
+}
+
+// 🔔 通知声音：最新一则「还没看过」的通知比上次响过的新 → 响一声；开始直播也响一声
+// 记录存在这台设备（localStorage），所以换页、重新整理时：还没响过的新通知会补响，响过的不会再响
+const LIVE_CHIME_KEY = "mochii_lastLiveChime";
+function maybeChime(events) {
+  if (!bell.soundReady || !soundOn()) return;
+  let ring = false;
+  try {
+    const unseen = events.find(e => !bell.seenAt || e.time > bell.seenAt);
+    const last = Number(localStorage.getItem(CHIME_KEY) || 0);
+    if (unseen && unseen.time.getTime() > last) {
+      ring = true;
+      localStorage.setItem(CHIME_KEY, String(unseen.time.getTime()));
+    }
+    if (bell.liveChecked) {
+      const liveKey = bell.live.map(x => x.k).join(",");
+      if (liveKey !== (localStorage.getItem(LIVE_CHIME_KEY) || "")) {
+        if (liveKey) ring = true;
+        localStorage.setItem(LIVE_CHIME_KEY, liveKey);
+      }
+    }
+  } catch (e) {}
+  if (ring) playChime();
 }
 
 // 只允许站内页面或 https 链接
@@ -1206,12 +1231,7 @@ function renderBell() {
   // 只写「● LIVE」+ 平台小图标（三种语言都一样短，标题列不会被挤成两行）；两个平台就两个图标，按哪个去哪个直播间
   if (lv) lv.innerHTML = bell.live.length ? `<span class="live-pill"><i aria-hidden="true"></i>LIVE${bell.live.map(x =>
     `<a href="${esc(x.url)}" target="_blank" rel="noopener" title="${esc(t("notif.live", { p: x.name }))}" aria-label="${esc(t("notif.live", { p: x.name }))}"><img src="${LIVE_LOGO[x.k]}" alt="${esc(x.name)}"></a>`).join("")}</span>` : "";
-  // 🔔 通知声音：有新通知（或刚开始直播）才响；页面刚打开时的旧通知不响
-  const top = events.length ? events[0].time.getTime() : 0;
-  const liveKey = bell.live.map(x => x.k).join(",");
-  if (bell.soundReady && soundOn() && ((top > bell.lastTop && (!bell.seenAt || events[0].time > bell.seenAt)) || (liveKey && liveKey !== bell.lastLive))) playChime();
-  if (top > bell.lastTop) bell.lastTop = top;
-  bell.lastLive = liveKey;
+  maybeChime(events);
   const liveHTML = "";
   // 🗂️ 分类标签：每类显示未读数字
   const tabs = document.getElementById("bellTabs");
@@ -1262,8 +1282,8 @@ export function initBell(user, member) {
   // 💬 回复通知：最近 30 天、回复我的帖子或 @我 的回复
   bell.uid = user.uid;
   startLiveWatch();
-  // 打开页面 4 秒后才开始响（先让资料载入完，旧通知、本来就在直播都不响）
-  setTimeout(() => { bell.soundReady = true; }, 4000);
+  // 资料载入后才开始判断要不要响（2.5 秒）；之后有新通知随时会响
+  setTimeout(() => { bell.soundReady = true; renderBell(); }, 2500);
   panel.addEventListener("click", e => {
     const b = e.target.closest("[data-bcat]");
     if (!b) return;

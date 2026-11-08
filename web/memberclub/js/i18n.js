@@ -1772,38 +1772,55 @@ export function setTheme(th) {
   else document.documentElement.removeAttribute("data-theme");
   try { localStorage.setItem(THEME_KEY, th); } catch (e) {}
 }
-// ---------- 🔔 通知声音（预设关闭；开着俱乐部网页时，有新通知「叮」一声）----------
-// 声音用网页自己产生（Web Audio），不用放音档。浏览器规定会员要先在页面点过一下才能发声
+// ---------- 🔔 通知声音（预设关闭；开着俱乐部网页时，有新通知「叮～咚」一声）----------
+// 用一小段网页自己产生的 WAV 声音（<audio> 播放，不用放音档）。
+// Chrome / Android：会员在这个网站点过一下之后，换页、重新整理也能直接响；
+// 浏览器还不让发声时（例如 iPhone 刚打开页面），会等会员下一次点页面时补响一声。
 const SOUND_KEY = "mochii_sound";
+export const CHIME_KEY = "mochii_lastChime";   // 最后响过的通知时间：同一个通知只响一次（换页也不会重复响）
 export function soundOn() { try { return localStorage.getItem(SOUND_KEY) === "on"; } catch (e) { return false; } }
-export function setSound(on) { try { localStorage.setItem(SOUND_KEY, on ? "on" : "off"); } catch (e) {} }
-let audioCtx = null;
-function ctx() {
-  if (!audioCtx) { const C = window.AudioContext || window.webkitAudioContext; if (C) audioCtx = new C(); }
-  return audioCtx;
+export function setSound(on) {
+  try {
+    localStorage.setItem(SOUND_KEY, on ? "on" : "off");
+    if (on) localStorage.setItem(CHIME_KEY, String(Date.now()));   // 刚打开：之前的旧通知不响
+  } catch (e) {}
 }
-// 会员第一次点页面时把声音准备好（之后才能自动响）
-if (typeof document !== "undefined" && document.addEventListener) {
-  const unlock = () => { try { const c = ctx(); if (c && c.state === "suspended") c.resume(); } catch (e) {} };
-  document.addEventListener("pointerdown", unlock, { once: true, capture: true });
+let chimeUrl = null, chimePending = false;
+function buildChime() {
+  const rate = 22050, dur = 0.75, n = Math.floor(rate * dur);
+  const pcm = new Int16Array(n);
+  // 两个音：C6（1046Hz）→ E6（1318Hz），各自快速淡出
+  [[1046.5, 0], [1318.5, 0.14]].forEach(([f, d]) => {
+    const s0 = Math.floor(d * rate);
+    for (let i = s0; i < n; i++) {
+      const tt = (i - s0) / rate;
+      const env = Math.min(1, tt / 0.01) * Math.exp(-tt * 7);
+      pcm[i] += Math.round(Math.sin(2 * Math.PI * f * tt) * env * 9000);
+    }
+  });
+  const buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const str = (o, x) => { for (let i = 0; i < x.length; i++) v.setUint8(o + i, x.charCodeAt(i)); };
+  str(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); str(8, "WAVE"); str(12, "fmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  str(36, "data"); v.setUint32(40, n * 2, true);
+  pcm.forEach((x, i) => v.setInt16(44 + i * 2, x, true));
+  let bin = "";
+  const bytes = new Uint8Array(buf);
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return "data:audio/wav;base64," + btoa(bin);
 }
 export function playChime() {
   try {
-    const c = ctx();
-    if (!c) return;
-    if (c.state === "suspended") c.resume();
-    const t0 = c.currentTime + 0.02;
-    // 两个音「叮～咚」：轻柔的正弦波，0.5 秒内淡出
-    [[1046.5, 0], [1318.5, 0.14]].forEach(([f, d]) => {
-      const o = c.createOscillator(), g = c.createGain();
-      o.type = "sine"; o.frequency.value = f;
-      g.gain.setValueAtTime(0.0001, t0 + d);
-      g.gain.exponentialRampToValueAtTime(0.18, t0 + d + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + d + 0.5);
-      o.connect(g); g.connect(c.destination);
-      o.start(t0 + d); o.stop(t0 + d + 0.55);
-    });
-  } catch (e) {}
+    if (!chimeUrl) chimeUrl = buildChime();
+    const a = new Audio(chimeUrl);
+    a.volume = 0.7;
+    const p = a.play();
+    if (p && p.catch) p.catch(() => { chimePending = true; });   // 浏览器还不让响：等下一次点页面
+  } catch (e) { chimePending = true; }
+}
+if (typeof document !== "undefined" && document.addEventListener) {
+  document.addEventListener("pointerdown", () => { if (chimePending) { chimePending = false; playChime(); } }, true);
 }
 
 export function settingsHTML() {
