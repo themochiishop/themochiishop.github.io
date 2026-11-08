@@ -421,7 +421,8 @@ export function homeCardHTML(st, { bound, reward } = {}) {
 // bal：loadBalance() 的结果；bound：已绑定
 export function shopCardHTML(st, { bal, bound } = {}) {
   if (st.kind === "status") {
-    return `<a class="card nm-card nm-shop done" id="nm" href="home.html">
+    // 已兑换：直接打开「兑换记录」里的那一笔（会捲到那一笔并闪一下）
+    return `<a class="card nm-card nm-shop done" id="nm" href="rewards.html#r-nm_${esc(st.rid)}">
       <span class="nm-thumb">${giftImg() ? `<img src="${esc(giftImg())}" alt="">` : "🎁"}</span>
       <div class="nm-tx"><div class="nm-tag">${esc(nt("shopTitle"))}</div><div class="nm-body">${esc(giftName())} · ${esc(nt("lbl." + st.status))}</div></div>
       <span class="btn btn-ghost btn-inline btn-xs">${esc(nt("shopDone"))}</span></a>`;
