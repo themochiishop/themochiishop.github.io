@@ -1921,7 +1921,9 @@ function tierFromZh(label) {
 }
 
 export function translateReason(reason) {
-  const r = String(reason || "");
+  // 🎉 迎新礼的兑换 / 退回：后端写「（新会员礼）」，换成会员的语言
+  const NM_SUFFIX = { zh: "（新会员礼）", en: " (new member gift)", ms: " (hadiah ahli baharu)" };
+  const r = String(reason || "").replace("（新会员礼）", NM_SUFFIX[lang] || NM_SUFFIX.en);
   let m;
   if (r === "购物积分") return t("reason.purchase");
   if ((m = r.match(/^购物积分（(.+) ×([\d.]+)）$/))) return t("reason.purchaseTier", { tier: tierFromZh(m[1]), m: m[2] });

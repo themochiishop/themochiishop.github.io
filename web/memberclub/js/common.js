@@ -6,6 +6,7 @@ import {
   onSnapshot, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { t, tn, applyI18n, langSwitchHTML, bindLangSwitch, settingsHTML, bindSettings, translateReason, lang, soundOn, playChime, CHIME_KEY } from "./i18n.js";
+import { bellEvents as nmBellEvents } from "./newmember.js";   // 🎉 新会员奖励
 import { ft } from "./feed-i18n.js";
 
 export { t, tn, applyI18n, translateReason, lang } from "./i18n.js";
@@ -1013,6 +1014,8 @@ const ANNOUNCE_DAYS = 60; // 公告在铃铛里显示多少天
 function buildEvents() {
   const now = new Date();
   const ev = [];
+  // 🎉 新会员奖励：活动提醒（关闭弹窗后）/ 迎新礼状态（只看会员资料上的摘要，不另外读资料）
+  try { ev.push(...nmBellEvents(bell.member)); } catch (e) { console.warn("nm bell", e); }
   bell.ledger.forEach(x => {
     if (x.redemptionId) return; // 兑换扣分不另外通知，「兑换已批准」已经说明了
     const at = toDate(x.createdAt), avail = toDate(x.availableAt);
