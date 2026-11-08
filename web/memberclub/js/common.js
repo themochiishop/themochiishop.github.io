@@ -701,7 +701,7 @@ export function invalidateMemberCache() {
 // 后台「会员详情 › 用会员视角查看」→ 前台 ?viewAs=会员UID；只有管理员能用，同一个分页里切换页面都维持
 // 用管理员权限读那位会员的资料；所有会改资料的按钮都挡住
 const VIEW_KEY = "mochiiViewAs";
-const PREVIEW_PAGES = ["home", "rewards", "prizes", "points"];   // 目前支援的页面，其他的之后再补
+const PREVIEW_PAGES = ["home", "rewards", "prizes", "points", "shop", "account", "profile", "help"];   // Feed 另外开那位会员的 Feed 主页
 export let PREVIEW = null;
 function readViewAs() {
   try {
@@ -719,7 +719,7 @@ function exitPreview() {
   window.close();   // 从后台开的新分页：直接关掉
   setTimeout(() => location.replace("home.html"), 200);
 }
-const PREVIEW_BLOCK = "[data-cancel],[data-editaddr],[data-receive],#rcvSubmit,#eaSubmit,#eaNew,[data-got],[data-claim],[data-pzaddr],#pzSubmit,#bellReadAll,[data-redeem],[data-like],[data-follow],button[type=submit]";
+const PREVIEW_BLOCK = "[data-addr],#addrAdd,#logoutBtn,a.cn-tag,[data-cancel],[data-editaddr],[data-receive],#rcvSubmit,#eaSubmit,#eaNew,[data-got],[data-claim],[data-pzaddr],#pzSubmit,#bellReadAll,[data-redeem],[data-like],[data-follow],button[type=submit]";
 function previewBanner(name, supported) {
   const bar = document.createElement("div");
   bar.className = "preview-bar";
@@ -742,7 +742,7 @@ function previewBanner(name, supported) {
     main.innerHTML = `<div class="card" style="text-align:center;padding:30px 16px">
       <div style="font-size:2rem">👁</div>
       <h2 style="margin:8px 0">这一页暂时不支援会员视角</h2>
-      <p class="muted">目前可以看：首页、兑换记录、中奖记录、积分明细</p>
+      <p class="muted">可以看：首页、兑换商城、兑换记录、中奖记录、会员等级、积分明细、个人资料、帮助中心</p>
       <a class="btn btn-primary" href="home.html" style="margin-top:12px">回首页</a></div>`;
   }
 }
@@ -864,7 +864,7 @@ export function renderNav(active) {
       </div>
       <div id="bellPanel" class="bell-panel hidden">
         <div class="bell-head">
-          <span>🔔 ${t("notif.title")}</span>
+          <span class="bell-h-l">🔔 ${t("notif.title")}<span id="bellLive" class="bell-live-pills"></span></span>
           <button type="button" id="bellReadAll" class="bell-readall">${t("notif.readAll")}</button>
         </div>
         <div id="bellTabs" class="bell-tabs"></div>
@@ -879,7 +879,7 @@ export function renderNav(active) {
     ${group && group.sub ? `
     <div class="topbar-inner sub-nav-row">
       <nav class="sub-nav">
-        ${group.sub.map(([k, href, key]) => `<a href="${href}" data-k="${k}" class="${k === active ? "active" : ""}">${key.startsWith("fd:") ? ft(key.slice(3)) : t(key)}</a>`).join("")}
+        ${group.sub.map(([k, href, key]) => `<a href="${k === "myfeed" && PREVIEW ? "feed.html#u-" + encodeURIComponent(PREVIEW.uid) : href}" ${k === "myfeed" && PREVIEW ? 'target="_blank" title="开新分页看这位会员的 Feed 主页"' : ""} data-k="${k}" class="${k === active ? "active" : ""}">${key.startsWith("fd:") ? ft(key.slice(3)) : t(key)}</a>`).join("")}
       </nav>
     </div>` : ""}`;
   bindSettings(el);
@@ -905,9 +905,10 @@ export async function fillContacts(root = document) {
   }
   const num = v => String(v || "").replace(/\D/g, "");
   const label = (obj, key) => (obj && (obj[lang] || obj.zh)) || t(key);
-  const btns = [[num(c.club), label(c.clubLabel, "help.waClub"), "🛠️"], [num(c.store), label(c.storeLabel, "help.waStore"), "🛍️"]]
+  // 名称固定：Club Tech Support / Mochii Shop Support（三种语言都一样），下面一行小字说明负责什么
+  const btns = [[num(c.club), "Club Tech Support", "🛠️", t("set.clubSub")], [num(c.store), "Mochii Shop Support", "🛍️", t("set.shopSub")]]
     .filter(([n]) => n)
-    .map(([n, l, ic]) => `<a class="set-wa" href="https://wa.me/${esc(n)}" target="_blank" rel="noopener">${ic} ${esc(l)}</a>`);
+    .map(([n, l, ic, sub]) => `<a class="set-wa" href="https://wa.me/${esc(n)}" target="_blank" rel="noopener"><span class="ic" aria-hidden="true">${ic}</span><span class="tx"><b>${esc(l)}</b><small>${esc(sub)}</small></span></a>`);
   box.innerHTML = btns.join("");
   box.closest(".set-contact").classList.toggle("hidden", !btns.length);
 }
@@ -1138,7 +1139,12 @@ function bellCatOf(e) {
 // 🔴 正在直播：读 Mochii Hub 写的直播状态（首页也读同一份，公开资料）。每分钟一次，页面在背景时暂停
 const LIVE_DB = "https://admin-status-c3bdb-default-rtdb.asia-southeast1.firebasedatabase.app/homepage/config";
 const LIVE_PLATS = { shopee: "Shopee", tiktok: "TikTok", facebook: "Facebook" };
-const LIVE_FALLBACK = "https://www.themochiishop.com/live-stream/";
+// 直播连结的顺序和网站首页一样：Hub 这场贴的链接 → 网站设定的平台连结 → 预设连结
+const LIVE_META = {
+  shopee:   { key: "liveShopee", def: "https://my.shp.ee/k4VoTpQc" },
+  tiktok:   { key: "tiktok",     def: "https://www.tiktok.com/@themochiishoptt" },
+  facebook: { key: "facebook",   def: "https://www.facebook.com/profile.php?id=61583702212449" },
+};
 async function checkLive() {
   try {
     const get = async k => { const r = await fetch(`${LIVE_DB}/${k}.json`, { cache: "no-store" }); return r.ok ? r.json() : null; };
@@ -1146,8 +1152,12 @@ async function checkLive() {
     const end = Number(until) || 0;
     const list = end && Date.now() >= end ? [] : String(plats || "").split(",").filter(k => LIVE_PLATS[k]);
     const u = urls && typeof urls === "object" ? urls : {};
-    const safe = x => /^https:\/\//i.test(String(x || "")) ? String(x) : LIVE_FALLBACK;
-    bell.live = list.map(k => ({ k, name: LIVE_PLATS[k], url: safe(u[k]) }));
+    const ok = x => /^https:\/\//i.test(String(x || ""));
+    // Hub 没贴这个平台的链接时，才去读网站设定的平台连结（直播中才读，平常不多读）
+    const need = list.filter(k => !ok(u[k]));
+    const site = {};
+    await Promise.all(need.map(async k => { site[k] = await get(LIVE_META[k].key).catch(() => null); }));
+    bell.live = list.map(k => ({ k, name: LIVE_PLATS[k], url: ok(u[k]) ? String(u[k]) : ok(site[k]) ? String(site[k]) : LIVE_META[k].def }));
   } catch (e) { bell.live = []; }
   renderBell();
 }
@@ -1190,9 +1200,10 @@ function renderBell() {
   let group = "";
   // 🔴 直播中：铃铛加红点，面板最上面固定一条
   document.getElementById("bellBtn").classList.toggle("is-live", bell.live.length > 0);
-  const liveHTML = bell.live.length ? `<li class="bell-live"><span class="live-dot" aria-hidden="true"></span>
-      <div class="bell-body"><div class="bell-title">${esc(t("notif.live", { p: bell.live.map(x => x.name).join(" + ") }))}</div>
-        <div class="live-links">${bell.live.map(x => `<a class="btn btn-primary btn-inline btn-xs" href="${esc(x.url)}" target="_blank" rel="noopener">▶ ${esc(x.name)}</a>`).join("")}</div></div></li>` : "";
+  // 「🔔 通知」标题后面的小标签：LIVE on Shopee（按了直接去直播间）
+  const lv = document.getElementById("bellLive");
+  if (lv) lv.innerHTML = bell.live.map(x => `<a class="live-pill" href="${esc(x.url)}" target="_blank" rel="noopener"><i aria-hidden="true"></i>${esc(t("notif.live", { p: x.name }))}</a>`).join("");
+  const liveHTML = "";
   // 🗂️ 分类标签：每类显示未读数字
   const tabs = document.getElementById("bellTabs");
   if (tabs) tabs.innerHTML = BELL_CATS.map(c => {

@@ -529,7 +529,12 @@ const DICT = {
     "rw.variantOut": "Sorry, {v} is out of stock",
     "pz.bundle": "Ships together with: {names}",
     "pz.claimAll": "Claim all {n} prizes",
-    "notif.live": "🔴 We're live now on {p}!",
+    "notif.live": "LIVE on {p}",
+    "set.clubSub": "WhatsApp · Club questions",
+    "set.shopSub": "WhatsApp · Orders & products",
+    "rw.vpConfirm": "Redeem · {cost} pts",
+    "rw.vpGiftNote": "📦 Packed with your next order. Points are only deducted once approved.",
+    "rw.vpCouponNote": "Points are only deducted once approved.",
     "notif.cat.all": "All",
     "notif.cat.points": "Points",
     "notif.cat.redeem": "Redeem",
@@ -1083,7 +1088,12 @@ const DICT = {
     "rw.variantOut": "Maaf, {v} sudah habis",
     "pz.bundle": "Dihantar bersama: {names}",
     "pz.claimAll": "Tuntut kesemua {n} hadiah",
-    "notif.live": "🔴 Kami sedang live di {p}!",
+    "notif.live": "LIVE on {p}",
+    "set.clubSub": "WhatsApp · Soalan kelab",
+    "set.shopSub": "WhatsApp · Pesanan & produk",
+    "rw.vpConfirm": "Tebus · {cost} mata",
+    "rw.vpGiftNote": "📦 Dibungkus bersama pesanan anda yang seterusnya. Mata hanya ditolak selepas diluluskan.",
+    "rw.vpCouponNote": "Mata hanya ditolak selepas diluluskan.",
     "notif.cat.all": "Semua",
     "notif.cat.points": "Mata",
     "notif.cat.redeem": "Tebusan",
@@ -1637,7 +1647,12 @@ const DICT = {
     "rw.variantOut": "抱歉，{v} 已经换完了",
     "pz.bundle": "会和这些奖品一起寄出：{names}",
     "pz.claimAll": "一次领取 {n} 个奖品",
-    "notif.live": "🔴 正在 {p} 直播中！",
+    "notif.live": "LIVE on {p}",
+    "set.clubSub": "WhatsApp · 俱乐部问题",
+    "set.shopSub": "WhatsApp · 订单、商品问题",
+    "rw.vpConfirm": "确认兑换 · {cost} 积分",
+    "rw.vpGiftNote": "📦 会和你的下一张订单一起寄出，审核通过才扣分。",
+    "rw.vpCouponNote": "审核通过才扣分。",
     "notif.cat.all": "全部",
     "notif.cat.points": "积分",
     "notif.cat.redeem": "兑换",
@@ -1752,7 +1767,7 @@ export function settingsHTML() {
   const th = currentTheme();
   return `<div class="set-dd">
     <button type="button" class="set-btn" aria-haspopup="true" aria-label="${t("set.title")}" title="${t("set.title")}">
-      <span class="set-ico"><img class="set-flag" src="${FLAGS[lang].img}" alt=""><span class="set-gear" aria-hidden="true">⚙️</span></span>
+      <span class="set-ico"><img class="set-flag" src="${FLAGS[lang].img}" alt=""></span><span class="set-gear"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span>
     </button>
     <div class="set-panel hidden" role="dialog" aria-label="${t("set.title")}">
       <div class="set-sec">
@@ -1770,7 +1785,7 @@ export function settingsHTML() {
       </div>
       <div class="set-sec set-contact hidden">
         <div class="set-h">💬 ${t("set.contact")}</div>
-        <div class="set-row" data-contacts></div>
+        <div class="set-col" data-contacts></div>
       </div>
     </div>
   </div>`;
