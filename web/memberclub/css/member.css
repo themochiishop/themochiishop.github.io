@@ -1309,3 +1309,20 @@ body.preview-mode .toast { bottom: 72px; }
 }
 .nm-rw { font-size: .8rem; margin: 6px 0 0; color: var(--accent); }
 .nm-bind-go { display: inline-block; margin-top: 6px; font-weight: 700; }
+
+/* ---------- 📅 我的兑换：进行中 / 最近一次在上面，下面按月份收起；每一笔一个小框 ---------- */
+.rw-cards .list li.redeem-li { background: var(--card2); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+.rw-cards .list li.redeem-li:last-child { margin-bottom: 0; border-bottom: 1px solid var(--line); }
+.rw-cards .gift-ship, .rw-cards .gift-addr, .rw-cards .gift-receipt, .rw-cards .gift-problem { background: var(--card); }
+.rw-sec-h { font-size: .78rem; font-weight: 800; color: var(--muted); letter-spacing: .04em; margin: 4px 0 8px; }
+.rw-top { margin-bottom: 18px; }
+.rw-month { border: 1px solid var(--line); border-radius: 14px; margin-bottom: 10px; background: var(--card); overflow: hidden; }
+.rw-month > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 13px 14px; font-weight: 800; }
+.rw-month > summary::-webkit-details-marker { display: none; }
+.rw-month > summary .chev { color: var(--muted); transition: transform .2s; font-size: .8rem; }
+.rw-month[open] > summary .chev { transform: rotate(90deg); }
+.rw-month > summary .m { flex: 1; }
+.rw-month > summary .n { color: var(--muted); font-weight: 600; font-size: .8rem; }
+.rw-month > summary .live { font-size: .68rem; font-weight: 800; color: #fff; background: var(--accent); border-radius: 999px; padding: 2px 8px; }
+.rw-month[open] > summary { border-bottom: 1px solid var(--line); }
+.rw-month > ul { padding: 12px; }
