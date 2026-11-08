@@ -1113,12 +1113,17 @@ body.preview-mode .toast { bottom: 72px; }
   width: 36px; height: 36px; padding: 0; border-radius: 50%; border: 1px solid var(--line);
   background: var(--card); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; overflow: hidden;
 }
-.set-ico { position: relative; width: 26px; height: 26px; border-radius: 50%; overflow: hidden; display: block; background: var(--card2); }
-.set-flag { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; clip-path: inset(0 50% 0 0); }
+.set-btn { position: relative; overflow: visible; }
+.set-ico { width: 26px; height: 26px; border-radius: 50%; overflow: hidden; display: block; box-shadow: 0 0 0 1px rgba(255,255,255,.12); }
+.set-flag { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* 方案 B：国旗 + 右下角小齿轮 */
 .set-gear {
-  position: absolute; top: 0; right: 0; width: 50%; height: 100%; display: flex; align-items: center; justify-content: flex-start;
-  font-size: 15px; line-height: 1; overflow: hidden; text-indent: -7px;
+  position: absolute; right: -4px; bottom: -4px; width: 17px; height: 17px; border-radius: 50%;
+  background: var(--card2); border: 1.5px solid var(--card); color: var(--text);
+  display: flex; align-items: center; justify-content: center;
 }
+.set-gear svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+:root[data-theme="light"] .set-ico { box-shadow: 0 0 0 1px rgba(0,0,0,.1); }
 .set-panel {
   position: absolute; top: calc(100% + 6px); right: 0; z-index: 30; width: min(320px, calc(100vw - 32px));
   background: var(--card); border: 1px solid rgba(255,111,174,.35); border-radius: 18px; padding: 6px 0;
@@ -1137,7 +1142,13 @@ body.preview-mode .toast { bottom: 72px; }
 .set-row button:hover, .set-wa:hover { border-color: var(--accent); text-decoration: none; }
 .set-row button.on { border-color: transparent; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent2)); }
 .set-row .flag { width: 20px; height: 14px; border-radius: 2px; object-fit: cover; flex-shrink: 0; }
-.set-wa { color: var(--text); }
+/* 联系：上下两排，名称不会被截断 */
+.set-col { display: flex; flex-direction: column; gap: 8px; }
+.set-col .set-wa { justify-content: flex-start; gap: 10px; padding: 9px 12px; white-space: normal; text-align: left; }
+.set-wa .ic { width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(37,211,102,.15); font-size: .95rem; }
+.set-wa .tx { min-width: 0; }
+.set-wa .tx b { display: block; font-size: .86rem; }
+.set-wa .tx small { display: block; color: var(--muted); font-weight: 500; font-size: .72rem; margin-top: 1px; }
 @media (max-width: 480px) { .set-panel { zoom: .92; } .set-row button span { display: none; } }
 
 /* ---------- ☀️ 浅色模式（:root[data-theme="light"]，预设是深色）---------- */
@@ -1213,3 +1224,22 @@ body.preview-mode .toast { bottom: 72px; }
 .vp-item:disabled { opacity: .45; cursor: not-allowed; }
 .vp-item img, .vp-item .vp-ph { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; }
 .vp-item small { display: block; color: var(--bad); font-weight: 600; }
+
+/* 🔴 「🔔 通知」标题后面的 LIVE 小标签 */
+.bell-h-l { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.bell-live-pills { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.bell-live-pills:empty { display: none; }
+.live-pill {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+  background: rgba(239,68,68,.16); border: 1px solid rgba(239,68,68,.5); color: #f87171; font-size: .7rem; font-weight: 800; text-decoration: none;
+}
+.live-pill:hover { text-decoration: none; background: rgba(239,68,68,.26); }
+.live-pill i { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; animation: liveDot 1.4s ease-in-out infinite; }
+:root[data-theme="light"] .live-pill { color: #dc2626; }
+@media (prefers-reduced-motion: reduce) { .live-pill i { animation: none; } }
+
+/* 🎨 选款式：点选（粉色框）→ 下面按确认兑换 */
+.vp-item.on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,111,174,.35); background: rgba(255,111,174,.08); }
+.vp-foot { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+.vp-foot .muted { font-size: .8rem; }
+.bell-head .bell-readall { white-space: nowrap; flex-shrink: 0; align-self: flex-start; }
