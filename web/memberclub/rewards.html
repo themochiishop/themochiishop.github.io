@@ -35,7 +35,7 @@
 
     <div class="card">
       <h2 class="dash-head" data-i18n="rw.mine"></h2>
-      <ul id="myList" class="list"><li class="empty" data-i18n="common.loading"></li></ul>
+      <div id="myList" class="rw-cards"><ul class="list"><li class="empty" data-i18n="common.loading"></li></ul></div>
     </div>
   </main>
 
@@ -81,7 +81,7 @@
       doc, updateDoc, collection, getDocs, serverTimestamp, query, where, onSnapshot
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
-      requireMember, renderNav, loadBalance, esc, fmtDate, t, tn, toDate,
+      requireMember, renderNav, loadBalance, esc, fmtDate, t, tn, toDate, lang,
       giftStep, GIFT_STEPS, addressHTML, AUTO_COMPLETE_DAYS, compressImage, redeemCode, DETAIL_COLLAPSE_DAYS,
       deliveryOf, MAX_ADDRESSES, invalidateMemberCache
     } from "./js/common.js";
@@ -100,6 +100,16 @@
       if (r.status === "cancelled" && r.adminCancelled) key = "gift.st.adminCancelled";
       return `<span class="tag ${STATUS_CLASS[r.status] || ""}">${t(key)}</span>`;
     };
+
+    // 📅 我的兑换：进行中 = 审核中，或实体奖品还没完成（待发货、配送异常、已发货等确认收货）
+    const isLive = r => r.status === "pending" || (r.kind === "gift" && ["approved", "problem", "shipped"].includes(r.status));
+    const RW_TXT = {
+      zh: { live: "进行中的兑换", latest: "最近一次兑换", months: "全部兑换（按月份）", liveN: "进行中 {n}", count: "{n} 笔" },
+      en: { live: "In progress", latest: "Latest redemption", months: "All redemptions (by month)", liveN: "{n} in progress", count: "{n} items", count1: "1 item" },
+      ms: { live: "Sedang diproses", latest: "Penebusan terkini", months: "Semua penebusan (ikut bulan)", liveN: "{n} sedang diproses", count: "{n} item" },
+    }[lang] || {};
+    const monthLabel = d => lang === "zh" ? `${d.getFullYear()} 年 ${d.getMonth() + 1} 月`
+      : d.toLocaleDateString(lang === "ms" ? "ms-MY" : "en-GB", { month: "long", year: "numeric" });
 
     document.querySelectorAll(".modal").forEach(m => {
       m.addEventListener("click", e => { if (e.target === m || e.target.closest("[data-close]")) m.classList.add("hidden"); });
@@ -220,8 +230,9 @@
         $("reservedNote").textContent = bal.reserved > 0 ? t("acc.reserved", { n: bal.reserved }) : " ";
 
         // 我的兑换
-        $("myList").innerHTML = bal.redemptions.length ? bal.redemptions.map(r => `
-          <li id="r-${esc(r.id)}" class="redeem-li${r.kind === "gift" ? " gift-item" : ""}">
+        // 我的兑换：最上面放「进行中」的（没有就放最近一次），下面按月份收起（点击展开），每一笔一个小框
+        const itemHTML = (r, withId) => `
+          <li ${withId ? `id="r-${esc(r.id)}" ` : ""}data-rid="${esc(r.id)}" class="redeem-li${r.kind === "gift" ? " gift-item" : ""}">
             <div class="redeem-row">
               ${thumb(r)}
               <div class="redeem-body">
@@ -239,12 +250,43 @@
             ${NM.rewardsNote(r, member)}
             ${giftBlock(r)}
             ${r.status === "pending" ? `<div class="redeem-actions"><button class="btn btn-ghost btn-inline btn-xs" data-cancel="${esc(r.id)}">${t("rw.cancel")}</button></div>` : ""}
-          </li>`).join("") : `<li class="empty">${t("rw.noneMine")}</li>`;
+          </li>`;
+        const list = bal.redemptions;
+        if (!list.length) {
+          $("myList").innerHTML = `<ul class="list"><li class="empty">${t("rw.noneMine")}</li></ul>`;
+        } else {
+          const live = list.filter(isLive);
+          const top = live.length ? live : [list[0]];
+          const topIds = new Set(top.map(r => r.id));
+          const months = [];
+          list.forEach(r => {
+            const d = r.createdAt || new Date(0);
+            const key = d.getFullYear() * 100 + d.getMonth();
+            let m = months.find(x => x.key === key);
+            if (!m) months.push(m = { key, date: d, items: [] });
+            m.items.push(r);
+          });
+          $("myList").innerHTML = `
+            <div class="rw-sec-h">${live.length ? "⏳ " + esc(RW_TXT.live) : "🕘 " + esc(RW_TXT.latest)}</div>
+            <ul class="list rw-top">${top.map(r => itemHTML(r, true)).join("")}</ul>
+            <div class="rw-sec-h">📅 ${esc(RW_TXT.months)}</div>
+            ${months.map(m => {
+              const n = m.items.filter(isLive).length;
+              return `<details class="rw-month" data-month="${m.key}">
+                <summary><span class="chev">▶</span><span class="m">${esc(monthLabel(m.date))}</span>
+                  ${n ? `<span class="live">${esc(RW_TXT.liveN.replace("{n}", n))}</span>` : ""}
+                  <span class="n">${esc(m.items.length === 1 && RW_TXT.count1 ? RW_TXT.count1 : RW_TXT.count.replace("{n}", m.items.length))}</span></summary>
+                <ul class="list">${m.items.map(r => itemHTML(r, !topIds.has(r.id))).join("")}</ul>
+              </details>`;
+            }).join("")}`;
+        }
 
         // 刚兑换完跳过来：捲到那一笔并闪一下
         const hash = location.hash.slice(1);
         if (hash) {
           const el = document.getElementById(hash);
+          const mo = el && el.closest("details.rw-month");
+          if (mo) mo.open = true;
           if (el) { el.classList.add("flash"); setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 200); }
           history.replaceState(null, "", location.pathname);
         }
