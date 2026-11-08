@@ -1326,3 +1326,5 @@ body.preview-mode .toast { bottom: 72px; }
 .rw-month > summary .live { font-size: .68rem; font-weight: 800; color: #fff; background: var(--accent); border-radius: 999px; padding: 2px 8px; }
 .rw-month[open] > summary { border-bottom: 1px solid var(--line); }
 .rw-month > ul { padding: 12px; }
+
+.nm-go { display: block; color: var(--accent); font-weight: 700; text-decoration: none; }
