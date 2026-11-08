@@ -118,7 +118,8 @@
         const sl = tr.parentElement, n = tr.children.length;
         const i = Math.max(0, Math.min(n - 1, Math.round(tr.scrollLeft / Math.max(1, tr.clientWidth))));
         sl.dataset.idx = i;
-        sl.querySelector(".vcount").textContent = `${i + 1}/${n}`;
+        // 数目不算主图：主图显示「共 N 款」，第 1 款显示 1/N
+        sl.querySelector(".vcount").textContent = i ? `${i}/${n - 1}` : t("rw.variantsN", { n: n - 1 });
       }, true);
       function slideTo(sl, dir) {
         const tr = sl.querySelector(".vtrack");
@@ -159,7 +160,7 @@
         const pic = `${vs.length ? `<div class="vslider" data-vs="${esc(r.id)}" data-idx="0">
             <div class="vtrack">${[{ image: r.image, name: "" }, ...vs].map((v, i) => `<div class="vslide">${one(v.image || (i ? "" : r.image), v.name || r.name)}${i ? `<span class="vname">${esc(v.name)}${typeof v.stock === "number" && v.stock <= 0 ? " · " + esc(t("rw.soldOut")) : ""}</span>` : ""}</div>`).join("")}</div>
             <button type="button" class="vnav prev" data-vnav="-1" aria-label="prev">‹</button><button type="button" class="vnav next" data-vnav="1" aria-label="next">›</button>
-            <span class="vcount">1/${vs.length + 1}</span></div>` : one(r.image, r.name)}
+            <span class="vcount">${esc(t("rw.variantsN", { n: vs.length }))}</span></div>` : one(r.image, r.name)}
           ${lockOverlayHTML(r)}
           ${es ? `<span class="ending-badge">⏰ ${esc(es.label)}</span>` : ""}`;
         return { kind: r.type === "coupon" ? "coupon" : "gift", soldOut, locked, btn, subs, limitLine, pic };
