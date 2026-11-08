@@ -83,9 +83,10 @@
     import {
       requireMember, renderNav, loadBalance, esc, fmtDate, t, tn, toDate,
       giftStep, GIFT_STEPS, addressHTML, AUTO_COMPLETE_DAYS, compressImage, redeemCode, DETAIL_COLLAPSE_DAYS,
-      deliveryOf, MAX_ADDRESSES
+      deliveryOf, MAX_ADDRESSES, invalidateMemberCache
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, addressCardHTML, saveAddresses } from "./js/address.js";
+    import * as NM from "./js/newmember.js";   // 🎉 新会员奖励
 
     const $ = id => document.getElementById(id);
     renderNav("rewards");
@@ -110,7 +111,7 @@
 
       async function load() {
         try {
-          const [b, rSnap] = await Promise.all([loadBalance(user.uid), getDocs(collection(db, "rewards"))]);
+          const [b, rSnap] = await Promise.all([loadBalance(user.uid), getDocs(collection(db, "rewards")), NM.loadSettings()]);
           bal = b;
           rSnap.docs.forEach(d => { rewardInfo[d.id] = d.data(); });
           render();
@@ -128,6 +129,12 @@
 
       // 商品图片：没有图片就显示类型图标
       function thumb(r) {
+        // 🎉 迎新礼：图片在活动设定里
+        if (NM.isNmRedemption(r)) {
+          const s = NM.peekSettings() || {};
+          const img = s.gift && s.gift.image;
+          return img ? `<img class="redeem-thumb" src="${esc(img)}" alt="" loading="lazy">` : `<span class="redeem-thumb">🎁</span>`;
+        }
         const info = rewardInfo[r.rewardId] || {};
         return info.image
           ? `<img class="redeem-thumb" src="${esc(info.image)}" alt="" loading="lazy">`
@@ -228,6 +235,7 @@
                 ${r.adminCancelled && r.cancelNote ? `<div class="meta">${esc(r.cancelNote)}</div>` : ""}
               </div>
             </div>
+            ${NM.rewardsNote(r, member)}
             ${giftBlock(r)}
             ${r.status === "pending" ? `<div class="redeem-actions"><button class="btn btn-ghost btn-inline btn-xs" data-cancel="${esc(r.id)}">${t("rw.cancel")}</button></div>` : ""}
           </li>`).join("") : `<li class="empty">${t("rw.noneMine")}</li>`;
@@ -249,11 +257,13 @@
         if (cancelId) {
           if (!confirm(t("rw.cancelConfirm"))) return;
           b.disabled = true;
+          const nmR = bal.redemptions.find(x => x.id === cancelId && NM.isNmRedemption(x));
           try {
-            await updateDoc(doc(db, "redemptions", cancelId), { status: "cancelled" });
+            if (nmR) { await NM.cancelPending(nmR.nmrId); invalidateMemberCache(); }   // 🎉 迎新礼由后端取消
+            else await updateDoc(doc(db, "redemptions", cancelId), { status: "cancelled" });
             await load();
           } catch (err) {
-            alert(t("rw.cancelFail") + err.message);
+            alert(nmR ? NM.errText(err) : t("rw.cancelFail") + err.message);
             b.disabled = false;
           }
         }

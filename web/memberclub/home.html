@@ -23,8 +23,9 @@
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, tierProgress, tierLabel, tierIconHTML, lockOverlayHTML, lockState, startLockTicker,
-      toDate, fmtDate, fmtMoney, esc, platformTag, t, lang, endState, isInternalMember, redeemCode, prizeDeadline
+      toDate, fmtDate, fmtMoney, esc, platformTag, t, lang, endState, isInternalMember, redeemCode, prizeDeadline, patchMemberCache
     } from "./js/common.js";
+    import * as NM from "./js/newmember.js";   // 🎉 新会员奖励
 
     const $ = id => document.getElementById(id);
     renderNav("home");
@@ -47,7 +48,7 @@
 
     requireMember(async (user, member) => {
       const mine = c => getDocs(query(collection(db, c), where("uid", "==", user.uid)));
-      let cfg = {}, bal, oSnap, rSnap, bnSnap, nSnap, pzSnap;
+      let cfg = {}, bal, oSnap, rSnap, bnSnap, nSnap, pzSnap, nmReward = null;
       try {
         const sSnap = await getDoc(doc(db, "settings", "home")).catch(() => null);
         cfg = sSnap && sSnap.exists() ? sSnap.data() : {};
@@ -58,7 +59,11 @@
           getDocs(collection(db, "homeBanners")).catch(() => ({ docs: [] })),
           getDocs(query(collection(db, "homeNews"), orderBy("createdAt", "desc"), limit(30))).catch(() => ({ docs: [] })),
           mine("prizeWins").catch(() => ({ docs: [] })),
+          NM.loadSettings(),
         ]);
+        // 🎉 新会员奖励：刚注册的会员先确认资格；已兑换的读那一笔的状态
+        member = await NM.ensureFresh(user, member);
+        if (member.nmr && member.nmr.rid) nmReward = await NM.loadReward(member.nmr.rid);
       } catch (e) {
         $("pageError").textContent = t("common.loadFail") + e.message;
         $("pageError").classList.remove("hidden");
@@ -246,14 +251,22 @@
         return `<a class="home-addr" href="rewards.html${list.length === 1 ? "#r-" + esc(list[0].id) : ""}">
           <span>${esc(t("home.needAddr", { n: list.length }))}</span><span class="go">➔</span></a>`;
       }
+      // 🎉 新会员奖励：还没兑换显示活动小卡；兑换后显示状态卡（固定在上面，不受「首页设定」影响）
+      const nmState = NM.stateOf(member);
+      const nmBound = oSnap.docs.length > 0 || (bal.ledger || []).some(x => x.reason === "新会员欢迎礼");
+      const nmBox = () => NM.homeCardHTML(nmState, { bound: nmBound, reward: nmReward });
       const draw = () => {
-        $("homeSections").innerHTML = addrBox() + prizeBox() + sections
+        $("homeSections").innerHTML = addrBox() + prizeBox() + nmBox() + sections
           .filter(s => s.on !== false && R[s.key])
           .map(s => R[s.key](s))
           .join("");
       };
       draw();
-      startLockTicker(id => rewardById[id], draw);   // 🔒 未开放的倒数，时间到自动开放
+      startLockTicker(id => rewardById[id], draw);
+      if (NM.shouldPopup(user, member, nmState)) {
+        NM.showPopup(user, { bound: nmBound,
+          onPatch: p => patchMemberCache(user.uid, { nmr: { ...(member.nmr || {}), ...p } }) });
+      }   // 🔒 未开放的倒数，时间到自动开放
     });
   </script>
 </body>

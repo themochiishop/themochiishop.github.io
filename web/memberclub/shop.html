@@ -21,6 +21,7 @@
       <div class="shop-mypts"><span data-i18n="acc.available"></span><b id="myPts">-</b></div>
     </div>
 
+    <div id="nmBox"></div>   <!-- 🎉 新会员专属迎新礼 -->
     <div class="cat-chips" id="cats"></div>
     <div id="rewardGrid" class="shop-grid mall-grid"><p class="empty" data-i18n="common.loading"></p></div>
     <p id="redeemMsg" class="msg"></p>
@@ -57,9 +58,10 @@
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, esc, t, loadShopCats, catOf, catName, endState, fmtDate, MAX_ADDRESSES,
-      lockState, lockOverlayHTML, startLockTicker, offShelf, showInShop, OFF_SHELF_DAYS, toDate
+      lockState, lockOverlayHTML, startLockTicker, offShelf, showInShop, OFF_SHELF_DAYS, toDate, invalidateMemberCache
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
+    import * as NM from "./js/newmember.js";   // 🎉 新会员奖励
 
     const $ = id => document.getElementById(id);
     renderNav("shop");
@@ -102,6 +104,7 @@
               || (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || a.cost - b.cost);
           render();
           openFromHash();
+          renderNm();
         } catch (e) {
           $("pageError").textContent = t("common.loadFail") + e.message;
           $("pageError").classList.remove("hidden");
@@ -418,6 +421,18 @@
           amMsg(err.code === "permission-denied" ? t("rw.denied") : t("rw.fail") + err.message, "err");
           $("amSubmit").disabled = false;
         }
+      });
+
+      // 🎉 新会员专属：在商城最上面（只有新会员 / 内部会员看得到）
+      async function renderNm() {
+        await NM.loadSettings();
+        const st = NM.stateOf(member);
+        const bound = (bal.ledger || []).some(x => x.reason === "新会员欢迎礼" || x.orderNo);
+        $("nmBox").innerHTML = NM.shopCardHTML(st, { bal, bound });
+        if (location.hash === "#nm" && $("nm")) $("nm").scrollIntoView({ block: "center" });
+      }
+      NM.bindShopCard($("nmBox"), user, {
+        onDone: () => { invalidateMemberCache(); setTimeout(() => location.href = "home.html", 900); },
       });
 
       load();

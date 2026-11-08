@@ -190,6 +190,7 @@
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
     import { MAX_ADDRESSES } from "./js/common.js";
+    import * as NM from "./js/newmember.js";   // 🎉 新会员奖励
 
     const $ = id => document.getElementById(id);
     renderNav("profile");
@@ -220,7 +221,7 @@
         p ? t("bind.detected", { tag: platformTag(p) }) : esc(t("bind.badFormat"));
     });
 
-    function initBind(user) {
+    function initBind(user, member = {}) {
       async function loadBindings() {
         const mine = c => getDocs(query(collection(db, c), where("uid", "==", user.uid)));
         const [bSnap, oSnap, logs] = await Promise.all([
@@ -300,6 +301,14 @@
           await loadBindings();
           // 绑定后马上领欢迎礼 / 第二平台奖励
           try { toastBonuses((await claimBonuses(user.uid)).claimed); } catch (e2) { console.warn(e2); }
+          // 🎉 新会员奖励：还没兑换的新会员，提示可以去兑换商城
+          try {
+            await NM.loadSettings();
+            if (NM.stateOf(member).kind === "offer") {
+              $("bindMsg").insertAdjacentHTML("beforeend",
+                `<br><a class="nm-bind-go" href="shop.html#nm">${esc(NM.nt("bindDone"))} ${esc(NM.nt("bindDoneGo"))}</a>`);
+            }
+          } catch (e3) { console.warn(e3); }
         } catch (err) {
           if (err.code === "permission-denied") bindMsg(t("bind.denied"), "err");
           else bindMsg(t("bind.fail") + err.message, "err");
@@ -328,7 +337,7 @@
     }
 
     requireMember((user, member) => {
-      initBind(user);
+      initBind(user, member);
       const ref = doc(db, "members", user.uid);
       $("internalTag").classList.toggle("hidden", !isInternalMember(member));
       $("email").value = member.email || user.email || "";
