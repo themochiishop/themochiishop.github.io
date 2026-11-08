@@ -118,6 +118,7 @@ const FD = {
     "editReview": "Saved — your post will be shown again after review.",
     "editSaved": "Saved",
     "editEmpty": "Write something first",
+    "phoneHidden": "Phone numbers were hidden (***) to protect your privacy.",
   },
   ms: {
     "pageTitle": "Mochii Feed · Mochii Club",
@@ -234,6 +235,7 @@ const FD = {
     "editReview": "Disimpan — siaran anda akan dipaparkan semula selepas disemak.",
     "editSaved": "Disimpan",
     "editEmpty": "Tulis sesuatu dahulu",
+    "phoneHidden": "Nombor telefon telah disembunyikan (***) untuk melindungi privasi anda.",
   },
   zh: {
     "pageTitle": "Mochii Feed · Mochii Club",
@@ -350,6 +352,7 @@ const FD = {
     "editReview": "已保存，帖子要重新审核后才会再显示。",
     "editSaved": "已保存",
     "editEmpty": "请先写点内容",
+    "phoneHidden": "为保护隐私，电话号码已隐藏（***）。",
   },
 };
 
