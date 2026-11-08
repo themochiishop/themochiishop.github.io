@@ -369,6 +369,7 @@
     import { renderNav, initBell, esc, toDate, toast, compressImage, isInternalMember, t, lang, BLACK_CROWN, fillContacts, claimBonuses, toastBonuses, invalidateMemberCache } from "./js/common.js";
     import { applyI18n, langSwitchHTML, bindLangSwitch, settingsHTML, bindSettings } from "./js/i18n.js";
     import { ft } from "./js/feed-i18n.js";
+    import { maskPhones } from "./js/phone-filter.js";
 
     const $ = id => document.getElementById(id);
     const PAGE_SIZE = 10;
@@ -500,6 +501,18 @@
       await syncMyFeed();
     }
 
+    // 📵 电话号码过滤：会员的文字先把电话号码换成 ***（管理员不过滤）
+    function cleanText(raw) {
+      return me.admin ? { text: raw, hit: false } : maskPhones(raw);
+    }
+    // 屏蔽记录：原文只有后台看得到（会员只能新增，不能读）；写失败不影响发帖
+    function logFilter(kind, raw, masked, postId = "", commentId = "") {
+      setDoc(doc(collection(db, "filterLogs")), {
+        uid: me.user.uid, name: me.member.name || "", kind, postId, commentId,
+        original: String(raw).slice(0, 2000), masked: String(masked).slice(0, 2000), createdAt: serverTimestamp(),
+      }).catch(e => console.warn("filterLogs", e));
+    }
+
     // 绑定通行证：记下一个自己的绑定账号，让规则确认「已绑定订单」（别人看不到）
     async function ensurePass(uid) {
       try {
@@ -523,7 +536,8 @@
         const cur = me.feed || {};
         const next = {
           name: me.member.name || "", tier: me.member.tier || "mochii", title: me.title,
-          avatar: cur.avatar || "", bio: cur.bio || "", code: me.user.uid.slice(0, 8), best: me.member.bestTier || "", ...(patch || {}),
+          // 旧简介如果有电话号码也一起换成 ***（不然新规则会挡住同步）
+          avatar: cur.avatar || "", bio: cleanText(cur.bio || "").text.slice(0, 60), code: me.user.uid.slice(0, 8), best: me.member.bestTier || "", ...(patch || {}),
         };
         const same = me.feed && ["name", "tier", "title", "avatar", "bio", "code", "best"].every(k => cur[k] === next[k]);
         if (!same) {
@@ -1096,7 +1110,8 @@
       if (ec) ec.onclick = () => { editing = null; drawDetail(p); };
       const es = inner.querySelector("[data-esave]");
       if (es) es.onclick = async () => {
-        const text = $("editText").value.trim();
+        const raw = $("editText").value.trim();
+        const { text, hit } = cleanText(raw);
         es.disabled = true;
         try {
           if (editing === "post") {
@@ -1108,23 +1123,25 @@
             batch.update(doc(db, "feedPosts", p.id), back ? { editedAt: serverTimestamp(), status: "pending" } : { editedAt: serverTimestamp() });
             batch.update(doc(db, "feedPosts", p.id, "content", "main"), { text: text.slice(0, 2000) });
             await batch.commit();
+            if (hit) logFilter("editPost", raw, text, p.id);
             p.content.text = text; p.editedAt = new Date(); editing = null;
             if (back) {
               p.status = "pending";
-              toast(ft("editReview"));
+              toast(ft("editReview") + (hit ? " " + ft("phoneHidden") : ""));
               closeModal("detail"); cursors.length = 1; loadPage(1); loadMyPosts();
               return;
             }
-            toast(ft("editSaved"));
+            toast(hit ? ft("phoneHidden") : ft("editSaved"));
             drawDetail(p); render();
           } else {
             if (!text) { toast(ft("editEmpty")); es.disabled = false; return; }
             const cid = editing.slice(2);
             await updateDoc(doc(db, "feedPosts", p.id, "comments", cid), { text: text.slice(0, 500), editedAt: serverTimestamp() });
+            if (hit) logFilter("editComment", raw, text, p.id, cid);
             const c = comments.find(x => x.id === cid);
             if (c) { c.text = text; c.editedAt = new Date(); }
             editing = null;
-            toast(ft("editSaved"));
+            toast(hit ? ft("phoneHidden") : ft("editSaved"));
             drawDetail(p);
           }
         } catch (err) { toast(ft("fail") + err.message); es.disabled = false; }
@@ -1146,8 +1163,9 @@
       if (rc) rc.onclick = () => { replyTo = null; drawDetail(p); };
       const send = $("rSend");
       if (send) send.onclick = async () => {
-        const text = $("rText").value.trim();
-        if (!text) return;
+        const raw = $("rText").value.trim();
+        if (!raw) return;
+        const { text, hit } = cleanText(raw);
         send.disabled = true;
         const data = {
           authorUid: me.user.uid, authorName: me.member.name || "", authorTier: me.member.tier || "mochii",
@@ -1157,6 +1175,7 @@
         try {
           const ref = doc(collection(db, "feedPosts", p.id, "comments"));
           await setDoc(ref, data);
+          if (hit) { logFilter("comment", raw, text, p.id, ref.id); toast(ft("phoneHidden")); }
           comments.push({ id: ref.id, ...data, createdAt: new Date() });
           p.nCmt = comments.length; replyTo = null; replyOpen = false; drafts[p.id] = "";
           drawDetail(p); render();
@@ -1258,7 +1277,8 @@
       $("cText").focus();
     };
     $("cSend").onclick = async () => {
-      const text = $("cText").value.trim();
+      const raw = $("cText").value.trim();
+      const { text, hit } = cleanText(raw);
       const setMsg = (s, type) => { $("cMsg").textContent = s; $("cMsg").className = "msg " + (type || ""); };
       if (!text && !pics.length) { setMsg(ft("needText"), "err"); return; }
       $("cSend").disabled = true;
@@ -1274,9 +1294,10 @@
         });
         batch.set(doc(db, "feedPosts", ref.id, "content", "main"), { text, images: pics.map(p => p.full) });
         await batch.commit();
+        if (hit) logFilter("post", raw, text, ref.id);
         $("cText").value = ""; pics = [];
         closeModal("composer");
-        toast(ft(direct ? "posted" : "sentReview"));
+        toast(ft(direct ? "posted" : "sentReview") + (hit ? " " + ft("phoneHidden") : ""));
         if (direct) { cursors.length = 1; loadPage(1); } else loadMyPosts();
       } catch (e) {
         setMsg(ft("fail") + e.message + (/size|exceed|too large/i.test(e.message) ? " " + ft("tooBig") : ""), "err");
@@ -1332,12 +1353,15 @@
     $("eSave").onclick = async () => {
       $("eSave").disabled = true;
       try {
-        await syncMyFeed({ avatar: draftAvatar, bio: $("eBio").value.trim().slice(0, 60) });
+        const rawBio = $("eBio").value.trim().slice(0, 60);
+        const bio = cleanText(rawBio);
+        await syncMyFeed({ avatar: draftAvatar, bio: bio.text.slice(0, 60) });
+        if (bio.hit) { logFilter("bio", rawBio, bio.text); $("eBio").value = bio.text; }
         // 🖼️ 第一次上传自己的头像 → 送积分（系统头像、名字第一个字不算）
         if (/^data:image\//.test(draftAvatar || "")) claimBonuses(me.user.uid, { withAvatar: true })
           .then(r => { if (r.claimed.length) { invalidateMemberCache(); toastBonuses(r.claimed); } }).catch(e => console.warn("avatar bonus", e));
         closeModal("editor");
-        toast(ft("saved"));
+        toast(bio.hit ? ft("phoneHidden") : ft("saved"));
         await renderProfileHead();
         if (view.mode !== "all") { cursors.length = 1; await loadPage(1); } else render();
       } catch (e) {
