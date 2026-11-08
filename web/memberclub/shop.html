@@ -350,6 +350,12 @@
             sel = +b.dataset.vp; paint();
           };
           m.classList.remove("hidden");
+          // 先选好的那一款捲到视窗中间（款式多的时候不用自己往下滑）
+          m.querySelector(".modal-card").scrollTop = 0;
+          requestAnimationFrame(() => {
+            const on = $("vpGrid").querySelector(".vp-item.on");
+            if (on) on.scrollIntoView({ block: "center" });
+          });
         });
       }
 
