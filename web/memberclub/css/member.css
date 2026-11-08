@@ -1245,6 +1245,8 @@ body.preview-mode .toast { bottom: 72px; }
 /* 🎨 选款式：点选（粉色框）→ 下面按确认兑换 */
 .vp-item.on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,111,174,.35); background: rgba(255,111,174,.08); }
 .vp-foot { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+/* 款式多的时候：「确认兑换」固定在视窗下面，不用滑到最底 */
+#vpModal .vp-foot { position: sticky; bottom: -20px; margin: 14px -20px -20px; padding: 12px 20px 16px; background: var(--card); border-top: 1px solid var(--line); }
 .vp-foot .muted { font-size: .8rem; }
 .bell-head .bell-readall { white-space: nowrap; flex-shrink: 0; }
 .bh-t { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
