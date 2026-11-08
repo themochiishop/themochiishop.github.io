@@ -35,7 +35,9 @@ const TXT = {
     "st.refunded": "这份迎新礼已取消，{cost} 分已退回。",
     "lbl.pending_approval": "审核中", "lbl.pending_order": "等待下一笔订单", "lbl.order_review": "订单确认中",
     "lbl.expired_review": "等待管理员审核", "lbl.ready_to_pack": "准备寄出", "lbl.packed": "准备寄出",
-    "lbl.shipped": "已寄出", "lbl.cancelled": "已取消", "lbl.refunded": "已取消 · 积分已退回",
+    "lbl.shipped": "已寄出", "lbl.completed": "已完成", "lbl.cancelled": "已取消", "lbl.refunded": "已取消 · 积分已退回",
+    "st.completed": "礼品已签收，谢谢你！🎉",
+    confirmGo: "收到礼品后，请到兑换记录按「确认收货」➔",
     kStatus: "当前状态", kDays: "剩余天数", kGift: "兑换商品", kDate: "兑换日期", kDeadline: "截止日期",
     days: "{n} 天", deadlineAfter: "批准后开始计算",
     orderHint: "💡 用任何一个已绑定的 Shopee / TikTok 账号下单都可以。",
@@ -96,7 +98,9 @@ const TXT = {
     "st.refunded": "This welcome gift has been cancelled and {cost} pts were returned.",
     "lbl.pending_approval": "Under review", "lbl.pending_order": "Waiting for your next order", "lbl.order_review": "Checking order",
     "lbl.expired_review": "Waiting for admin review", "lbl.ready_to_pack": "Preparing to ship", "lbl.packed": "Preparing to ship",
-    "lbl.shipped": "Shipped", "lbl.cancelled": "Cancelled", "lbl.refunded": "Cancelled · points returned",
+    "lbl.shipped": "Shipped", "lbl.completed": "Completed", "lbl.cancelled": "Cancelled", "lbl.refunded": "Cancelled · points returned",
+    "st.completed": "Gift received — thank you! 🎉",
+    confirmGo: "Got your gift? Tap \"Confirm received\" in My Redemptions ➔",
     kStatus: "Status", kDays: "Days left", kGift: "Gift", kDate: "Redeemed on", kDeadline: "Order by",
     days: "{n} days", deadlineAfter: "Starts once approved",
     orderHint: "💡 Any of your linked Shopee / TikTok accounts can place the order.",
@@ -157,7 +161,9 @@ const TXT = {
     "st.refunded": "Hadiah alu-aluan ini telah dibatalkan dan {cost} mata telah dikembalikan.",
     "lbl.pending_approval": "Sedang disemak", "lbl.pending_order": "Menunggu pesanan seterusnya", "lbl.order_review": "Menyemak pesanan",
     "lbl.expired_review": "Menunggu semakan admin", "lbl.ready_to_pack": "Sedang disediakan", "lbl.packed": "Sedang disediakan",
-    "lbl.shipped": "Telah dihantar", "lbl.cancelled": "Dibatalkan", "lbl.refunded": "Dibatalkan · mata dikembalikan",
+    "lbl.shipped": "Telah dihantar", "lbl.completed": "Selesai", "lbl.cancelled": "Dibatalkan", "lbl.refunded": "Dibatalkan · mata dikembalikan",
+    "st.completed": "Hadiah telah diterima — terima kasih! 🎉",
+    confirmGo: "Sudah terima hadiah? Tekan \"Sahkan terima\" di Penebusan Saya ➔",
     kStatus: "Status", kDays: "Baki hari", kGift: "Hadiah", kDate: "Tarikh tebus", kDeadline: "Pesan sebelum",
     days: "{n} hari", deadlineAfter: "Bermula selepas diluluskan",
     orderHint: "💡 Mana-mana akaun Shopee / TikTok yang dipautkan boleh membuat pesanan.",
@@ -387,6 +393,8 @@ export function homeCardHTML(st, { bound, reward } = {}) {
   if (st.kind !== "status") return "";
   const r = reward || {};
   const status = r.status || st.status;
+  // 已完成：签收 7 天后首页就不再显示（兑换记录里一直看得到）
+  if (status === "completed" && toMs(r.completedAt) && Date.now() - toMs(r.completedAt) > 7 * 86400000) return "";
   const cost = r.cost ?? (S ? S.cost : 30);
   const dl = toMs(r.deadline) ?? st.deadline;
   const order = (r.linkedOrder && r.linkedOrder.orderNo) || "";
@@ -394,7 +402,7 @@ export function homeCardHTML(st, { bound, reward } = {}) {
   const img = (r.gift && r.gift.image) || giftImg();
   const live = ["pending_order", "order_review", "expired_review"].includes(status);
   const tone = { pending_order: "tag-pending", order_review: "tag-ship", expired_review: "tag-pending",
-    ready_to_pack: "tag-ship", packed: "tag-ship", shipped: "tag-ok", pending_approval: "tag-pending" }[status] || "";
+    ready_to_pack: "tag-ship", packed: "tag-ship", shipped: "tag-ship", completed: "tag-ok", pending_approval: "tag-pending" }[status] || "";
   const rows = [
     [nt("kStatus"), `<span class="tag ${tone}">${esc(nt("lbl." + status))}</span>`],
     status === "pending_order" && dl ? [nt("kDays"), `<b class="nm-days${daysLeft(dl) <= 5 ? " soon" : ""}">${esc(nt("days", { n: daysLeft(dl) }))}</b>`] : null,
@@ -408,12 +416,13 @@ export function homeCardHTML(st, { bound, reward } = {}) {
         ${img ? `<img class="nm-thumb" src="${esc(img)}" alt="">` : `<span class="nm-thumb">🎁</span>`}
         <div class="nm-tx">
           <div class="nm-tag">✨ ${esc(nt("tag"))}</div>
-          <div class="nm-title">${esc(["cancelled", "refunded"].includes(status) ? gift : nt("redeemedTitle", { gift }))}</div>
+          <div class="nm-title">${esc(["cancelled", "refunded", "completed"].includes(status) ? gift : nt("redeemedTitle", { gift }))}</div>
         </div>
       </div>
       <p class="nm-msg">${esc(nt("st." + status, { cost, order, days: dl ? daysLeft(dl) : (S ? S.validDays : 20), gift }))}</p>
       <dl class="nm-kv">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join("")}</dl>
       ${status === "pending_order" ? `<p class="nm-hint">${esc(nt("orderHint"))}</p>` : ""}
+      ${status === "shipped" && st.rid ? `<a class="nm-hint nm-go" href="rewards.html#r-nm_${esc(st.rid)}">${esc(nt("confirmGo"))}</a>` : ""}
     </div>`;
 }
 
@@ -503,7 +512,7 @@ export function rewardsNote(r, member) {
   if (!r.newMember) return "";
   const n = (member && member.nmr) || {};
   // 已寄出 / 已完成 / 已取消：以兑换记录本身为准（会员资料可能是几分钟前的暂存）
-  const byRed = { shipped: "shipped", completed: "shipped", cancelled: "cancelled", rejected: "cancelled" }[r.status];
+  const byRed = { shipped: "shipped", completed: "completed", cancelled: "cancelled", rejected: "cancelled" }[r.status];
   const status = byRed || (n.rid === r.nmrId && n.status ? n.status : null);
   if (!status) return "";
   return `<div class="nm-rw">${esc(nt("rwNote", { status: nt("lbl." + status) }))} <a href="home.html">${esc(nt("rwSee"))}</a></div>`;
