@@ -164,7 +164,8 @@
                 <span class="dt">${i <= step && dates[i] ? fmtDate(dates[i]).slice(0, 5) : ""}</span>
               </div>`).join("")}
           </div>`;
-        const sh = r.shipping || {};
+        // 🎉 迎新礼一定随订单寄出（旧纪录没有 shipping 也照样显示「随订单寄出」）
+        const sh = r.shipping || (NM.isNmRedemption(r) ? { withOrder: true } : {});
         const doneAt = toDate(r.receivedAt) || toDate(r.completedAt);
         const old = r.status === "completed" && doneAt && (Date.now() - doneAt) > DETAIL_COLLAPSE_DAYS * 86400000;
         const url = /^https:\/\//i.test(sh.trackingUrl || "") ? sh.trackingUrl : "";
@@ -226,7 +227,7 @@
               <div class="redeem-body">
                 <div class="redeem-top">
                   <div class="title">${esc(r.rewardName)}${r.variantName ? ` <span class="tag">🎨 ${esc(r.variantName)}</span>` : ""} ${statusTag(r)}</div>
-                  <span class="redeem-no">${redeemCode(r.id)}</span>
+                  <span class="redeem-no">${redeemCode(NM.isNmRedemption(r) ? r.id.replace(/^nm_/, "") : r.id)}</span>
                 </div>
                 <div class="meta">${r.gift ? "🎁 " + esc(t("rw.perkGift", { why: r.giftReason || "" })) : t("unit.pts", { n: r.cost })} · ${t("rw.appliedOn", { d: fmtDate(r.createdAt) })}${r.decidedAt && r.kind !== "gift" ? " · " + t("rw.decidedOn", { d: fmtDate(r.decidedAt) }) : ""}</div>
                 ${r.couponCode ? `<div class="code"><span class="code-txt">${t("rw.code")} <b>${esc(r.couponCode)}</b></span> <button class="btn btn-ghost btn-inline" data-copy="${esc(r.couponCode)}">${t("rw.copy")}</button></div>
