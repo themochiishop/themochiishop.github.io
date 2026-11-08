@@ -288,7 +288,7 @@
             ${p.status === "unclaimed" && deadline ? `<div class="pz-deadline${left <= 7 ? " soon" : ""}">⏰ ${esc(t("pz.deadline", { d: fmtDate(deadline) }))}</div>` : ""}
             ${p.status === "shipped" && toDate(p.shippedAt) ? `<div class="muted gift-auto">${esc(t("pz.autoNote", { d: fmtDate(new Date(toDate(p.shippedAt).getTime() + PRIZE_AUTO_COMPLETE_DAYS * 86400000)) }))}</div>` : ""}
             ${p.status === "completed" && p.autoCompleted ? `<div class="muted gift-auto">✅ ${esc(t("gift.autoDone"))}</div>` : ""}
-            ${p.status === "cancelled" ? (p.autoExpired ? `<div class="meta">⏰ ${esc(t("pz.expiredNote"))}</div>` : p.cancelNote ? `<div class="meta">${esc(tn(p.cancelNote, p.cancelNoteI18n))}</div>` : "") : ""}
+            ${p.status === "cancelled" ? (p.autoExpired ? `<div class="meta">⏰ ${esc(t("pz.expiredNote"))}</div>` : p.cancelNote ? `<div class="meta">${esc(t("rw.note"))}${esc(tn(p.cancelNote, p.cancelNoteI18n))}</div>` : "") : ""}
             ${p.status === "unclaimed" ? `<button class="btn btn-primary gift-confirm pz-claim" data-claim="${esc(p.id)}">${toClaim > 1 ? t("pz.claimAll", { n: toClaim }) : t("pz.claim")}</button>` : ""}
             ${p.status === "shipped" ? `<button class="btn btn-primary gift-confirm" data-got="${esc(p.id)}">${t("pz.receivedBtn")}</button>` : ""}
           </li>`;
