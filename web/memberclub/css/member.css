@@ -1302,8 +1302,9 @@ body.preview-mode .toast { bottom: 72px; }
 .nm-act { flex-shrink: 0; }
 @media (max-width: 560px) {
   .nm-shop { flex-wrap: wrap; }
+  .nm-shop .nm-thumb { width: 60px; height: 60px; }
   .nm-shop .nm-act { width: 100%; }
-  .nm-shop .nm-act .btn { width: 100%; }
+  .nm-shop .nm-act .btn { width: 100%; justify-content: center; text-align: center; }
   .nm-offer .btn { display: none; }
 }
 .nm-rw { font-size: .8rem; margin: 6px 0 0; color: var(--accent); }
