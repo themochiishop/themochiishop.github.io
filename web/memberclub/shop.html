@@ -102,6 +102,7 @@
         firstSnap = new Promise((resolve, reject) => {
           let first = true;
           unsub = onSnapshot(query(collection(db, "rewards"), where("active", "==", true)), snap => {
+            const before = first ? null : stockSnapshot();   // 变动前的库存（拿来比较、播动画）
             snap.docChanges().forEach(ch => {
               const r = { id: ch.doc.id, ...ch.doc.data() };
               if (ch.type === "removed") { liveMap.delete(r.id); offMap.set(r.id, r); }   // 刚下架：显示灰色「已下架」
@@ -110,6 +111,7 @@
             if (first) { first = false; resolve(); return; }
             if (!bal) return;   // 还在第一次载入中：等 load() 画
             rebuild(); render();
+            if (before) animateStock(before);
             if (vpRefresh) vpRefresh();   // 选款式视窗开着：卖完的款式马上变灰
           }, err => {
             console.warn("rewards live", err);
@@ -117,6 +119,61 @@
           });
         });
         return firstSnap;
+      }
+
+      // ✨ 实时库存变动的效果（只在变动的那一下播放；刚打开商城不播）
+      //   卖完：盖「已兑完」印章、卡片轻晃；补货：印章淡出、闪光 ✨「有货了」；剩 3 个以下数字变少：数字跳一下
+      function stockSnapshot() {
+        const m = new Map();
+        liveMap.forEach(r => m.set(r.id, { s: stockOf(r), v: Object.fromEntries(varsOf(r).map(v => [v.id, typeof v.stock === "number" ? Math.max(v.stock, 0) : null])) }));
+        return m;
+      }
+      const reduceMotion = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      function flash(el, cls, ms) {
+        if (!el) return;
+        el.classList.remove(cls); void el.offsetWidth;   // 同一个效果连续播也会重新开始
+        el.classList.add(cls);
+        setTimeout(() => el.classList.remove(cls), ms);
+      }
+      function restockFx(ph) {
+        if (!ph) return;
+        flash(ph, "fx-restock", 1400);
+        const tag = document.createElement("span");
+        tag.className = "fx-restock-tag"; tag.textContent = t("rw.restocked");
+        ph.appendChild(tag);
+        if (!reduceMotion()) for (let i = 0; i < 5; i++) {
+          const sp = document.createElement("span");
+          sp.className = "fx-spark"; sp.textContent = "✨";
+          sp.style.left = (15 + i * 17) + "%"; sp.style.animationDelay = (i * 70) + "ms";
+          ph.appendChild(sp);
+          setTimeout(() => sp.remove(), 1300);
+        }
+        setTimeout(() => tag.remove(), 2200);
+      }
+      function animateStock(before) {
+        const now = stockSnapshot();
+        now.forEach((n, id) => {
+          const b = before.get(id);
+          if (!b) return;
+          const roots = [document.querySelector(`.shop-item[data-rid="${CSS.escape(id)}"]`), dtId === id ? $("dtBody") : null].filter(Boolean);
+          roots.forEach(root => {
+            const ph = root.querySelector(".ph, .dt-ph");
+            // 整个奖品
+            if (b.s != null && b.s > 0 && n.s === 0) { flash(root.querySelector(".so-stamp"), "fx-stamp", 900); flash(root, "fx-shake", 600); }
+            else if (b.s === 0 && n.s > 0) restockFx(ph);
+            else if (n.s != null && b.s != null && n.s < b.s && isLow(n.s)) flash(root.querySelector("[data-stock-line]"), "fx-bump", 600);
+            // 款式（整个奖品没卖完时，看每一款）
+            if (n.s !== 0) {
+              const slides = root.querySelectorAll(".vslide");
+              varsOf(rewards.find(x => x.id === id) || {}).forEach((v, i) => {
+                const bv = b.v[v.id], nv = n.v[v.id], slide = slides[i + 1];
+                if (!slide) return;
+                if (bv > 0 && nv === 0) flash(slide.querySelector(".so-stamp"), "fx-stamp", 900);
+                else if (bv === 0 && nv > 0) restockFx(slide);
+              });
+            }
+          });
+        });
       }
 
       async function load() {
@@ -154,7 +211,9 @@
         if (!vs.length) return typeof r.stock === "number" ? Math.max(r.stock, 0) : null;
         return vs.every(v => typeof v.stock === "number") ? vs.reduce((a, v) => a + Math.max(v.stock, 0), 0) : null;
       }
-      const stockText = n => n == null ? "" : t("rw.left", { n });
+      const LOW_STOCK = 3;   // 剩几个以下显示红色 🔥
+      const isLow = n => n != null && n > 0 && n <= LOW_STOCK;
+      const stockText = n => n == null ? "" : (isLow(n) ? "🔥 " : "") + t("rw.left", { n });
       // 滑到哪一款，下面的「剩 N 份」就显示那一款的库存（主图显示总库存）
       function syncStockLine(sl) {
         const i = +sl.dataset.idx || 0;
@@ -164,6 +223,7 @@
         if (!slide || !el) return;
         const v = slide.dataset.stk;
         el.textContent = v === "" || v == null ? "" : " · " + stockText(+v);
+        el.classList.toggle("low", v !== "" && v != null && isLow(+v));
       }
       // 滑动时更新 1/5；左右箭头（电脑用）
       document.addEventListener("scroll", e => {
@@ -208,18 +268,22 @@
         else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
         else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
               const subs = `
-          <div class="sub">${t(ty.key)}<span data-stock-line>${stock != null && !r.ciOnly ? " · " + stockText(stock) : ""}</span></div>
+          <div class="sub">${t(ty.key)}<span data-stock-line class="${!r.ciOnly && isLow(stock) ? "low" : ""}">${stock != null && !r.ciOnly ? " · " + stockText(stock) : ""}</span></div>
           ${es ? `<div class="ending-line">${esc(t("shop.endingSoon"))} · ${esc(t("shop.endsOn", { d: fmtDate(es.end, true) }))}</div>` : ""}`;
         // 🔁 限兑次数：只在详情里显示
         const limitLine = max ? `<div class="sub">${esc(full && r.type === "coupon" ? t("rw.limitNext") : t("rw.limitLine", { max, used }))}</div>` : "";
         const vs = varsOf(r);
         // 🎨 有款式：主图 + 每一款图片可以左右滑动，下面显示 1/5、2/5…
         const one = (img, alt) => img ? `<img src="${esc(img)}" alt="${esc(alt)}" loading="lazy">` : ty.icon;
+        // 📦 已兑完印章：整个奖品卖完盖在图片上；只有某一款卖完就盖在那一款的图片上
+        const stamp = `<span class="so-stamp" aria-hidden="true">${esc(t("rw.soldOut"))}<small>SOLD OUT</small></span>`;
+        const allOut = soldOut && !r.ciOnly;
         const pic = `${vs.length ? `<div class="vslider" data-vs="${esc(r.id)}" data-idx="0">
-            <div class="vtrack">${[{ image: r.image, name: "" }, ...vs].map((v, i) => `<div class="vslide" data-stk="${r.ciOnly ? "" : i ? (typeof v.stock === "number" ? Math.max(v.stock, 0) : "") : (stock ?? "")}">${one(v.image || (i ? "" : r.image), v.name || r.name)}${i ? `<span class="vname">${esc(v.name)}${typeof v.stock === "number" && v.stock <= 0 ? " · " + esc(t("rw.soldOut")) : ""}</span>` : ""}</div>`).join("")}</div>
+            <div class="vtrack">${[{ image: r.image, name: "" }, ...vs].map((v, i) => `<div class="vslide" data-stk="${r.ciOnly ? "" : i ? (typeof v.stock === "number" ? Math.max(v.stock, 0) : "") : (stock ?? "")}">${one(v.image || (i ? "" : r.image), v.name || r.name)}${i && !allOut && typeof v.stock === "number" && v.stock <= 0 ? stamp : ""}${i ? `<span class="vname">${esc(v.name)}${typeof v.stock === "number" && v.stock <= 0 ? " · " + esc(t("rw.soldOut")) : ""}</span>` : ""}</div>`).join("")}</div>
             <button type="button" class="vnav prev" data-vnav="-1" aria-label="prev">‹</button><button type="button" class="vnav next" data-vnav="1" aria-label="next">›</button>
             <span class="vcount">${esc(t("rw.variantsN", { n: vs.length }))}</span></div>` : one(r.image, r.name)}
           ${lockOverlayHTML(r)}
+          ${allOut ? stamp : ""}
           ${r.ciOnly ? `<span class="ci-only-tag"><img src="img/ci-badge.png" alt="">${esc(t("shop.ciOnlyTag"))}</span>` : ""}
           ${es ? `<span class="ending-badge">⏰ ${esc(es.label)}</span>` : ""}`;
         // 积分：签到达人专属的不显示积分，改成「签到达人奖励」
@@ -265,7 +329,7 @@
         $("rewardGrid").innerHTML = list.length ? list.map(r => {
           const s = cardState(r), id = esc(r.id);
           return `
-            <div class="shop-item mall-item type-${s.kind}${s.soldOut ? " sold-out" : ""}${s.locked ? " locked" : ""}">
+            <div class="shop-item mall-item type-${s.kind}${s.soldOut ? " sold-out" : ""}${s.locked ? " locked" : ""}" data-rid="${id}">
               <div class="ph" data-detail="${id}">${s.pic}</div>
               <div class="info">
                 <div class="name" data-detail="${id}">${esc(r.name)}</div>
