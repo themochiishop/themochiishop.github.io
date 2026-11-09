@@ -148,6 +148,23 @@
       // 🎨 款式（后台「商城奖品」设定）：照顺序排好
       const varsOf = r => r.type === "coupon" ? [] : Object.entries(r.variants || {}).map(([id, v]) => ({ id, ...v }))
         .filter(v => v.name).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      // 📦 库存：有款式的奖品，总库存 = 各款式库存加起来（有一款不限库存 = 不限）；没有款式的用奖品本身的库存
+      function stockOf(r) {
+        const vs = varsOf(r);
+        if (!vs.length) return typeof r.stock === "number" ? Math.max(r.stock, 0) : null;
+        return vs.every(v => typeof v.stock === "number") ? vs.reduce((a, v) => a + Math.max(v.stock, 0), 0) : null;
+      }
+      const stockText = n => n == null ? "" : t("rw.left", { n });
+      // 滑到哪一款，下面的「剩 N 份」就显示那一款的库存（主图显示总库存）
+      function syncStockLine(sl) {
+        const i = +sl.dataset.idx || 0;
+        const slide = sl.querySelectorAll(".vslide")[i];
+        const root = sl.closest(".shop-item") || sl.closest("#dtBody");
+        const el = root && root.querySelector("[data-stock-line]");
+        if (!slide || !el) return;
+        const v = slide.dataset.stk;
+        el.textContent = v === "" || v == null ? "" : " · " + stockText(+v);
+      }
       // 滑动时更新 1/5；左右箭头（电脑用）
       document.addEventListener("scroll", e => {
         const tr = e.target.closest && e.target.closest(".vtrack");
@@ -157,6 +174,7 @@
         sl.dataset.idx = i;
         // 数目不算主图：主图显示「共 N 款」，第 1 款显示 1/N
         sl.querySelector(".vcount").textContent = i ? `${i}/${n - 1}` : t("rw.variantsN", { n: n - 1 });
+        syncStockLine(sl);
       }, true);
       function slideTo(sl, dir) {
         const tr = sl.querySelector(".vtrack");
@@ -176,7 +194,8 @@
         const ty = TYPE[r.type] || TYPE.gift;
         const off = offShelf(r);
         const es = off ? null : endState(r);
-        const soldOut = typeof r.stock === "number" && r.stock <= 0;
+        const stock = stockOf(r);
+        const soldOut = stock != null && stock <= 0;   // 有款式：全部款式都卖完才算兑完
         const short = r.cost - bal.spendable;
         const locked = off || !!lockState(r);
         const max = limitOf(r), used = max ? usedOf(r) : 0, full = !!max && used >= max;
@@ -189,7 +208,7 @@
         else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
         else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
               const subs = `
-          <div class="sub">${t(ty.key)}${typeof r.stock === "number" && !r.ciOnly ? " · " + t("rw.left", { n: Math.max(r.stock, 0) }) : ""}</div>
+          <div class="sub">${t(ty.key)}<span data-stock-line>${stock != null && !r.ciOnly ? " · " + stockText(stock) : ""}</span></div>
           ${es ? `<div class="ending-line">${esc(t("shop.endingSoon"))} · ${esc(t("shop.endsOn", { d: fmtDate(es.end, true) }))}</div>` : ""}`;
         // 🔁 限兑次数：只在详情里显示
         const limitLine = max ? `<div class="sub">${esc(full && r.type === "coupon" ? t("rw.limitNext") : t("rw.limitLine", { max, used }))}</div>` : "";
@@ -197,7 +216,7 @@
         // 🎨 有款式：主图 + 每一款图片可以左右滑动，下面显示 1/5、2/5…
         const one = (img, alt) => img ? `<img src="${esc(img)}" alt="${esc(alt)}" loading="lazy">` : ty.icon;
         const pic = `${vs.length ? `<div class="vslider" data-vs="${esc(r.id)}" data-idx="0">
-            <div class="vtrack">${[{ image: r.image, name: "" }, ...vs].map((v, i) => `<div class="vslide">${one(v.image || (i ? "" : r.image), v.name || r.name)}${i ? `<span class="vname">${esc(v.name)}${typeof v.stock === "number" && v.stock <= 0 ? " · " + esc(t("rw.soldOut")) : ""}</span>` : ""}</div>`).join("")}</div>
+            <div class="vtrack">${[{ image: r.image, name: "" }, ...vs].map((v, i) => `<div class="vslide" data-stk="${r.ciOnly ? "" : i ? (typeof v.stock === "number" ? Math.max(v.stock, 0) : "") : (stock ?? "")}">${one(v.image || (i ? "" : r.image), v.name || r.name)}${i ? `<span class="vname">${esc(v.name)}${typeof v.stock === "number" && v.stock <= 0 ? " · " + esc(t("rw.soldOut")) : ""}</span>` : ""}</div>`).join("")}</div>
             <button type="button" class="vnav prev" data-vnav="-1" aria-label="prev">‹</button><button type="button" class="vnav next" data-vnav="1" aria-label="next">›</button>
             <span class="vcount">${esc(t("rw.variantsN", { n: vs.length }))}</span></div>` : one(r.image, r.name)}
           ${lockOverlayHTML(r)}
@@ -225,6 +244,7 @@
           sl.dataset.idx = i;
           const n = tr.children.length;
           sl.querySelector(".vcount").textContent = `${i}/${n - 1}`;
+          syncStockLine(sl);
           requestAnimationFrame(() => { tr.style.scrollSnapType = ""; });
         });
       }
