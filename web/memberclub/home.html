@@ -260,14 +260,13 @@
       const nmState = NM.stateOf(member);
       const nmBound = oSnap.docs.length > 0 || (bal.ledger || []).some(x => x.reason === "新会员欢迎礼");
       const nmBox = () => NM.homeCardHTML(nmState, { bound: nmBound, reward: nmReward });
-      // 📅 每日签到卡片：放在「你好 + 积分」下面（首页设定关掉那一区时，放在最上面）
+      // 📅 每日签到卡片：固定在首页最上面（在中奖、兑换提醒之前，不受「首页设定」影响）
       const ciSet = CI.settingsOf(perks);
       const ciBox = () => CI.cardHTML(ciSet, ciState, { bound: nmBound || isInternalMember(member), preview: !!user.isPreview });
       const draw = () => {
         const shown = sections.filter(s => s.on !== false && R[s.key]);
-        const hasHero = shown.some(s => s.key === "hero");
-        $("homeSections").innerHTML = addrBox() + prizeBox() + nmBox() + (hasHero ? "" : ciBox()) + shown
-          .map(s => R[s.key](s) + (s.key === "hero" ? ciBox() : ""))
+        $("homeSections").innerHTML = ciBox() + addrBox() + prizeBox() + nmBox() + shown
+          .map(s => R[s.key](s))
           .join("");
       };
       $("homeSections").addEventListener("click", async e => {
@@ -290,6 +289,16 @@
         if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-ci-open]")) { e.preventDefault(); e.target.click(); }
       });
       draw();
+      // 📅 从商城「去签到」进来（home.html#checkin）：捲到签到框并高亮
+      if (location.hash === "#checkin") {
+        history.replaceState(null, "", location.pathname + location.search);
+        const box = $("homeSections").querySelector("[data-ci-wrap]");
+        if (box) {
+          box.scrollIntoView({ behavior: "smooth", block: "start" });
+          box.classList.add("ci-flash");
+          setTimeout(() => box.classList.remove("ci-flash"), 3200);
+        }
+      }
       startLockTicker(id => rewardById[id], draw);
       if (NM.shouldPopup(user, member, nmState)) {
         NM.showPopup(user, { bound: nmBound,

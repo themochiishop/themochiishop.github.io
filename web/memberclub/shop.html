@@ -225,7 +225,7 @@
             ${r.ciOnly ? `<div class="ci-only-note"><img src="img/ci-badge.png" alt=""><span>${esc(t("shop.ciOnlyNote"))}</span></div>` : ""}
             ${s.cost}
             ${s.btn}
-            ${r.ciOnly ? `<a class="btn btn-primary ci-only-go" href="home.html">📅 ${esc(t("shop.ciOnlyGo"))}</a>` : ""}
+            ${r.ciOnly ? `<a class="btn btn-primary ci-only-go" href="home.html#checkin">📅 ${esc(t("shop.ciOnlyGo"))}</a>` : ""}
           </div>`;
         $("dtModal").classList.remove("hidden");
         document.body.classList.add("modal-open");
