@@ -67,21 +67,21 @@
 
     // 📲 第三个分页「App 与网址」：内容固定写在这里（不经后台）；安装按钮叫 pwa.js 的 MochiiPWA.install()
     const APP_TXT = {
-      zh: { tab: "App 与网址", q: "App 与网址",
-        a: "把 Mochii Club 装到手机桌面，打开就是全屏 App，不用每次找网址。也可以随时回到 Mochii 商店网站逛逛。",
+      zh: { tab: "App 与网址", q: "Club 应用&官网",
+        a: "将 Mochii Club 添加至您的手机主屏幕，即可以应用程序形式全屏开启，无需每次输入网址。您亦可随时返回 The Mochii Shop 官方网站浏览。",
         install: "📲 安装 Mochii Club App", site: "🏪 回到 Mochii 商店", using: "✅ 你正在使用 App" },
-      en: { tab: "App & Website", q: "Mochii Club app & website",
-        a: "Install Mochii Club on your home screen. It opens full screen like an app, so you don't need to look for the link. You can also go back to The Mochii Shop website anytime.",
+      en: { tab: "App & Website", q: "Club App & Official Website",
+        a: "Add Mochii Club to your phone's home screen to open it full screen as an app, without entering the web address each time. You may also return to The Mochii Shop official website at any time.",
         install: "📲 Install Mochii Club app", site: "🏪 Back to The Mochii Shop", using: "✅ You're using the app" },
-      ms: { tab: "Aplikasi & Laman Web", q: "Aplikasi & laman web Mochii Club",
-        a: "Pasang Mochii Club di skrin utama telefon anda. Ia dibuka skrin penuh seperti aplikasi, jadi tak perlu cari pautan lagi. Anda juga boleh kembali ke laman web The Mochii Shop bila-bila masa.",
+      ms: { tab: "Aplikasi & Laman Web", q: "Aplikasi Kelab & Laman Web Rasmi",
+        a: "Tambahkan Mochii Club ke skrin utama telefon anda untuk membukanya dalam skrin penuh sebagai aplikasi, tanpa perlu menaip alamat web setiap kali. Anda juga boleh kembali ke laman web rasmi The Mochii Shop pada bila-bila masa.",
         install: "📲 Pasang aplikasi Mochii Club", site: "🏪 Kembali ke The Mochii Shop", using: "✅ Anda sedang guna aplikasi" },
     };
     const AT = APP_TXT[lang] || APP_TXT.en;
     $("tabApp").textContent = AT.tab;
     const inApp = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
     const appItems = () => [{
-      q: AT.q, cat: "app", html: true,
+      q: AT.q, cat: "app", html: true, open: true,   // 默认展开
       a: `<p>${esc(AT.a)}</p>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
           ${inApp
@@ -205,7 +205,7 @@
 
     function itemHTML(i, showWhere) {
       return `
-        <details class="faq-item">
+        <details class="faq-item"${i.open ? " open" : ""}>
           <summary>${showWhere ? `<span class="help-where">${esc(i.where)}</span> ` : ""}${esc(i.q)}</summary>
           <div class="faq-a">${i.html ? i.a : `<div class="pre">${esc(i.a)}</div>`}</div>
         </details>`;
