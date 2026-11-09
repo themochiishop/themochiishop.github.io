@@ -1380,3 +1380,31 @@ body.preview-mode .toast { bottom: 72px; }
   .ci-pts { font-size: .82rem; }
   .ci-foot .ci-btn { flex: 1 1 100%; }
 }
+
+/* 📱 手机版：平常是一行签到条，点一下展开完整卡片（电脑版一直显示完整卡片） */
+.ci-bar, .ci-fold { display: none; }
+@media (max-width: 760px) {
+  .ci-wrap:not(.open) .ci-card { display: none; }
+  .ci-wrap.open .ci-bar { display: none; }
+  .ci-fold { display: inline-flex; align-items: center; justify-content: center; margin-left: auto; width: 30px; height: 30px; border-radius: 50%;
+    border: 1px solid var(--line); background: var(--card2); color: var(--muted); font-size: .95rem; cursor: pointer; padding: 0; }
+  .ci-card .card-head { gap: 8px; }
+  .ci-card .ci-streak + .ci-fold { margin-left: 4px; }
+  .ci-bar {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 14px; border-radius: var(--radius);
+    background: var(--card); border: 1px solid var(--line); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .ci-bar.gift { border-color: rgba(255,111,174,.5); background: linear-gradient(135deg, rgba(255,111,174,.12), rgba(124,92,255,.1)), var(--card); }
+  .ci-bt { font-weight: 800; font-size: .9rem; white-space: nowrap; }
+  .ci-bm { flex: 1; min-width: 0; font-size: .78rem; line-height: 1.3; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .ci-dots { display: flex; gap: 4px; align-items: center; flex: 1; min-width: 0; }
+  .ci-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); display: block; flex: none; }
+  .ci-dots i.on { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+  .ci-dots i.nx { background: transparent; box-shadow: inset 0 0 0 2px var(--accent); animation: ciDot 1.4s ease-in-out infinite; }
+  @keyframes ciDot { 50% { transform: scale(1.35); } }
+  .ci-dots b { font-size: .85rem; line-height: 1; margin-left: 1px; }
+  .ci-fire { font-size: .75rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .ci-chev { color: var(--muted); font-size: .9rem; }
+  .ci-bar .ci-bbtn { width: auto; flex: none; margin: 0; padding: 7px 14px; font-size: .8rem; white-space: nowrap; }
+}
+@media (max-width: 760px) and (prefers-reduced-motion: reduce) { .ci-dots i.nx { animation: none; } }
