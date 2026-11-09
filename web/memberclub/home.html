@@ -271,6 +271,7 @@
           .join("");
       };
       $("homeSections").addEventListener("click", async e => {
+        if (CI.onToggle(e)) return;   // 📱 手机版签到条：展开 / 收起
         const b = e.target.closest("[data-checkin]");
         if (!b || b.disabled) return;
         b.disabled = true;
@@ -281,6 +282,10 @@
           toast(r.already ? "✅ " + CI.ct("done") : r.pts > 0 ? CI.ct("got", { n: r.pts }) : CI.ct("gotZero"));
           draw();
         } catch (err) { toast(CI.errText(err)); b.disabled = false; }
+      });
+      // 键盘：在签到条上按 Enter / 空白键也能展开
+      $("homeSections").addEventListener("keydown", e => {
+        if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-ci-open]")) { e.preventDefault(); e.target.click(); }
       });
       draw();
       startLockTicker(id => rewardById[id], draw);
