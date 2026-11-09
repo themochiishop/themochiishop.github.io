@@ -294,7 +294,8 @@
         history.replaceState(null, "", location.pathname + location.search);
         const box = $("homeSections").querySelector("[data-ci-wrap]");
         if (box) {
-          box.scrollIntoView({ behavior: "smooth", block: "start" });
+          // 签到框固定在首页最上面：直接回到页面顶端（手机的顶部导航很高，用 scrollIntoView 会被挡住一半）
+          window.scrollTo({ top: 0, behavior: "smooth" });
           box.classList.add("ci-flash");
           setTimeout(() => box.classList.remove("ci-flash"), 3200);
         }
