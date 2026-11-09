@@ -45,8 +45,10 @@
     import {
       collection, getDocs, getDoc, doc
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-    import { requireMember, renderNav, esc, t, lang, SOCIAL_ICONS, bindWaTags } from "./js/common.js";
+    import { requireMember, renderNav, esc, t, lang, SOCIAL_ICONS, bindWaTags, loadPerks } from "./js/common.js";
     import { clubFaq } from "./js/faq.js";
+    import { settingsOf as ciSettingsOf } from "./js/checkin.js";
+    import { loadSettings as nmLoadSettings, stateOf as nmStateOf, giftName as nmGiftName } from "./js/newmember.js";
 
     const $ = id => document.getElementById(id);
     renderNav("help");
@@ -198,6 +200,26 @@
       bindWaTags($("contactBtns"), user, member);
       club = clubFaq();
       render();
+      // 带入目前设定：新会员迎新礼（只给看得到的会员）、每日签到、Feed 权限（各一次读取，有暂存）
+      try {
+        const [perks, nm, fc] = await Promise.all([
+          loadPerks(),
+          nmLoadSettings().catch(() => null),
+          getDoc(doc(db, "feedConfig", "main")).catch(() => null),
+        ]);
+        const ci = ciSettingsOf(perks);
+        const m30 = (perks && perks.checkin && perks.checkin.m30) || {};
+        ci.giftDays = Number.isInteger(m30.giftDays) ? m30.giftDays : 30;
+        const nmShow = nm && nmStateOf(member).kind !== "none";
+        club = clubFaq({
+          nm: nmShow ? { cost: nm.cost, days: nm.validDays, gift: nmGiftName() } : null,
+          ci,
+          feed: fc && fc.exists() ? fc.data() : {},
+        });
+        render();
+      } catch (e) {
+        console.warn("faq settings", e);
+      }
       try {
         const [fs, hs] = await Promise.all([getDocs(collection(db, "storeFaq")), getDoc(doc(db, "settings", "help"))]);
         store = fs.docs.map(d => ({ id: d.id, ...d.data() }))
