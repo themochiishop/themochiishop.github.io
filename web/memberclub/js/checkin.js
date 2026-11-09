@@ -11,6 +11,17 @@ const DEFAULT_POINTS = [1, 1, 2, 2, 3, 3, 8];   // 要和后端 src/checkin.js �
 const TXT = {
   en: {
     title: "📅 Daily check-in",
+    toStar: "{n} more day(s) to become a Check-in Star 🏅",
+    shareBtn: "✨ Share on Feed +{n}",
+    shareShort: "Share +{n}",
+    mTitle: "🏅 You're a Check-in Star!",
+    mSub: "{n} days in a row — amazing!",
+    mPts: "+{n} points",
+    mGift: "🎁 {g} — ships with your next order (order within {d} days)",
+    mGiftBack: "🎁 {g} — restocking, ships with your next order",
+    mBadge: "Check-in Star badge ×{n} on your Feed profile",
+    mShare: "Share it on the Feed and get +{n} more points!",
+    mLater: "Later",
     btnShort: "Check in +{n}",
     barDone: "Done today",
     roundDone: "Round complete",
@@ -36,6 +47,17 @@ const TXT = {
   },
   ms: {
     title: "📅 Daftar masuk harian",
+    toStar: "{n} hari lagi untuk jadi Bintang Daftar Masuk 🏅",
+    shareBtn: "✨ Kongsi di Feed +{n}",
+    shareShort: "Kongsi +{n}",
+    mTitle: "🏅 Anda Bintang Daftar Masuk!",
+    mSub: "{n} hari berturut-turut — hebat!",
+    mPts: "+{n} mata",
+    mGift: "🎁 {g} — dihantar bersama pesanan seterusnya (pesan dalam {d} hari)",
+    mGiftBack: "🎁 {g} — stok sedang ditambah, dihantar bersama pesanan seterusnya",
+    mBadge: "Lencana Bintang Daftar Masuk ×{n} di profil Feed anda",
+    mShare: "Kongsi di Feed dan dapat +{n} mata lagi!",
+    mLater: "Nanti",
     btnShort: "Daftar +{n}",
     barDone: "Selesai hari ini",
     roundDone: "Pusingan selesai",
@@ -61,6 +83,17 @@ const TXT = {
   },
   zh: {
     title: "📅 每日签到",
+    toStar: "再签 {n} 天成为签到达人 🏅",
+    shareBtn: "✨ 分享到 Feed +{n}",
+    shareShort: "分享 +{n}",
+    mTitle: "🏅 你成为签到达人了！",
+    mSub: "连续签到 {n} 天，太厉害了！",
+    mPts: "+{n} 积分",
+    mGift: "🎁 {g}：随下一单寄出（{d} 天内下单）",
+    mGiftBack: "🎁 {g}：补货中，随下一单寄出",
+    mBadge: "Feed 个人主页的签到达人徽章 ×{n}",
+    mShare: "分享到 Feed 再拿 +{n} 积分！",
+    mLater: "稍后",
     btnShort: "签到 +{n}",
     barDone: "今日已签",
     roundDone: "一轮完成",
@@ -98,7 +131,9 @@ const prevDate = d => new Date(Date.parse(d + "T00:00:00Z") - 86400000).toISOStr
 export function settingsOf(perks) {
   const c = (perks && perks.checkin) || {};
   const ok = Array.isArray(c.points) && c.points.length === 7 && c.points.every(n => Number.isInteger(n) && n >= 0);
-  return { active: c.active === true, points: ok ? c.points : DEFAULT_POINTS };
+  const m = c.m30 || {};
+  return { active: c.active === true, points: ok ? c.points : DEFAULT_POINTS,
+    sharePts: Number.isInteger(m.sharePts) ? m.sharePts : 10 };   // 🏅 签到达人分享奖励（要和后端预设一致）
 }
 
 export async function loadState(uid) {
@@ -118,6 +153,16 @@ export function viewOf(state, now = Date.now()) {
     return { today: false, done: state.day, next: state.day + 1, streak: state.streak || 0 };
   }
   return { today: false, done: 0, next: 1, streak: 0 };
+}
+
+// 🏅 签到达人：还有没用掉的分享资格 → 「分享到 Feed +10」；还差几天到 30 天
+const MILESTONE = 30;
+const shareOpen = state => !!(state && state.share && state.share.ms && state.share.claimed !== true);
+const shareHref = state => "feed.html?ci=" + encodeURIComponent(state.share.ms);
+function toStar(v) {
+  const s = v.streak || 0;   // 今天签了：含今天；还没签：到昨天为止（今天签了会 +1，所以剩下的天数已经算进今天）
+  const r = MILESTONE - (s % MILESTONE);
+  return v.today && s % MILESTONE === 0 ? MILESTONE : r;
 }
 
 // 完整卡片（电脑版一直显示；手机版展开时显示）
@@ -145,6 +190,8 @@ function fullCardHTML(settings, v, opts) {
       <button type="button" class="ci-fold" data-ci-fold aria-label="${ct("fold")}" title="${ct("fold")}">⌃</button></div>
     <ol class="ci-cells">${cells}</ol>
     ${action}
+    ${opts.bound && shareOpen(opts.state) ? `<a class="btn btn-primary ci-share" href="${shareHref(opts.state)}">${ct("shareBtn", { n: settings.sharePts })}</a>` : ""}
+    ${opts.bound ? `<p class="ci-star"><img src="img/ci-badge.png" alt="">${ct("toStar", { n: toStar(v) })}</p>` : ""}
     <p class="ci-rule">${ct("rule")}</p>
   </div>`;
 }
@@ -166,7 +213,9 @@ function barHTML(settings, v, opts) {
   } else if (v.today && v.done === 7) {
     inner = `<span class="ci-bt">🎉 ${ct("roundDone")}</span>${dots}<span class="ci-fire">+${P[6]}</span>${chev}`;
   } else if (v.today) {
-    inner = `<span class="ci-bt">✅ ${ct("barDone")}</span>${dots}${v.streak > 1 ? `<span class="ci-fire">🔥${ct("streakShort", { n: v.streak })}</span>` : ""}${chev}`;
+    inner = `<span class="ci-bt">✅ ${ct("barDone")}</span>${dots}${shareOpen(opts.state)
+      ? `<a class="btn btn-primary ci-bbtn" href="${shareHref(opts.state)}">${ct("shareShort", { n: settings.sharePts })}</a>`
+      : `${v.streak > 1 ? `<span class="ci-fire">🔥${ct("streakShort", { n: v.streak })}</span>` : ""}${chev}`}`;
   } else {
     inner = `<span class="ci-bt">📅 ${ct("day", { n: v.next })}</span>${dots}
       <button type="button" class="btn btn-primary ci-bbtn" data-checkin ${opts.preview ? `disabled title="${ct("preview")}"` : ""}>${ct("btnShort", { n: P[v.next - 1] })}</button>`;
@@ -186,6 +235,7 @@ function isOpen(v, opts) {
 export function cardHTML(settings, state, opts = {}) {
   if (!settings.active) return "";
   const v = viewOf(state);
+  opts = { ...opts, state };
   return `<div class="ci-wrap${isOpen(v, opts) ? " open" : ""}" data-ci-wrap>${barHTML(settings, v, opts)}${fullCardHTML(settings, v, opts)}</div>`;
 }
 
@@ -218,7 +268,32 @@ export function errText(e) {
 }
 // 签到成功后把新的状态写回（不用再读一次）
 export function stateAfter(r, prev) {
-  return {
-    ...(prev || {}), lastDate: r.today, day: r.day, streak: r.streak,
-  };
+  const next = { ...(prev || {}), lastDate: r.today, day: r.day, streak: r.streak };
+  if (r.milestone) { next.badges = r.milestone.badges; next.share = { ms: r.today, claimed: false, postId: null }; }
+  return next;
+}
+
+// 🎉 签到达人达标弹窗：积分、礼物、徽章、分享到 Feed
+export function showMilestone(r) {
+  const m = r.milestone;
+  if (!m) return;
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const el = document.createElement("div");
+  el.className = "ci-modal";
+  el.innerHTML = `<div class="ci-modal-card" role="dialog" aria-modal="true">
+    <img class="ci-modal-badge" src="img/ci-badge.png" alt="">
+    <h3>${ct("mTitle")}</h3>
+    <p class="muted">${ct("mSub", { n: m.streak })}</p>
+    <ul>
+      ${m.points > 0 ? `<li>💰 ${ct("mPts", { n: m.points })}</li>` : ""}
+      ${m.gift ? `<li>${esc(ct(m.gift.backorder ? "mGiftBack" : "mGift", { g: m.gift.name, d: m.gift.days }))}</li>` : ""}
+      <li><img src="img/ci-badge.png" alt="">${ct("mBadge", { n: m.badges })}</li>
+    </ul>
+    ${m.sharePts > 0 ? `<p class="ci-modal-share">${ct("mShare", { n: m.sharePts })}</p>` : ""}
+    <a class="btn btn-primary" href="feed.html?ci=${encodeURIComponent(r.today)}">${ct("shareBtn", { n: m.sharePts })}</a>
+    <button type="button" class="btn btn-ghost" data-close>${ct("mLater")}</button>
+  </div>`;
+  const close = () => el.remove();
+  el.addEventListener("click", e => { if (e.target === el || e.target.closest("[data-close]")) close(); });
+  document.body.appendChild(el);
 }

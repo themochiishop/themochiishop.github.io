@@ -80,6 +80,8 @@ const DICT = {
     "notif.prizeCancelled": "Prize cancelled: {name}",
     "reason.follow": "Followed us on {p}",
     "reason.checkin": "Daily check-in: Day {n}",
+    "reason.ciStar": "Check-in Star: {n}-day streak",
+    "reason.ciShare": "Check-in Star: shared on Feed",
     "follow.title": "📣 Follow us",
     "follow.sub": "Follow us on each platform and get points — once per platform.",
     "follow.go": "Follow",
@@ -525,6 +527,10 @@ const DICT = {
     "rw.copy": "Copy",
     "rw.codeHint": "Copy it and paste it at {p} checkout",
     "rw.perkGift": "Gift from us: {why}",
+    "rw.ciGift": "Check-in Star gift (30-day streak)",
+    "rw.ciDeadline": "Place an order by {d} — this gift ships with it",
+    "rw.ciBackorder": "Restocking · place an order by {d} — this gift ships with it",
+    "rw.ciExpired": "No order before the deadline, so this gift was cancelled. Your points stay.",
     "set.title": "Settings",
     "rw.pickVariant": "Which style would you like?",
     "rw.variantOut": "Sorry, {v} is out of stock",
@@ -650,6 +656,8 @@ const DICT = {
     "notif.prizeCancelled": "Hadiah dibatalkan: {name}",
     "reason.follow": "Ikuti kami di {p}",
     "reason.checkin": "Daftar masuk harian: Hari {n}",
+    "reason.ciStar": "Bintang Daftar Masuk: {n} hari berturut-turut",
+    "reason.ciShare": "Bintang Daftar Masuk: kongsi di Feed",
     "follow.title": "📣 Ikuti kami",
     "follow.sub": "Ikuti kami di setiap platform dan dapatkan mata — sekali bagi setiap platform.",
     "follow.go": "Ikuti",
@@ -1095,6 +1103,10 @@ const DICT = {
     "rw.copy": "Salin",
     "rw.codeHint": "Salin dan tampal semasa checkout di {p}",
     "rw.perkGift": "Hadiah daripada kami: {why}",
+    "rw.ciGift": "Hadiah Bintang Daftar Masuk (30 hari berturut-turut)",
+    "rw.ciDeadline": "Buat pesanan sebelum {d} — hadiah ini dihantar bersamanya",
+    "rw.ciBackorder": "Stok sedang ditambah · buat pesanan sebelum {d} — hadiah ini dihantar bersamanya",
+    "rw.ciExpired": "Tiada pesanan sebelum tarikh akhir, jadi hadiah ini dibatalkan. Mata anda kekal.",
     "set.title": "Tetapan",
     "rw.pickVariant": "Pilih gaya yang anda mahu",
     "rw.variantOut": "Maaf, {v} sudah habis",
@@ -1220,6 +1232,8 @@ const DICT = {
     "notif.prizeCancelled": "奖品已取消：{name}",
     "reason.follow": "关注我们：{p}",
     "reason.checkin": "每日签到：第{n}天",
+    "reason.ciStar": "签到达人：连续 {n} 天",
+    "reason.ciShare": "签到达人：分享到 Feed",
     "follow.title": "📣 关注我们",
     "follow.sub": "关注我们的各个平台就送积分，每个平台可领一次。",
     "follow.go": "去关注",
@@ -1665,6 +1679,10 @@ const DICT = {
     "rw.copy": "复制",
     "rw.codeHint": "复制后，在 {p} 下单结账（checkout）时粘贴使用",
     "rw.perkGift": "福利赠送：{why}",
+    "rw.ciGift": "签到达人礼物（连续 30 天）",
+    "rw.ciDeadline": "请在 {d} 前下单，礼物会随订单一起寄出",
+    "rw.ciBackorder": "补货中 · 请在 {d} 前下单，礼物会随订单一起寄出",
+    "rw.ciExpired": "期限内没有下单，礼物已取消，积分不受影响。",
     "set.title": "设定",
     "rw.pickVariant": "要兑换哪一款？",
     "rw.variantOut": "抱歉，{v} 已经换完了",
@@ -2002,5 +2020,7 @@ export function translateReason(reason) {
   if (r === "积分过期") return t("reason.expired");
   if (r.startsWith("关注我们：")) return t("reason.follow", { p: r.slice(5) });
   if ((m = r.match(/^每日签到：第(\d)天$/))) return t("reason.checkin", { n: m[1] });
+  if ((m = r.match(/^签到达人：连续 (\d+) 天$/))) return t("reason.ciStar", { n: m[1] });
+  if (r === "签到达人：分享到 Feed") return t("reason.ciShare");
   return r;
 }

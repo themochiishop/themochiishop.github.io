@@ -119,6 +119,11 @@ const FD = {
     "editSaved": "Saved",
     "editEmpty": "Write something first",
     "phoneHidden": "Phone numbers were hidden (***) to protect your privacy.",
+    "ciBadge": "Check-in Star ×{n}",
+    "ciBadgeTip": "Completed a 30-day check-in streak {n} time(s)",
+    "ciShareText": "I just checked in {n} days in a row at Mochii Club 🔥 ",
+    "ciShareNote": "Check-in Star share post — you'll get +{n} points once it's published.",
+    "ciShareGone": "This share has already been used or has expired.",
   },
   ms: {
     "pageTitle": "Mochii Feed · Mochii Club",
@@ -236,6 +241,11 @@ const FD = {
     "editSaved": "Disimpan",
     "editEmpty": "Tulis sesuatu dahulu",
     "phoneHidden": "Nombor telefon telah disembunyikan (***) untuk melindungi privasi anda.",
+    "ciBadge": "Bintang Daftar Masuk ×{n}",
+    "ciBadgeTip": "Selesai {n} kali daftar masuk 30 hari berturut-turut",
+    "ciShareText": "Saya baru daftar masuk {n} hari berturut-turut di Mochii Club 🔥 ",
+    "ciShareNote": "Hantaran perkongsian Bintang Daftar Masuk — anda dapat +{n} mata selepas ia diterbitkan.",
+    "ciShareGone": "Perkongsian ini sudah digunakan atau telah tamat.",
   },
   zh: {
     "pageTitle": "Mochii Feed · Mochii Club",
@@ -353,6 +363,11 @@ const FD = {
     "editSaved": "已保存",
     "editEmpty": "请先写点内容",
     "phoneHidden": "为保护隐私，电话号码已隐藏（***）。",
+    "ciBadge": "签到达人 ×{n}",
+    "ciBadgeTip": "完成 {n} 次连续 30 天签到",
+    "ciShareText": "我在 Mochii Club 连续签到 {n} 天了 🔥 ",
+    "ciShareNote": "签到达人分享帖：发布后可拿 +{n} 积分。",
+    "ciShareGone": "这次的分享已经用过或已过期。",
   },
 };
 
