@@ -31,8 +31,14 @@ body {
   color: var(--text);
   line-height: 1.5;
   min-height: 100vh;
-  font-size: 15px;
+  font-size: .9375rem;   /* = 15px（标准字体）；跟着下面的 🔠 字体大小一起放大缩小 */
 }
+/* 🔠 全局字体大小（右上角 ⚙️ 设定，记在这台设备；js/theme-init.js 先套用）：所有用 rem 的字一起变 */
+:root[data-fs="s"]  { font-size: 87.5%; }
+:root[data-fs="l"]  { font-size: 110%; }
+:root[data-fs="xl"] { font-size: 120%; }
+/* 字体选「小」时，手机输入框保持 16px，iPhone 点输入框才不会自动放大画面 */
+@media (max-width: 760px) { :root[data-fs="s"] :is(input, textarea, select) { font-size: 16px; } }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -1141,6 +1147,17 @@ body.preview-mode .toast { bottom: 72px; }
 }
 .set-row button:hover, .set-wa:hover { border-color: var(--accent); text-decoration: none; }
 .set-row button.on { border-color: transparent; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+/* 标题和选项同一排（联系区除外）；按钮放不下文字时只显示图示（i18n.js 的 fitSetRows 判断） */
+.set-sec:not(.set-contact) { display: flex; align-items: center; gap: 10px; }
+.set-sec:not(.set-contact) .set-h { flex: 0 0 var(--set-h-w, auto); width: var(--set-h-w, auto); margin: 0; line-height: 1.3; white-space: nowrap; }
+.set-panel.h-wrap .set-sec:not(.set-contact) .set-h { white-space: normal; }   /* 标题太长：允许折成两行 */
+.set-sec:not(.set-contact) .set-row { flex: 1; min-width: 0; }
+.set-row.ico-only button > span { display: none; }
+.set-row button .fs-a { font-style: normal; font-weight: 800; line-height: 1; }
+.set-row button .fs-s  { font-size: .72rem; }
+.set-row button .fs-m  { font-size: .86rem; }
+.set-row button .fs-l  { font-size: 1rem; }
+.set-row button .fs-xl { font-size: 1.15rem; }
 .set-row .flag { width: 20px; height: 14px; border-radius: 2px; object-fit: cover; flex-shrink: 0; }
 /* 联系：上下两排，名称不会被截断 */
 .set-col { display: flex; flex-direction: column; gap: 8px; }
@@ -1149,7 +1166,7 @@ body.preview-mode .toast { bottom: 72px; }
 .set-wa .tx { min-width: 0; }
 .set-wa .tx b { display: block; font-size: .86rem; }
 .set-wa .tx small { display: block; color: var(--muted); font-weight: 500; font-size: .72rem; margin-top: 1px; }
-@media (max-width: 480px) { .set-panel { zoom: .92; } .set-row button span { display: none; } }
+@media (max-width: 480px) { .set-panel { zoom: .92; } }
 
 /* ---------- ☀️ 浅色模式（:root[data-theme="light"]，预设是深色）---------- */
 :root[data-theme="light"] {
