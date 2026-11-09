@@ -76,6 +76,12 @@
       <ul class="task-list" id="taskList"></ul>
     </div>
 
+    <!-- 📅 每日签到：精简两行（后台「额外福利 › 每日签到」有开才显示） -->
+    <div class="card hidden" id="ciCard">
+      <h2 id="ciTitle"></h2>
+      <ul class="ckl" id="ciRows"></ul>
+    </div>
+
     <!-- 📣 关注我们：各平台关注后自己领取 -->
     <div class="card follow-card hidden" id="followCard">
       <h2 data-i18n="follow.title"></h2>
@@ -95,8 +101,9 @@
       requireMember, renderNav, loadBalance, toDate, fmtDate, fmtMoney, esc, platformTag,
       TIERS, tierProgress, tierLabel, tierIconHTML, t, translateReason,
       BONUSES, bonusPoints, bonusActive, activeBonuses, customPerks, EXPIRY_MONTHS, isInternalMember,
-      followList, claimFollow, toast
+      followList, claimFollow, toast, loadPerks
     } from "./js/common.js";
+    import * as CI from "./js/checkin.js";   // 📅 每日签到
 
     const $ = id => document.getElementById(id);
     renderNav("account");
@@ -179,6 +186,17 @@
       } else {
         $("expiryNote").textContent = t("acc.expiryRule", { m: EXPIRY_MONTHS });
       }
+
+      // ---------- 📅 每日签到（精简两行） ----------
+      try {
+        const ciSet = CI.settingsOf(await loadPerks());
+        if (ciSet.active) {
+          const st = await CI.loadState(user.uid);
+          $("ciTitle").textContent = CI.ct("title");
+          $("ciRows").innerHTML = CI.perksRowsHTML(ciSet, st, { bound: bindings.length > 0 || internal });
+          $("ciCard").classList.remove("hidden");
+        }
+      } catch (e) { console.warn("checkin card", e); }
 
       // ---------- 🎁 额外福利（后台可设定） ----------
       const got = new Set(bal.ledger.map(x => (BONUSES.find(b => b.reason === x.reason) || {}).key).filter(Boolean));
