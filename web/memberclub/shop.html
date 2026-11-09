@@ -209,7 +209,27 @@
         return { kind: r.type === "coupon" ? "coupon" : "gift", soldOut: soldOut && !r.ciOnly, locked, btn, subs, limitLine, pic, cost };
       }
 
+      // ⚡ 实时更新重画时，保留每个款式图片正在看的那一张（不跳回主图）
+      function saveSlides(root) {
+        const m = {};
+        root.querySelectorAll(".vslider[data-vs]").forEach(sl => { m[sl.dataset.vs] = +sl.dataset.idx || 0; });
+        return m;
+      }
+      function restoreSlides(root, m) {
+        root.querySelectorAll(".vslider[data-vs]").forEach(sl => {
+          const i = m[sl.dataset.vs];
+          if (!i) return;
+          const tr = sl.querySelector(".vtrack");
+          tr.style.scrollSnapType = "none";   // 先关掉吸附，直接跳到那一张（不播放滑动动画）
+          tr.scrollLeft = i * tr.clientWidth;
+          sl.dataset.idx = i;
+          const n = tr.children.length;
+          sl.querySelector(".vcount").textContent = `${i}/${n - 1}`;
+          requestAnimationFrame(() => { tr.style.scrollSnapType = ""; });
+        });
+      }
       function render() {
+        const keepGrid = saveSlides($("rewardGrid")), keepDt = saveSlides($("dtBody"));
         $("myPts").textContent = bal.spendable.toLocaleString();
 
         // 分类：只显示有奖品的分类
@@ -236,7 +256,8 @@
               </div>
             </div>`;
         }).join("") : `<p class="empty">${t("rw.none")}</p>`;
-        if (dtId) openDetail(dtId);   // 详情开着的话也一起更新
+        restoreSlides($("rewardGrid"), keepGrid);
+        if (dtId) { openDetail(dtId); restoreSlides($("dtBody"), keepDt); }   // 详情开着的话也一起更新
         startLockTicker(id => rewards.find(x => x.id === id), render);   // 倒数，时间到自动开放
       }
 
