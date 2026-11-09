@@ -549,6 +549,11 @@ const DICT = {
     "set.light": "Light",
     "set.dark": "Dark",
     "set.lang": "Language",
+    "set.fs": "Text size",
+    "set.fsS": "Small",
+    "set.fsM": "Standard",
+    "set.fsL": "Large",
+    "set.fsXL": "Extra large",
     "set.contact": "Contact us",
     "notif.perkGift": "You got a gift: {name} ({why})",
     "rw.codeHintAny": "Copy it and paste it at Shopee or TikTok checkout",
@@ -1113,6 +1118,11 @@ const DICT = {
     "set.light": "Cerah",
     "set.dark": "Gelap",
     "set.lang": "Bahasa",
+    "set.fs": "Saiz teks",
+    "set.fsS": "Kecil",
+    "set.fsM": "Biasa",
+    "set.fsL": "Besar",
+    "set.fsXL": "Sangat besar",
     "set.contact": "Hubungi kami",
     "notif.perkGift": "Anda dapat hadiah: {name} ({why})",
     "rw.codeHintAny": "Salin dan tampal semasa checkout di Shopee atau TikTok",
@@ -1677,6 +1687,11 @@ const DICT = {
     "set.light": "浅色",
     "set.dark": "深色",
     "set.lang": "语言",
+    "set.fs": "字体大小",
+    "set.fsS": "小",
+    "set.fsM": "标准",
+    "set.fsL": "大",
+    "set.fsXL": "特大",
     "set.contact": "联系我们",
     "notif.perkGift": "你获得了福利：{name}（{why}）",
     "rw.codeHintAny": "复制后，在 Shopee 或 TikTok 下单结账（checkout）时粘贴使用",
@@ -1778,6 +1793,29 @@ export function setTheme(th) {
   else document.documentElement.removeAttribute("data-theme");
   try { localStorage.setItem(THEME_KEY, th); } catch (e) {}
 }
+// ---------- 🔠 字体大小（s 小 / m 标准 / l 大 / xl 特大）：放大缩小整个网站的 rem，记在这台设备 ----------
+const FS_KEY = "mochii_fs";
+const FS_LIST = [["s", "set.fsS"], ["m", "set.fsM"], ["l", "set.fsL"], ["xl", "set.fsXL"]];
+export function currentFs() { const v = document.documentElement.getAttribute("data-fs"); return v === "s" || v === "l" || v === "xl" ? v : "m"; }
+export function setFontSize(v) {
+  if (v === "s" || v === "l" || v === "xl") document.documentElement.setAttribute("data-fs", v);
+  else { v = "m"; document.documentElement.removeAttribute("data-fs"); }
+  try { localStorage.setItem(FS_KEY, v); } catch (e) {}
+}
+// 设定面板每一排：按钮放不下文字 → 只显示图示（滑鼠停在按钮上会显示名称）
+function fitSetRows(panel) {
+  // 标题统一宽度（= 最长的标题，最多面板的 45%），让每一排的按钮对齐；超过就折行
+  panel.style.removeProperty("--set-h-w"); panel.classList.remove("h-wrap");
+  const hs = [...panel.querySelectorAll(".set-sec:not(.set-contact) .set-h")];
+  const cap = Math.floor(panel.clientWidth * 0.45);
+  const need = Math.ceil(Math.max(0, ...hs.map(h => h.scrollWidth))) + 2;
+  if (need > cap) panel.classList.add("h-wrap");
+  panel.style.setProperty("--set-h-w", Math.min(need, cap) + "px");
+  panel.querySelectorAll(".set-row").forEach(row => {
+    row.classList.remove("ico-only");
+    if ([...row.querySelectorAll("button")].some(b => b.scrollWidth > b.clientWidth + 1)) row.classList.add("ico-only");
+  });
+}
 // ---------- 🔔 通知声音（预设关闭；开着俱乐部网页时，有新通知「叮～咚」一声）----------
 // 用一小段网页自己产生的 WAV 声音（<audio> 播放，不用放音档）。
 // Chrome / Android：会员在这个网站点过一下之后，换页、重新整理也能直接响；
@@ -1830,7 +1868,7 @@ if (typeof document !== "undefined" && document.addEventListener) {
 }
 
 export function settingsHTML() {
-  const th = currentTheme();
+  const th = currentTheme(), fs = currentFs();
   return `<div class="set-dd">
     <button type="button" class="set-btn" aria-haspopup="true" aria-label="${t("set.title")}" title="${t("set.title")}">
       <span class="set-ico"><img class="set-flag" src="${FLAGS[lang].img}" alt=""></span><span class="set-gear"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span>
@@ -1839,15 +1877,21 @@ export function settingsHTML() {
       <div class="set-sec">
         <div class="set-h">🎨 ${t("set.theme")}</div>
         <div class="set-row">
-          <button type="button" data-settheme="light" class="${th === "light" ? "on" : ""}">☀️ ${t("set.light")}</button>
-          <button type="button" data-settheme="dark" class="${th === "dark" ? "on" : ""}">🌙 ${t("set.dark")}</button>
+          <button type="button" data-settheme="light" class="${th === "light" ? "on" : ""}" title="${t("set.light")}">☀️<span>${t("set.light")}</span></button>
+          <button type="button" data-settheme="dark" class="${th === "dark" ? "on" : ""}" title="${t("set.dark")}">🌙<span>${t("set.dark")}</span></button>
+        </div>
+      </div>
+      <div class="set-sec">
+        <div class="set-h">🔠 ${t("set.fs")}</div>
+        <div class="set-row">
+          ${FS_LIST.map(([v, k]) => `<button type="button" data-setfs="${v}" class="${v === fs ? "on" : ""}" title="${t(k)}"><i class="fs-a fs-${v}">A</i><span>${t(k)}</span></button>`).join("")}
         </div>
       </div>
       <div class="set-sec">
         <div class="set-h">🔔 ${t("set.sound")}</div>
         <div class="set-row">
-          <button type="button" data-setsound="on" class="${soundOn() ? "on" : ""}">🔔 ${t("set.on")}</button>
-          <button type="button" data-setsound="off" class="${soundOn() ? "" : "on"}">🔕 ${t("set.off")}</button>
+          <button type="button" data-setsound="on" class="${soundOn() ? "on" : ""}" title="${t("set.on")}">🔔<span>${t("set.on")}</span></button>
+          <button type="button" data-setsound="off" class="${soundOn() ? "" : "on"}" title="${t("set.off")}">🔕<span>${t("set.off")}</span></button>
         </div>
       </div>
       <div class="set-sec">
@@ -1873,6 +1917,11 @@ export function bindSettings(root = document) {
       const bp = document.getElementById("bellPanel");
       if (bp) bp.classList.add("hidden");   // 和铃铛不同时打开
       panel.classList.toggle("hidden");
+      if (!panel.classList.contains("hidden")) {
+        fitSetRows(panel);
+        // 字体档案还在下载时量到的宽度不准：下载完再量一次
+        if (document.fonts && document.fonts.status !== "loaded") document.fonts.ready.then(() => { if (!panel.classList.contains("hidden")) fitSetRows(panel); });
+      }
     });
     panel.addEventListener("click", e => {
       e.stopPropagation();
@@ -1880,6 +1929,13 @@ export function bindSettings(root = document) {
       if (tb) {
         setTheme(tb.dataset.settheme);
         panel.querySelectorAll("[data-settheme]").forEach(b => b.classList.toggle("on", b === tb));
+        return;
+      }
+      const fb = e.target.closest("[data-setfs]");
+      if (fb) {
+        setFontSize(fb.dataset.setfs);
+        panel.querySelectorAll("[data-setfs]").forEach(b => b.classList.toggle("on", b === fb));
+        fitSetRows(panel);   // 字变大后，放不下的排改成只显示图示
         return;
       }
       const sb = e.target.closest("[data-setsound]");
