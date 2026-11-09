@@ -212,7 +212,7 @@
                     <div class="ph">${r.image ? `<img src="${esc(r.image)}" alt="" loading="lazy">` : (r.type === "coupon" ? "🎫" : "🎁")}${lockOverlayHTML(r)}</div>
                     <div class="info">
                       <div class="name">${esc(r.name)}</div>
-                      <div class="cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
+                      <div class="cost">${r.ciOnly ? "🏅 " + esc(t("shop.ciOnlyTag")) : t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
                     </div>
                   </a>`).join("")}
               </div>

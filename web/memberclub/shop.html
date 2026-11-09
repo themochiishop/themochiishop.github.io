@@ -147,13 +147,15 @@
         const locked = off || !!lockState(r);
         const max = limitOf(r), used = max ? usedOf(r) : 0, full = !!max && used >= max;
         let btn;
-        if (locked) btn = `<button class="btn btn-primary" disabled>${t("rw.redeem")}</button>`;   // 未开放 / 已下架：灰色、按不下去
+        // 🏅 签到达人专属：看得到、不能兑换（连续签到 30 天由系统送出）
+        if (r.ciOnly) btn = `<button class="btn btn-ghost ci-only-btn" disabled>🏅 ${esc(t("shop.ciOnlyBtn"))}</button>`;
+        else if (locked) btn = `<button class="btn btn-primary" disabled>${t("rw.redeem")}</button>`;   // 未开放 / 已下架：灰色、按不下去
         else if (full) btn = `<button class="btn btn-ghost" disabled>${t("rw.limitDone", { used, max })}</button>`;
         else if (soldOut) btn = `<button class="btn btn-ghost" disabled>${t("rw.soldOut")}</button>`;
         else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
         else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
               const subs = `
-          <div class="sub">${t(ty.key)}${typeof r.stock === "number" ? " · " + t("rw.left", { n: Math.max(r.stock, 0) }) : ""}</div>
+          <div class="sub">${t(ty.key)}${typeof r.stock === "number" && !r.ciOnly ? " · " + t("rw.left", { n: Math.max(r.stock, 0) }) : ""}</div>
           ${es ? `<div class="ending-line">${esc(t("shop.endingSoon"))} · ${esc(t("shop.endsOn", { d: fmtDate(es.end, true) }))}</div>` : ""}`;
         // 🔁 限兑次数：只在详情里显示
         const limitLine = max ? `<div class="sub">${esc(full && r.type === "coupon" ? t("rw.limitNext") : t("rw.limitLine", { max, used }))}</div>` : "";
@@ -165,8 +167,12 @@
             <button type="button" class="vnav prev" data-vnav="-1" aria-label="prev">‹</button><button type="button" class="vnav next" data-vnav="1" aria-label="next">›</button>
             <span class="vcount">${esc(t("rw.variantsN", { n: vs.length }))}</span></div>` : one(r.image, r.name)}
           ${lockOverlayHTML(r)}
+          ${r.ciOnly ? `<span class="ci-only-tag"><img src="img/ci-badge.png" alt="">${esc(t("shop.ciOnlyTag"))}</span>` : ""}
           ${es ? `<span class="ending-badge">⏰ ${esc(es.label)}</span>` : ""}`;
-        return { kind: r.type === "coupon" ? "coupon" : "gift", soldOut, locked, btn, subs, limitLine, pic };
+        // 积分：签到达人专属的不显示积分，改成「签到达人奖励」
+        const cost = r.ciOnly ? `<div class="cost ci-only-cost">${esc(t("shop.ciOnlyTag"))}</div>`
+          : `<div class="cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>`;
+        return { kind: r.type === "coupon" ? "coupon" : "gift", soldOut: soldOut && !r.ciOnly, locked, btn, subs, limitLine, pic, cost };
       }
 
       function render() {
@@ -191,7 +197,7 @@
                 <div class="name" data-detail="${id}">${esc(r.name)}</div>
                 ${r.shortDesc ? `<div class="desc" data-detail="${id}">${esc(r.shortDesc)}</div>` : ""}
                 ${s.subs}
-                <div class="cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
+                ${s.cost}
                 ${s.btn}
               </div>
             </div>`;
@@ -216,8 +222,10 @@
             ${r.shortDesc ? `<div class="dt-short">${esc(r.shortDesc)}</div>` : ""}
             ${r.description ? `<div class="dt-long">${esc(r.description)}</div>` : ""}
             ${s.subs}${s.limitLine}
-            <div class="cost">${t("unit.pts", { n: Number(r.cost).toLocaleString() })}</div>
+            ${r.ciOnly ? `<div class="ci-only-note"><img src="img/ci-badge.png" alt=""><span>${esc(t("shop.ciOnlyNote"))}</span></div>` : ""}
+            ${s.cost}
             ${s.btn}
+            ${r.ciOnly ? `<a class="btn btn-primary ci-only-go" href="home.html">📅 ${esc(t("shop.ciOnlyGo"))}</a>` : ""}
           </div>`;
         $("dtModal").classList.remove("hidden");
         document.body.classList.add("modal-open");
@@ -272,7 +280,7 @@
       }
 
            async function startRedeem(r, btn, slide = 0) {
-        if (!r || lockState(r) || offShelf(r)) return;   // 未开放 / 已下架
+        if (!r || r.ciOnly || lockState(r) || offShelf(r)) return;   // 签到达人专属 / 未开放 / 已下架
         if (limitOf(r) && usedOf(r) >= limitOf(r)) return;   // 本期已换满
         const gift = r.type !== "coupon";   // 实体奖品：随单寄送，不用先填地址
         // 🎨 有款式：一定先选款式（见 pickVariant）
