@@ -11,6 +11,15 @@ const DEFAULT_POINTS = [1, 1, 2, 2, 3, 3, 8];   // 要和后端 src/checkin.js �
 const TXT = {
   en: {
     title: "📅 Daily check-in",
+    pDaily: "Check in {r}",
+    pDailySub: "7-day round, {n} pts total · miss a day, restart",
+    pStar: "Check-in Star: 30 days",
+    pStarPts: "+{n} points",
+    pStarGift: "🎁 free gift",
+    pStarShare: "Feed share +{n}",
+    pGo: "Check in",
+    pDone: "✅ Done today",
+    pLeft: "{n} days to go",
     toStar: "{n} more day(s) to become a Check-in Star 🏅",
     shareBtn: "✨ Share on Feed +{n}",
     shareShort: "Share +{n}",
@@ -47,6 +56,15 @@ const TXT = {
   },
   ms: {
     title: "📅 Daftar masuk harian",
+    pDaily: "Daftar masuk {r}",
+    pDailySub: "7 hari sepusingan, {n} mata · terlepas, mula semula",
+    pStar: "Bintang: 30 hari berturut",
+    pStarPts: "+{n} mata",
+    pStarGift: "🎁 hadiah percuma",
+    pStarShare: "kongsi Feed +{n}",
+    pGo: "Daftar",
+    pDone: "✅ Selesai",
+    pLeft: "{n} hari lagi",
     toStar: "{n} hari lagi untuk jadi Bintang Daftar Masuk 🏅",
     shareBtn: "✨ Kongsi di Feed +{n}",
     shareShort: "Kongsi +{n}",
@@ -83,6 +101,15 @@ const TXT = {
   },
   zh: {
     title: "📅 每日签到",
+    pDaily: "每天签到 {r}",
+    pDailySub: "7 天一轮共 {n} 分，断签从第 1 天重来",
+    pStar: "签到达人：连续 30 天",
+    pStarPts: "+{n} 积分",
+    pStarGift: "🎁 礼物随单寄",
+    pStarShare: "分享 Feed +{n}",
+    pGo: "去签到",
+    pDone: "✅ 已签到",
+    pLeft: "再 {n} 天",
     toStar: "再签 {n} 天成为签到达人 🏅",
     shareBtn: "✨ 分享到 Feed +{n}",
     shareShort: "分享 +{n}",
@@ -133,7 +160,9 @@ export function settingsOf(perks) {
   const ok = Array.isArray(c.points) && c.points.length === 7 && c.points.every(n => Number.isInteger(n) && n >= 0);
   const m = c.m30 || {};
   return { active: c.active === true, points: ok ? c.points : DEFAULT_POINTS,
-    sharePts: Number.isInteger(m.sharePts) ? m.sharePts : 10 };   // 🏅 签到达人分享奖励（要和后端预设一致）
+    sharePts: Number.isInteger(m.sharePts) ? m.sharePts : 10,     // 🏅 签到达人分享奖励（要和后端预设一致）
+    starPts: Number.isInteger(m.points) ? m.points : 30,          // 🏅 签到达人 30 天奖励
+    hasGift: !!m.giftRewardId };                                  // 🏅 有没有签到达人礼物
 }
 
 export async function loadState(uid) {
@@ -252,6 +281,24 @@ export function onToggle(e) {
   store(OPEN_KEY, open ? "1" : "0");
   if (!open) store(FOLD7_KEY, mytDate(Date.now()));
   return true;
+}
+
+// 🎁 会员等级页「额外福利」：精简两行（每天签到 +1~+8 / 签到达人 30 天奖励）
+export function perksRowsHTML(settings, state, opts = {}) {
+  if (!settings.active) return "";
+  const P = settings.points, v = viewOf(state);
+  const pos = P.filter(n => n > 0), lo = Math.min(...pos), hi = Math.max(...pos);
+  const range = !pos.length ? "" : lo === hi ? `+${hi}` : `+${lo}\u00a0~\u00a0+${hi}`;   // 不让数字拆成两行
+  const total = P.reduce((a, n) => a + n, 0);
+  let act;
+  if (!opts.bound) act = `<a class="btn btn-ghost" href="bind.html">${ct("bindBtn")}</a>`;
+  else if (v.today) act = `<span class="pill">${ct("pDone")}</span>`;
+  else act = `<a class="btn btn-primary" href="home.html#checkin">${ct("pGo")}</a>`;
+  const star = [settings.starPts > 0 ? ct("pStarPts", { n: settings.starPts }) : "", settings.hasGift ? ct("pStarGift") : "",
+    settings.sharePts > 0 ? ct("pStarShare", { n: settings.sharePts }) : ""].filter(Boolean).join(" · ");
+  return `<li><span class="ic">📅</span><span class="tx"><b>${ct("pDaily", { r: range })}</b><small>${ct("pDailySub", { n: total })}</small></span><span class="act">${act}</span></li>
+    <li><span class="ic"><img src="img/ci-badge.png" alt=""></span><span class="tx"><b>${ct("pStar")}</b><small>${star}</small></span>
+      <span class="act">${opts.bound ? `<span class="pill">${ct("pLeft", { n: toStar(v) })}</span>` : ""}</span></li>`;
 }
 
 // ---------- 后端 ----------
