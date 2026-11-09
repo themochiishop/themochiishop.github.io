@@ -1408,3 +1408,23 @@ body.preview-mode .toast { bottom: 72px; }
   .ci-bar .ci-bbtn { width: auto; flex: none; margin: 0; padding: 7px 14px; font-size: .8rem; white-space: nowrap; }
 }
 @media (max-width: 760px) and (prefers-reduced-motion: reduce) { .ci-dots i.nx { animation: none; } }
+
+/* 🏅 签到达人：分享按钮、还差几天、达标弹窗（js/checkin.js） */
+.ci-card .ci-share { display: flex; width: 100%; justify-content: center; margin-top: 10px; }
+.ci-star { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; font-size: .8rem; font-weight: 700; color: var(--accent); }
+.ci-star img { width: 20px; height: 20px; flex: none; }
+.ci-bar a.ci-bbtn { text-decoration: none; }
+.ci-modal { position: fixed; inset: 0; z-index: 200; background: rgba(8,10,20,.6); display: flex; align-items: center; justify-content: center; padding: 20px; animation: ciFade .2s ease; }
+@keyframes ciFade { from { opacity: 0; } }
+.ci-modal-card { width: min(360px, 100%); background: var(--card); border: 1px solid rgba(255,111,174,.45); border-radius: 22px; padding: 24px 20px 18px;
+  text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,.45); display: flex; flex-direction: column; gap: 8px; animation: ciPop .35s cubic-bezier(.2,1.4,.4,1); }
+@keyframes ciPop { from { transform: scale(.85); opacity: 0; } }
+.ci-modal-badge { width: 92px; height: 92px; margin: -6px auto 4px; filter: drop-shadow(0 6px 16px rgba(255,111,174,.45)); }
+.ci-modal-card h3 { margin: 0; font-size: 1.15rem; }
+.ci-modal-card .muted { margin: 0 0 4px; font-size: .86rem; }
+.ci-modal-card ul { list-style: none; margin: 4px 0; padding: 0; text-align: left; display: flex; flex-direction: column; gap: 6px; }
+.ci-modal-card li { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 12px; background: var(--card2); border: 1px solid var(--line); font-size: .86rem; font-weight: 600; }
+.ci-modal-card li img { width: 20px; height: 20px; flex: none; }
+.ci-modal-share { margin: 4px 0 2px; font-size: .84rem; font-weight: 700; color: var(--accent); }
+.ci-modal-card .btn { width: 100%; justify-content: center; margin: 0; }
+@media (prefers-reduced-motion: reduce) { .ci-modal, .ci-modal-card { animation: none; } }
