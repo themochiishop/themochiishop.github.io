@@ -1474,11 +1474,7 @@ body.preview-mode .toast { bottom: 72px; }
 @keyframes soTag { 0% { opacity: 0; transform: translate(-50%, -8px); } 15%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -6px); } }
 .fx-spark { position: absolute; bottom: 20%; z-index: 4; font-size: 1rem; pointer-events: none; animation: soSpark 1.1s ease-out both; }
 @keyframes soSpark { 0% { opacity: 0; transform: translateY(0) scale(.5); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-60px) scale(1.2); } }
-/* 剩 3 个以下：红色 🔥；数字变少时跳一下 */
-[data-stock-line].low { color: #e11d48; font-weight: 800; }
-[data-stock-line].fx-bump { display: inline-block; animation: soBump .5s ease; }
-@keyframes soBump { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.25); } }
 @media (prefers-reduced-motion: reduce) {
-  .so-stamp.fx-stamp, .fx-shake, .fx-restock, .fx-restock-tag, .fx-spark, [data-stock-line].fx-bump { animation: none; }
+  .so-stamp.fx-stamp, .fx-shake, .fx-restock, .fx-restock-tag, .fx-spark { animation: none; }
   .fx-spark { display: none; }
 }
