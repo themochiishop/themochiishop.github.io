@@ -1,4 +1,4 @@
-// 📲 Mochii App（PWA）：注册 service worker、状态栏颜色、App 里的返回按钮、「安装 App」和「回到商店」入口
+// 📲 Mochii App（PWA）：状态栏颜色、App 里的返回按钮、「安装 App」（入口在帮助中心 › App 与网址）
 // 整个网站共用（商店页面 + /memberclub/）。不碰登录、Firebase、会员资料。
 (function () {
   "use strict";
@@ -12,7 +12,7 @@
   // ---------- 文字（三语）----------
   var TXT = {
     en: {
-      sec: "App", install: "Install Mochii Club app", installShort: "Install Club", site: "Back to website", shop: "Back to The Mochii Shop", back: "Back",
+      sec: "App", install: "Install Mochii Club app", shop: "Back to The Mochii Shop", back: "Back",
       iosT: "Add Mochii Club to your Home Screen",
       ios1: "Open this page in <b>Safari</b> (not inside Facebook, Instagram, TikTok or WhatsApp).",
       ios2: "Tap the <b>Share</b> button <span class=\"pwa-k\">⬆️</span> at the bottom (or top) of Safari.",
@@ -24,7 +24,7 @@
       ok: "Got it", done: "Installed! Look for the Mochii Club icon on your home screen."
     },
     ms: {
-      sec: "Aplikasi", install: "Pasang aplikasi Mochii Club", installShort: "Pasang Club", site: "Ke laman web", shop: "Kembali ke The Mochii Shop", back: "Kembali",
+      sec: "Aplikasi", install: "Pasang aplikasi Mochii Club", shop: "Kembali ke The Mochii Shop", back: "Kembali",
       iosT: "Tambah Mochii Club ke Skrin Utama",
       ios1: "Buka halaman ini dalam <b>Safari</b> (bukan dalam Facebook, Instagram, TikTok atau WhatsApp).",
       ios2: "Tekan butang <b>Kongsi</b> <span class=\"pwa-k\">⬆️</span> di bahagian bawah (atau atas) Safari.",
@@ -36,7 +36,7 @@
       ok: "Faham", done: "Sudah dipasang! Cari ikon Mochii Club di skrin utama anda."
     },
     zh: {
-      sec: "App", install: "安装 Mochii Club App", installShort: "安装 Club", site: "回到网站", shop: "回到 Mochii 商店", back: "返回",
+      sec: "App", install: "安装 Mochii Club App", shop: "回到 Mochii 商店", back: "返回",
       iosT: "把 Mochii Club 加到主屏幕",
       ios1: "用 <b>Safari</b> 打开这个页面（不能在 Facebook、Instagram、TikTok、WhatsApp 里面打开）。",
       ios2: "点 Safari 下方（或上方）的 <b>分享</b> 按钮 <span class=\"pwa-k\">⬆️</span>。",
@@ -89,9 +89,6 @@
     "padding:7px 13px 7px 9px;border-radius:999px;border:1px solid rgba(255,111,174,.45);background:rgba(20,24,40,.82);color:#fff;",
     "font:600 14px/1 Inter,'Noto Sans SC',-apple-system,sans-serif;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}",
     ".pwa-back:active{transform:scale(.96)}",
-    ".pwa-shop-link{display:flex;align-items:center;justify-content:center;gap:8px;margin:22px auto 6px;padding:13px 16px;max-width:420px;",
-    "border:1px dashed var(--accent,#ff6fae);border-radius:14px;color:var(--text,#e8ecf8);font-weight:700;text-decoration:none}",
-    ".pwa-shop-link:hover{background:rgba(255,111,174,.08);text-decoration:none}",
     ".pwa-modal{position:fixed;inset:0;z-index:10000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);padding:16px}",
     "@media(min-width:600px){.pwa-modal{align-items:center}}",
     ".pwa-card{width:100%;max-width:400px;border-radius:18px;padding:20px 20px 16px;background:var(--card,#131a2e);color:var(--text,#e8ecf8);",
@@ -142,31 +139,8 @@
     showGuide(IS_IOS);
   }
 
-  // ---------- 4. 设定面板 ⚙️ 里加「App」区块（club 每一页）----------
-  function addSettingsSection(panel) {
-    if (!panel || panel.querySelector(".pwa-sec")) return;
-    var sec = document.createElement("div");
-    sec.className = "set-sec pwa-sec";   // 和上面的「外观」「语言」一样：标题 + 一行按钮
-    sec.innerHTML = '<div class="set-h">📲 ' + t("sec") + '</div><div class="set-row">' +
-      (standalone ? "" : '<button type="button" data-pwa-install title="' + t("installShort") + '">📲<span>' + t("installShort") + "</span></button>") +
-      '<button type="button" data-pwa-site title="' + t("site") + '">🏪<span>' + t("site") + "</span></button></div>";
-    sec.querySelector("[data-pwa-site]").addEventListener("click", function () { location.href = "/"; });
-    var ib = sec.querySelector("[data-pwa-install]");
-    if (ib) ib.addEventListener("click", install);
-    var contact = panel.querySelector(".set-contact");
-    panel.insertBefore(sec, contact || null);
-  }
-
-  // ---------- 5. 首页最下面的「回到 Mochii 商店」----------
-  function addHomeShopLink() {
-    var box = document.getElementById("homeSections");
-    if (!box || document.querySelector(".pwa-shop-link")) return;
-    var a = document.createElement("a");
-    a.className = "pwa-shop-link";
-    a.href = "/";
-    a.textContent = "🏪 " + t("shop");
-    box.parentNode.insertBefore(a, box.nextSibling);
-  }
+  // ---------- 4. 给帮助中心「App 与网址」分页用（help.html 的安装按钮会叫 MochiiPWA.install()）----------
+  window.MochiiPWA = { install: install, standalone: standalone };
 
   // ---------- 6. App 里的返回按钮（左下角）：只在全屏 App、而且页面没有自己的导航时出现 ----------
   function addBackButton() {
@@ -186,16 +160,6 @@
   }
 
   function onReady() {
-    if (IN_CLUB) {
-      document.querySelectorAll(".set-panel").forEach(addSettingsSection);
-      if (/\/memberclub\/home\.html$/.test(path)) addHomeShopLink();
-      // club 的顶部导航是之后才画出来的：等它出现再加
-      var mo = new MutationObserver(function () {
-        document.querySelectorAll(".set-panel").forEach(addSettingsSection);
-      });
-      mo.observe(document.body, { childList: true, subtree: true });
-      setTimeout(function () { mo.disconnect(); }, 15000);
-    }
     addBackButton();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", onReady);
