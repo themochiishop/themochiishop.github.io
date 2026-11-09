@@ -54,7 +54,7 @@
   <script type="module">
     import { db } from "./js/firebase-config.js";
     import {
-      collection, query, where, getDocs, addDoc, serverTimestamp, Timestamp
+      collection, query, where, getDocs, addDoc, serverTimestamp, Timestamp, onSnapshot
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
     import {
       requireMember, renderNav, loadBalance, esc, t, loadShopCats, catOf, catName, endState, fmtDate, MAX_ADDRESSES,
@@ -85,24 +85,57 @@
       let bal = null;
 
 
+      // ⚡ 上架中的奖品：实时监听（库存、款式库存、上架 / 下架有变动，画面马上更新，不用重新整理）
+      //    打开商城时读取次数和以前一样；之后只有奖品有变动才多读（每个正在看商城的人 1 次）；离开页面就停止
+      let liveMap = new Map();     // 上架中的奖品（实时）
+      let offMap = new Map();      // 最近 30 天内下架的（打开时读一次；实时监听中刚下架的也会加进来）
+      let unsub = null, firstSnap = null;
+      function rebuild() {
+        const seen = new Map([...offMap, ...liveMap]);
+        rewards = [...seen.values()]
+          .filter(r => showInShop(r))
+          .sort((a, b) => (offShelf(a) ? 1 : 0) - (offShelf(b) ? 1 : 0)   // 已下架排最后
+            || (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || a.cost - b.cost);
+      }
+      function startLive() {
+        if (unsub) return firstSnap;
+        firstSnap = new Promise((resolve, reject) => {
+          let first = true;
+          unsub = onSnapshot(query(collection(db, "rewards"), where("active", "==", true)), snap => {
+            snap.docChanges().forEach(ch => {
+              const r = { id: ch.doc.id, ...ch.doc.data() };
+              if (ch.type === "removed") { liveMap.delete(r.id); offMap.set(r.id, r); }   // 刚下架：显示灰色「已下架」
+              else { liveMap.set(r.id, r); offMap.delete(r.id); }
+            });
+            if (first) { first = false; resolve(); return; }
+            if (!bal) return;   // 还在第一次载入中：等 load() 画
+            rebuild(); render();
+            if (vpRefresh) vpRefresh();   // 选款式视窗开着：卖完的款式马上变灰
+          }, err => {
+            console.warn("rewards live", err);
+            if (first) { first = false; unsub = null; reject(err); }
+          });
+        });
+        return firstSnap;
+      }
+
       async function load() {
         try {
           const cutoff = Timestamp.fromDate(new Date(Date.now() - OFF_SHELF_DAYS * 86400000));
-          const [b, rSnap, offSnap, cs] = await Promise.all([
+          const [b, offSnap, cs] = await Promise.all([
             loadBalance(user.uid),
-            getDocs(query(collection(db, "rewards"), where("active", "==", true))),
             // ⛔ 最近 30 天内下架的：显示灰色「已下架」
             getDocs(query(collection(db, "rewards"), where("delistedAt", ">=", cutoff))).catch(() => ({ docs: [] })),
-            loadShopCats()
+            loadShopCats(),
+            startLive().catch(async () => {   // 实时监听失败：退回读一次
+              const rSnap = await getDocs(query(collection(db, "rewards"), where("active", "==", true)));
+              liveMap = new Map(rSnap.docs.map(d => [d.id, { id: d.id, ...d.data() }]));
+            }),
           ]);
           bal = b;
           shopCats = cs;
-          const seen = new Map();
-          [...rSnap.docs, ...offSnap.docs].forEach(d => seen.set(d.id, { id: d.id, ...d.data() }));
-          rewards = [...seen.values()]
-            .filter(r => showInShop(r))
-            .sort((a, b) => (offShelf(a) ? 1 : 0) - (offShelf(b) ? 1 : 0)   // 已下架排最后
-              || (a.sortOrder ?? 999) - (b.sortOrder ?? 999) || a.cost - b.cost);
+          offSnap.docs.forEach(d => { if (!liveMap.has(d.id)) offMap.set(d.id, { id: d.id, ...d.data() }); });
+          rebuild();
           render();
           openFromHash();
           renderNm();
@@ -319,6 +352,7 @@
 
       // 🎨 选款式：有款式的商品，按兑换一定先开这个视窗（正在看哪一款就先帮忙选好）
       //    点选一款（粉色框）→ 下面按「确认兑换」，不再另外跳确认小视窗
+      let vpRefresh = null;   // 选款式视窗开着时，奖品有变动就重画
       function pickVariant(r, pre = -1) {
         return new Promise(resolve => {
           let m = document.getElementById("vpModal");
@@ -331,7 +365,7 @@
               </div></div>`);
             m = document.getElementById("vpModal");
           }
-          const vs = varsOf(r);
+          let vs = varsOf(r);
           const out = v => typeof v.stock === "number" && v.stock <= 0;
           let sel = pre >= 0 && vs[pre] && !out(vs[pre]) ? pre : -1;
           $("vpName").textContent = r.name;
@@ -344,7 +378,16 @@
             $("vpOk").disabled = sel < 0;
           };
           paint();
-          const done = v => { m.classList.add("hidden"); m.onclick = null; resolve(v); };
+          // ⚡ 实时：别人换走了某一款 → 那一款变灰；已经选的那一款卖完就取消选择
+          vpRefresh = () => {
+            const nr = rewards.find(x => x.id === r.id);
+            if (!nr) return;
+            const selId = sel >= 0 && vs[sel] ? vs[sel].id : null;
+            r = nr; vs = varsOf(nr);
+            sel = selId ? vs.findIndex(v => v.id === selId && !out(v)) : -1;
+            paint();
+          };
+          const done = v => { vpRefresh = null; m.classList.add("hidden"); m.onclick = null; resolve(v); };
           m.onclick = e => {
             if (e.target === m) return done(null);
             const b = e.target.closest("[data-vp]");
