@@ -111,6 +111,10 @@
     .tier-pill { display: inline-flex; align-items: center; gap: 5px; font-size: .76rem; font-weight: 800; padding: 3px 11px; border-radius: 999px;
       border: 1px solid var(--ring); color: var(--text); background: rgba(255,255,255,.04); }
     .tier-pill.best { border-color: rgba(212,175,55,.6); color: #f3d27a; font-weight: 700; }
+    .tier-pill.ci-pill { border-color: rgba(255,111,174,.45); }
+    .tier-pill.ci-pill img { width: 18px; height: 18px; margin-left: -6px; }
+    .ci-mini { width: 15px; height: 15px; vertical-align: -2px; margin-left: 3px; flex: none; }
+    .ci-share-note { display: block; background: rgba(255,111,174,.12); border: 1px solid rgba(255,111,174,.35); border-radius: 10px; padding: 8px 10px; font-size: .82rem; margin-bottom: 8px; }
     .bio-lbl { color: var(--muted); font-size: .76rem; font-weight: 700; margin-right: 4px; }
     .prof-bio { font-size: .9rem; margin: 12px auto 0; max-width: 460px; white-space: pre-wrap; word-break: break-word; line-height: 1.55; }
     .prof-bio.empty { color: var(--muted); font-style: italic; cursor: pointer; border: 1px dashed var(--line); border-radius: 10px; padding: 8px 12px; display: inline-block; }
@@ -430,7 +434,7 @@
     function who(p) {
       if (isShop(p)) return { name: p.authorName || cfg.shopName || "The Mochii Shop", tier: "", title: p.authorTitle || "", avatar: p.avatar || cfg.shopAvatar || "", shop: true };
       const f = profiles[p.authorUid] || {};
-      return { name: f.name || p.authorName || "", tier: f.tier || p.authorTier || "mochii", title: f.title ?? p.authorTitle ?? "", avatar: f.avatar || "", bio: f.bio || "" };
+      return { name: f.name || p.authorName || "", tier: f.tier || p.authorTier || "mochii", title: f.title ?? p.authorTitle ?? "", avatar: f.avatar || "", bio: f.bio || "", ciBadge: f.ciBadge || 0 };
     }
     function avatarOf(w) {
       const a = w.avatar || "";
@@ -444,7 +448,11 @@
       const ch = Array.from(String(w.name || "?").trim())[0] || "?";
       return `<span class="av t-${esc(w.tier || "mochii")}">${esc(ch.toUpperCase())}</span>`;
     }
-    const tierMark = w => TIER_MARK[w.tier] ? `<span class="tier-mark">${TIER_MARK[w.tier]}</span>` : "";
+    // 🏅 签到达人：名字旁边的小麻糬徽章（没有数字）；个人主页显示「签到达人 ×N」
+    const CI_BADGE = "img/ci-badge.png";
+    const ciMini = w => w.ciBadge > 0 ? `<img class="ci-mini" src="${CI_BADGE}" alt="" title="${esc(ft("ciBadgeTip", { n: w.ciBadge }))}">` : "";
+    const ciPill = w => w.ciBadge > 0 ? `<span class="tier-pill ci-pill" title="${esc(ft("ciBadgeTip", { n: w.ciBadge }))}"><img src="${CI_BADGE}" alt="">${esc(ft("ciBadge", { n: w.ciBadge }))}</span>` : "";
+    const tierMark = w => (TIER_MARK[w.tier] ? `<span class="tier-mark">${TIER_MARK[w.tier]}</span>` : "") + ciMini(w);
     const authorKey = p => isShop(p) ? "shop" : "u-" + p.authorUid;
     const canSee = p => me.rank >= (p.minRank ?? 0);
     const isMod = () => me.admin || me.perm === "mod";
@@ -541,6 +549,10 @@
         };
         const same = me.feed && ["name", "tier", "title", "avatar", "bio", "code", "best"].every(k => cur[k] === next[k]);
         if (!same) {
+          // 🏅 签到达人次数只有后端能写：保存时照伺服器上现在的数字原样带回去（规则要求不能改）
+          const fresh = me.feed ? await getDoc(ref) : null;
+          const cb = fresh ? (fresh.exists() ? fresh.data().ciBadge : undefined) : cur.ciBadge;
+          if (cb !== undefined) next.ciBadge = cb;
           await setDoc(ref, { ...next, updatedAt: serverTimestamp() });
           me.feed = next;
         }
@@ -664,7 +676,7 @@
       } else {
         await loadProfiles([view.uid]);
         const f = profiles[view.uid] || {};
-        w = { name: f.name || "", tier: f.tier || "mochii", title: f.title || "", avatar: f.avatar || "", bio: f.bio || "", code: f.code || view.uid.slice(0, 8), best: f.best || "" };
+        w = { name: f.name || "", tier: f.tier || "mochii", title: f.title || "", avatar: f.avatar || "", bio: f.bio || "", code: f.code || view.uid.slice(0, 8), best: f.best || "", ciBadge: f.ciBadge || 0 };
         mine = !!me.user && view.uid === me.user.uid;
         likeKey = view.uid;
       }
@@ -689,6 +701,7 @@
               <div class="prof-line">
                 <span class="tier-pill">${tierIcon} ${esc(tierName)}</span>
                 ${w.best && (RANK[w.best] ?? 0) > (RANK[w.tier] ?? 0) ? `<span class="tier-pill best">${esc(t("tier.best", { label: t("tier." + w.best) }))}</span>` : ""}
+                ${ciPill(w)}
               </div>
               ${bio}
             </div>
@@ -733,7 +746,7 @@
         <div class="sc-av">${avatarOf(w)}</div>
         <div class="sc-body">
           <div class="sc-name">${esc(w.name)} ${titleTag(w.title)}</div>
-          <div class="prof-line"><span class="tier-pill">${w.shop ? "🏪" : (TIER_MARK[w.tier] || "🎀")} ${esc(tierName)}</span></div>
+          <div class="prof-line"><span class="tier-pill">${w.shop ? "🏪" : (TIER_MARK[w.tier] || "🎀")} ${esc(tierName)}</span>${ciPill(w)}</div>
           <div class="sc-link" id="scLink">${esc(url.replace(/^https:\/\//, ""))}</div>
           <div class="sc-acts">
             <button class="btn btn-ghost" id="scCopy">${esc(ft("copyLink"))}</button>
@@ -1268,8 +1281,23 @@
       for (const f of files) { try { pics.push({ full: await compressImage(f, 960), file: f }); } catch (err) {} }
       drawPics();
     };
+    // 🏅 签到分享帖：从首页「去分享」进来（feed.html?ci=达标日期），有分享资格就打开发帖窗口并预填
+    let ciShare = null;
+    async function openCiShare() {
+      const ms = new URLSearchParams(location.search).get("ci");
+      if (!ms || !/^\d{4}-\d{2}-\d{2}$/.test(ms) || !me.member || !me.member.name) return;
+      try {
+        const [st, pk] = await Promise.all([getDoc(doc(db, "checkins", me.user.uid)), getDoc(doc(db, "settings", "perks")).catch(() => null)]);
+        const sh = st.exists() ? st.data().share : null;
+        if (!sh || sh.ms !== ms || sh.claimed === true) { toast(ft("ciShareGone")); return; }
+        const m30 = pk && pk.exists() ? ((pk.data().checkin || {}).m30 || {}) : {};
+        ciShare = { ms, streak: st.data().streak || 30, pts: Number.isInteger(m30.sharePts) ? m30.sharePts : 10 };
+      } catch (e) { console.warn("ci share", e); return; }
+      $("cText").value = ft("ciShareText", { n: ciShare.streak });
+      $("fab").onclick();
+    }
     $("fab").onclick = () => {
-      $("cNote").textContent = ft(autoPublish() ? "postDirect" : "postReview");
+      $("cNote").innerHTML = (ciShare ? `<span class="ci-share-note">🏅 ${esc(ft("ciShareNote", { n: ciShare.pts }))}</span>` : "") + esc(ft(autoPublish() ? "postDirect" : "postReview"));
       $("cMsg").textContent = "";
       drawPics();
       $("composer").classList.remove("hidden"); document.body.style.overflow = "hidden";
@@ -1291,11 +1319,13 @@
           authorUid: me.user.uid, authorName: me.member.name || "", authorTier: me.member.tier || "mochii",
           authorTitle: me.title, thumb: pics.length ? await compressImage(pics[0].file, 24) : "",
           imageCount: pics.length, pinned: false, createdAt: serverTimestamp(),
+          ...(ciShare ? { tag: "checkin", ciMs: ciShare.ms } : {}),   // 🏅 签到分享帖
         });
         batch.set(doc(db, "feedPosts", ref.id, "content", "main"), { text, images: pics.map(p => p.full) });
         await batch.commit();
         if (hit) logFilter("post", raw, text, ref.id);
         $("cText").value = ""; pics = [];
+        if (ciShare) { ciShare = null; history.replaceState(null, "", location.pathname + location.hash); }
         closeModal("composer");
         toast(ft(direct ? "posted" : "sentReview") + (hit ? " " + ft("phoneHidden") : ""));
         if (direct) { cursors.length = 1; loadPage(1); } else loadMyPosts();
@@ -1379,6 +1409,7 @@
       document.body.classList.remove("loading");
       loadMyPosts();
       await route();
+      openCiShare();   // 🏅 签到分享帖
     });
   </script>
 </body>

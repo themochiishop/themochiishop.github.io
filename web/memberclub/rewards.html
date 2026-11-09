@@ -240,16 +240,18 @@
                   <div class="title">${esc(r.rewardName)}${r.variantName ? ` <span class="tag">🎨 ${esc(r.variantName)}</span>` : ""} ${statusTag(r)}</div>
                   <span class="redeem-no">${redeemCode(NM.isNmRedemption(r) ? r.id.replace(/^nm_/, "") : r.id)}</span>
                 </div>
-                <div class="meta">${r.gift ? "🎁 " + esc(t("rw.perkGift", { why: r.giftReason || "" })) : t("unit.pts", { n: r.cost })} · ${t("rw.appliedOn", { d: fmtDate(r.createdAt) })}${r.decidedAt && r.kind !== "gift" ? " · " + t("rw.decidedOn", { d: fmtDate(r.decidedAt) }) : ""}</div>
+                <div class="meta">${r.ciGift ? "🏅 " + esc(t("rw.ciGift")) : r.gift ? "🎁 " + esc(t("rw.perkGift", { why: r.giftReason || "" })) : t("unit.pts", { n: r.cost })} · ${t("rw.appliedOn", { d: fmtDate(r.createdAt) })}${r.decidedAt && r.kind !== "gift" ? " · " + t("rw.decidedOn", { d: fmtDate(r.decidedAt) }) : ""}</div>
                 ${r.couponCode ? `<div class="code"><span class="code-txt">${t("rw.code")} <b>${esc(r.couponCode)}</b></span> <button class="btn btn-ghost btn-inline" data-copy="${esc(r.couponCode)}">${t("rw.copy")}</button></div>
                 <div class="code-hint">💡 ${esc(codeHint(r))}</div>` : ""}
                 ${r.note ? `<div class="meta">${t("rw.note")}${esc(tn(r.note, r.noteI18n))}</div>` : ""}
                 ${r.adminCancelled && r.cancelNote ? `<div class="meta">${esc(r.cancelNote)}</div>` : ""}
+                ${r.ciGift && ["pending", "approved", "problem"].includes(r.status) && toDate(r.deadline) ? `<div class="meta">⏰ ${esc(t(r.backorder ? "rw.ciBackorder" : "rw.ciDeadline", { d: fmtDate(toDate(r.deadline)) }))}</div>` : ""}
+                ${r.ciGift && r.status === "cancelled" && !r.adminCancelled ? `<div class="meta">${esc(t("rw.ciExpired"))}</div>` : ""}
               </div>
             </div>
             ${NM.rewardsNote(r, member)}
             ${giftBlock(r)}
-            ${r.status === "pending" ? `<div class="redeem-actions"><button class="btn btn-ghost btn-inline btn-xs" data-cancel="${esc(r.id)}">${t("rw.cancel")}</button></div>` : ""}
+            ${r.status === "pending" && !r.ciGift ? `<div class="redeem-actions"><button class="btn btn-ghost btn-inline btn-xs" data-cancel="${esc(r.id)}">${t("rw.cancel")}</button></div>` : ""}
           </li>`;
         const list = bal.redemptions;
         if (!list.length) {

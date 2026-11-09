@@ -280,7 +280,9 @@
           ciState = CI.stateAfter(r, ciState);
           if (!r.already && r.pts > 0) bal.spendable += r.pts;   // 积分马上加到上面的总数
           toast(r.already ? "✅ " + CI.ct("done") : r.pts > 0 ? CI.ct("got", { n: r.pts }) : CI.ct("gotZero"));
+          if (r.milestone && r.milestone.points > 0) bal.spendable += r.milestone.points;   // 🏅 签到达人积分
           draw();
+          if (r.milestone) CI.showMilestone(r);   // 🎉 签到达人弹窗
         } catch (err) { toast(CI.errText(err)); b.disabled = false; }
       });
       // 键盘：在签到条上按 Enter / 空白键也能展开
