@@ -1345,3 +1345,38 @@ body.preview-mode .toast { bottom: 72px; }
 .rw-month > ul { padding: 12px; }
 
 .nm-go { display: block; color: var(--accent); font-weight: 700; text-decoration: none; }
+
+/* ---------- 📅 每日签到（首页卡片，js/checkin.js）---------- */
+.ci-card .card-head { align-items: center; }
+.ci-streak { font-size: .78rem; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.ci-cells { list-style: none; margin: 4px 0 12px; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.ci-cell {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  padding: 9px 2px 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--card2); text-align: center; min-width: 0;
+}
+.ci-day { font-size: .66rem; color: var(--muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.ci-pts { font-size: .92rem; font-weight: 800; white-space: nowrap; }
+.ci-cell.big .ci-pts { font-size: 1rem; }
+.ci-cell.big { border-color: rgba(255,111,174,.45); }
+.ci-gift { position: absolute; top: -9px; left: -4px; font-size: .95rem; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,.25)); }
+.ci-cell.on { border-color: transparent; color: #fff; background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+.ci-cell.on .ci-day { color: rgba(255,255,255,.85); }
+.ci-cell.on::after {
+  content: "✓"; position: absolute; top: -6px; right: -4px; width: 18px; height: 18px; border-radius: 50%;
+  background: #16a34a; color: #fff; font-size: .7rem; font-weight: 800; line-height: 18px; text-align: center; box-shadow: 0 0 0 2px var(--card);
+}
+.ci-cell.next { border: 2px solid var(--accent); box-shadow: 0 0 0 3px rgba(255,111,174,.18); animation: ciPulse 1.8s ease-in-out infinite; }
+@keyframes ciPulse { 50% { box-shadow: 0 0 0 6px rgba(255,111,174,.08); } }
+@media (prefers-reduced-motion: reduce) { .ci-cell.next { animation: none; } }
+.ci-locked .ci-cells { opacity: .5; filter: grayscale(.4); }
+.ci-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: .86rem; }
+.ci-ok { font-weight: 700; }
+.ci-btn { min-width: 128px; }
+.ci-rule { margin: 10px 0 0; font-size: .72rem; color: var(--muted); line-height: 1.45; }
+@media (max-width: 480px) {
+  .ci-cells { gap: 4px; }
+  .ci-cell { padding: 7px 1px 6px; border-radius: 10px; }
+  .ci-day { font-size: .6rem; }
+  .ci-pts { font-size: .82rem; }
+  .ci-foot .ci-btn { flex: 1 1 100%; }
+}
