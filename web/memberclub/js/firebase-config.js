@@ -17,9 +17,15 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 // 本机暂存：换页时先显示暂存的资料（例如铃铛），再在背景更新，感觉更快
+// 📲 iPhone / iPad 装成 App（加到主屏幕）时不用本机暂存：换页后旧页面还占着暂存，新页面会一直卡在「载入中」（2026-11-09 实测）
+const IOS_APP = navigator.standalone === true ||
+  ((/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)) &&
+   window.matchMedia && matchMedia("(display-mode: standalone)").matches);
 let _db;
 try {
-  _db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+  _db = IOS_APP
+    ? getFirestore(app)   // 只存在记忆体，每页各自读
+    : initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
 } catch (e) {
   _db = getFirestore(app);
 }
