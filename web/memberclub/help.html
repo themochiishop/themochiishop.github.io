@@ -28,6 +28,7 @@
     <div class="tabs" id="helpTabs">
       <button data-tab="club" class="active" data-i18n="help.tabClub"></button>
       <button data-tab="store" data-i18n="help.tabStore"></button>
+      <button data-tab="app" id="tabApp"></button>
     </div>
 
     <div class="card">
@@ -64,6 +65,32 @@
     // 商店帮助的分类（和后台 storehelp.html 的 STORE_CATS 一致）
     const STORE_CATS = ["order", "shipping", "payment", "return", "product", "live", "contact"];
 
+    // 📲 第三个分页「App 与网址」：内容固定写在这里（不经后台）；安装按钮叫 pwa.js 的 MochiiPWA.install()
+    const APP_TXT = {
+      zh: { tab: "App 与网址", q: "App 与网址",
+        a: "把 Mochii Club 装到手机桌面，打开就是全屏 App，不用每次找网址。也可以随时回到 Mochii 商店网站逛逛。",
+        install: "📲 安装 Mochii Club App", site: "🏪 回到 Mochii 商店", using: "✅ 你正在使用 App" },
+      en: { tab: "App & Website", q: "Mochii Club app & website",
+        a: "Install Mochii Club on your home screen. It opens full screen like an app, so you don't need to look for the link. You can also go back to The Mochii Shop website anytime.",
+        install: "📲 Install Mochii Club app", site: "🏪 Back to The Mochii Shop", using: "✅ You're using the app" },
+      ms: { tab: "Aplikasi & Laman Web", q: "Aplikasi & laman web Mochii Club",
+        a: "Pasang Mochii Club di skrin utama telefon anda. Ia dibuka skrin penuh seperti aplikasi, jadi tak perlu cari pautan lagi. Anda juga boleh kembali ke laman web The Mochii Shop bila-bila masa.",
+        install: "📲 Pasang aplikasi Mochii Club", site: "🏪 Kembali ke The Mochii Shop", using: "✅ Anda sedang guna aplikasi" },
+    };
+    const AT = APP_TXT[lang] || APP_TXT.en;
+    $("tabApp").textContent = AT.tab;
+    const inApp = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+    const appItems = () => [{
+      q: AT.q, cat: "app", html: true,
+      a: `<p>${esc(AT.a)}</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+          ${inApp
+            ? `<div class="btn btn-ghost" style="flex:1 1 200px;width:auto;cursor:default">${esc(AT.using)}</div>`
+            : `<button type="button" class="btn btn-primary" data-pwa-install style="flex:1 1 200px;width:auto">${esc(AT.install)}</button>`}
+          <a class="btn btn-ghost" href="/" style="flex:1 1 200px;width:auto;text-decoration:none">${esc(AT.site)}</a>
+        </div>`,
+    }];
+
     let tab = "club", cat = "all", page = 0;
     const PER = 8;   // 超过 8 题就分页
     let club = [], store = [], contacts = {};
@@ -71,14 +98,16 @@
     // 网址带 #club-redeem、#store 之类，直接打开对应分类
     const hash = location.hash.slice(1);
     if (hash.startsWith("store")) tab = "store";
+    if (hash === "app") tab = "app";   // help.html#app 直接打开「App 与网址」
     if (hash.startsWith("club-")) cat = hash.slice(5);
-    else if (hash && !hash.startsWith("store")) cat = hash;   // help.html#points 也可以
+    else if (hash && !hash.startsWith("store") && hash !== "app") cat = hash;   // help.html#points 也可以
 
     const norm = x => String(x || "").toLowerCase();
     const strip = html => String(html || "").replace(/<[^>]+>/g, " ");
 
     function items() {
       if (tab === "club") return club.flatMap(g => g.items.map(i => ({ ...i, cat: g.sec, html: true })));
+      if (tab === "app") return appItems();
       return store.map(x => ({ q: x.q, a: x.a, cat: x.cat, html: false }));
     }
 
@@ -131,7 +160,7 @@
     function render() {
       document.querySelectorAll("#helpTabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
       const q = norm($("helpSearch").value.trim());
-      renderContacts(!!q);
+      renderContacts(!!q || tab === "app");   // 「App 与网址」分页：Club 和商店的联系方式都显示
 
       // 搜索：两边一起找
       if (q) {
@@ -139,12 +168,13 @@
         const all = [
           ...club.flatMap(g => g.items.map(i => ({ ...i, html: true, where: t("help.tabClub") }))),
           ...store.map(x => ({ q: x.q, a: x.a, html: false, where: t("help.tabStore") })),
+          ...appItems().map(i => ({ ...i, where: AT.tab })),
         ].filter(i => norm(i.q).includes(q) || norm(i.html ? strip(i.a) : i.a).includes(q));
         showPage(all, true, t("help.noResult"));
         return;
       }
 
-      const cats = tab === "club" ? club.map(g => g.sec) : STORE_CATS.filter(c => store.some(x => x.cat === c));
+      const cats = tab === "club" ? club.map(g => g.sec) : tab === "app" ? [] : STORE_CATS.filter(c => store.some(x => x.cat === c));
       if (cat !== "all" && !cats.includes(cat)) cat = "all";
       $("helpCats").innerHTML = cats.length > 1
         ? [`<button type="button" data-k="all" class="${cat === "all" ? "active" : ""}">${t("pts.kind.all")}</button>`,
@@ -193,6 +223,11 @@
       if (!b) return;
       cat = b.dataset.k; page = 0;
       render();
+    });
+    // 📲 安装按钮（在 FAQ 框里，列表会重画，所以用委派）
+    $("helpList").addEventListener("click", e => {
+      if (!e.target.closest("[data-pwa-install]")) return;
+      if (window.MochiiPWA) window.MochiiPWA.install();
     });
     $("helpSearch").addEventListener("input", () => { page = 0; render(); });
     $("helpPager").addEventListener("click", e => {
