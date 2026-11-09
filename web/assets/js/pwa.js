@@ -57,11 +57,16 @@
   }
   function t(k) { return (TXT[lang()] || TXT.en)[k] || TXT.en[k]; }
 
-  // ---------- 1. Service worker（只处理没网络的情况）----------
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () {
-      navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" }).catch(function () {});
-    });
+  // ---------- 1. 不使用 service worker ----------
+  // 有 service worker 时，iPhone / iPad 的 Safari 换页后 Firebase 读不到资料（2026-11-09 实测），所以拿掉。
+  // 这里把之前已经装上的 /sw.js 清掉；安装 App 只需要 manifest，不需要 service worker。
+  if ("serviceWorker" in navigator && navigator.serviceWorker.getRegistrations) {
+    navigator.serviceWorker.getRegistrations().then(function (regs) {
+      regs.forEach(function (r) {
+        var sw = r.active || r.waiting || r.installing;
+        if (sw && /\/sw\.js(\?|$)/.test(sw.scriptURL)) r.unregister();
+      });
+    }).catch(function () {});
   }
 
   // ---------- 2. 状态栏颜色：club 跟着浅色 / 深色模式 ----------
