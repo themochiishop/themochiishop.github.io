@@ -111,7 +111,7 @@
     .tier-pill { display: inline-flex; align-items: center; gap: 5px; font-size: .76rem; font-weight: 800; padding: 3px 11px; border-radius: 999px;
       border: 1px solid var(--ring); color: var(--text); background: rgba(255,255,255,.04); }
     .tier-pill.best { border-color: rgba(212,175,55,.6); color: #f3d27a; font-weight: 700; }
-    .tier-pill.ci-pill { border-color: rgba(255,111,174,.45); }
+    .tier-pill.ci-pill { border-color: rgba(255,111,174,.45); cursor: pointer; font-family: inherit; line-height: inherit; }
     .tier-pill.ci-pill img { width: 18px; height: 18px; margin-left: -6px; }
     .ci-mini { width: 15px; height: 15px; vertical-align: -2px; margin-left: 3px; flex: none; }
     .ci-share-note { display: block; background: rgba(255,111,174,.12); border: 1px solid rgba(255,111,174,.35); border-radius: 10px; padding: 8px 10px; font-size: .82rem; margin-bottom: 8px; }
@@ -451,7 +451,14 @@
     // 🏅 签到达人：名字旁边的小麻糬徽章（没有数字）；个人主页显示「签到达人 ×N」
     const CI_BADGE = "img/ci-badge.png";
     const ciMini = w => w.ciBadge > 0 ? `<img class="ci-mini" src="${CI_BADGE}" alt="" title="${esc(ft("ciBadgeTip", { n: w.ciBadge }))}">` : "";
-    const ciPill = w => w.ciBadge > 0 ? `<span class="tier-pill ci-pill" title="${esc(ft("ciBadgeTip", { n: w.ciBadge }))}"><img src="${CI_BADGE}" alt="">${esc(ft("ciBadge", { n: w.ciBadge }))}</span>` : "";
+    // 只显示徽章 + 数字（三种语言都一样短）；点一下显示「签到达人 · 完成 N 次连续 30 天签到」
+    const ciPill = w => w.ciBadge > 0 ? `<button type="button" class="tier-pill ci-pill" data-ci-tip="${w.ciBadge}" title="${esc(ft("ciBadgeFull", { n: w.ciBadge }))}" aria-label="${esc(ft("ciBadgeFull", { n: w.ciBadge }))}"><img src="${CI_BADGE}" alt="">×${w.ciBadge}</button>` : "";
+    document.addEventListener("click", e => {
+      const b = e.target.closest("[data-ci-tip]");
+      if (!b) return;
+      e.stopPropagation();
+      toast("🏅 " + ft("ciBadgeFull", { n: +b.dataset.ciTip }));
+    }, true);
     const tierMark = w => (TIER_MARK[w.tier] ? `<span class="tier-mark">${TIER_MARK[w.tier]}</span>` : "") + ciMini(w);
     const authorKey = p => isShop(p) ? "shop" : "u-" + p.authorUid;
     const canSee = p => me.rank >= (p.minRank ?? 0);
