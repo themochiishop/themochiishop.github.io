@@ -122,7 +122,7 @@
       }
 
       // ✨ 实时库存变动的效果（只在变动的那一下播放；刚打开商城不播）
-      //   卖完：盖「已兑完」印章、卡片轻晃；补货：印章淡出、闪光 ✨「有货了」；剩 3 个以下数字变少：数字跳一下
+      //   卖完：盖「已兑完」印章、卡片轻晃；补货：印章淡出、闪光 ✨「有货了」
       function stockSnapshot() {
         const m = new Map();
         liveMap.forEach(r => m.set(r.id, { s: stockOf(r), v: Object.fromEntries(varsOf(r).map(v => [v.id, typeof v.stock === "number" ? Math.max(v.stock, 0) : null])) }));
@@ -161,7 +161,6 @@
             // 整个奖品
             if (b.s != null && b.s > 0 && n.s === 0) { flash(root.querySelector(".so-stamp"), "fx-stamp", 900); flash(root, "fx-shake", 600); }
             else if (b.s === 0 && n.s > 0) restockFx(ph);
-            else if (n.s != null && b.s != null && n.s < b.s && isLow(n.s)) flash(root.querySelector("[data-stock-line]"), "fx-bump", 600);
             // 款式（整个奖品没卖完时，看每一款）
             if (n.s !== 0) {
               const slides = root.querySelectorAll(".vslide");
@@ -211,9 +210,7 @@
         if (!vs.length) return typeof r.stock === "number" ? Math.max(r.stock, 0) : null;
         return vs.every(v => typeof v.stock === "number") ? vs.reduce((a, v) => a + Math.max(v.stock, 0), 0) : null;
       }
-      const LOW_STOCK = 3;   // 剩几个以下显示红色 🔥
-      const isLow = n => n != null && n > 0 && n <= LOW_STOCK;
-      const stockText = n => n == null ? "" : (isLow(n) ? "🔥 " : "") + t("rw.left", { n });
+      const stockText = n => n == null ? "" : t("rw.left", { n });
       // 滑到哪一款，下面的「剩 N 份」就显示那一款的库存（主图显示总库存）
       function syncStockLine(sl) {
         const i = +sl.dataset.idx || 0;
@@ -223,7 +220,6 @@
         if (!slide || !el) return;
         const v = slide.dataset.stk;
         el.textContent = v === "" || v == null ? "" : " · " + stockText(+v);
-        el.classList.toggle("low", v !== "" && v != null && isLow(+v));
       }
       // 滑动时更新 1/5；左右箭头（电脑用）
       document.addEventListener("scroll", e => {
@@ -268,7 +264,7 @@
         else if (short > 0) btn = `<button class="btn btn-ghost" disabled>${t("rw.short", { n: short })}</button>`;
         else btn = `<button class="btn btn-primary" data-redeem="${esc(r.id)}">${t("rw.redeem")}</button>`;
               const subs = `
-          <div class="sub">${t(ty.key)}<span data-stock-line class="${!r.ciOnly && isLow(stock) ? "low" : ""}">${stock != null && !r.ciOnly ? " · " + stockText(stock) : ""}</span></div>
+          <div class="sub">${t(ty.key)}<span data-stock-line>${stock != null && !r.ciOnly ? " · " + stockText(stock) : ""}</span></div>
           ${es ? `<div class="ending-line">${esc(t("shop.endingSoon"))} · ${esc(t("shop.endsOn", { d: fmtDate(es.end, true) }))}</div>` : ""}`;
         // 🔁 限兑次数：只在详情里显示
         const limitLine = max ? `<div class="sub">${esc(full && r.type === "coupon" ? t("rw.limitNext") : t("rw.limitLine", { max, used }))}</div>` : "";
