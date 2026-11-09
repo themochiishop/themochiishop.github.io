@@ -1428,3 +1428,15 @@ body.preview-mode .toast { bottom: 72px; }
 .ci-modal-share { margin: 4px 0 2px; font-size: .84rem; font-weight: 700; color: var(--accent); }
 .ci-modal-card .btn { width: 100%; justify-content: center; margin: 0; }
 @media (prefers-reduced-motion: reduce) { .ci-modal, .ci-modal-card { animation: none; } }
+
+/* 🏅 签到达人专属奖品（商城看得到、不能兑换） */
+.ci-only-tag { position: absolute; left: 8px; top: 8px; z-index: 2; display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px 3px 3px;
+  border-radius: 999px; background: rgba(255,255,255,.92); color: #be185d; font-size: .7rem; font-weight: 800; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+.shop-item .ph .ci-only-tag img, .dt-ph .ci-only-tag img, .ci-only-tag img { width: 18px; height: 18px; max-height: none; object-fit: contain; flex: none; }
+.ci-only-tag { white-space: nowrap; width: auto; height: auto; }
+.ci-only-cost { color: var(--accent); }
+.ci-only-btn { opacity: 1 !important; border-color: rgba(255,111,174,.4); color: var(--accent); }
+.ci-only-note { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0; padding: 10px 12px; border-radius: 12px;
+  background: rgba(255,111,174,.1); border: 1px solid rgba(255,111,174,.3); font-size: .84rem; line-height: 1.45; }
+.ci-only-note img { width: 26px; height: 26px; flex: none; }
+.ci-only-go { margin-top: 8px; width: 100%; justify-content: center; }
