@@ -62,6 +62,7 @@
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, saveAddresses, addressCardHTML } from "./js/address.js";
     import * as NM from "./js/newmember.js";   // 🎉 新会员奖励
+    import * as RD from "./js/redeem-api.js";   // 🛍️ 兑换交给后端（扣库存、检查积分）
 
     const $ = id => document.getElementById(id);
     renderNav("shop");
@@ -262,21 +263,10 @@
         render();
       });
       // 兑换
+      // 🛍️ 兑换交给后端：检查库存 / 款式 / 限兑 / 积分，通过才建立兑换并马上扣库存（不会超卖）
       async function submitRedeem(r, address, variant) {
-        const data = {
-          uid: user.uid,
-          rewardId: r.id,
-          rewardName: r.name,
-          cost: r.cost,
-          status: "pending",
-          kind: r.type === "coupon" ? "coupon" : "gift",
-          createdAt: serverTimestamp()
-        };
-        if (data.kind === "gift") data.delivery = "withOrder";   // 预设随单寄送；要单独寄出由管理员在审核时改
-        if (address) data.address = address;
-        if (variant) { data.variantId = variant.id; data.variantName = variant.name; }
-        const ref = await addDoc(collection(db, "redemptions"), data);
-        return ref.id;
+        const res = await RD.redeem(r.id, variant ? variant.id : null);
+        return res.id;
       }
 
            async function startRedeem(r, btn, slide = 0) {
@@ -298,8 +288,10 @@
           setMsg(t(gift ? "rw.submittedGift" : "rw.submitted", { name: r.name }), "ok");
           location.href = "rewards.html#r-" + newId;   // 自动跳到兑换记录
         } catch (err) {
-          setMsg(err.code === "permission-denied" ? t("rw.denied") : t("rw.fail") + err.message, "err");
+          setMsg(RD.errText(err), "err");
           btn.disabled = false;
+          // 已兑完 / 下架 / 款式卖完：重新读奖品，画面上的库存跟着更新
+          if (["rd/sold-out", "rd/gone", "rd/not-open", "rd/limit"].includes(RD.errKey(err))) load();
         }
       }
 
@@ -426,7 +418,7 @@
           setMsg(t("rw.submittedGift", { name: r.name }), "ok");
           location.href = "rewards.html#r-" + newId;   // 自动跳到兑换记录
         } catch (err) {
-          amMsg(err.code === "permission-denied" ? t("rw.denied") : t("rw.fail") + err.message, "err");
+          amMsg(RD.errText(err), "err");
           $("amSubmit").disabled = false;
         }
       });

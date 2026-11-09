@@ -87,6 +87,7 @@
     } from "./js/common.js";
     import { addressFormHTML, bindAddressForm, fillAddressForm, validateAddressForm, addressCardHTML, saveAddresses } from "./js/address.js";
     import * as NM from "./js/newmember.js";   // 🎉 新会员奖励
+    import * as RD from "./js/redeem-api.js";   // 🛍️ 取消兑换交给后端（库存加回）
 
     const $ = id => document.getElementById(id);
     renderNav("rewards");
@@ -305,10 +306,10 @@
           const nmR = bal.redemptions.find(x => x.id === cancelId && NM.isNmRedemption(x));
           try {
             if (nmR) { await NM.cancelPending(nmR.nmrId); invalidateMemberCache(); }   // 🎉 迎新礼由后端取消
-            else await updateDoc(doc(db, "redemptions", cancelId), { status: "cancelled" });
+            else await RD.cancel(cancelId);   // 🛍️ 后端取消：保留的库存会加回去
             await load();
           } catch (err) {
-            alert(nmR ? NM.errText(err) : t("rw.cancelFail") + err.message);
+            alert(nmR ? NM.errText(err) : RD.errText(err, "rw.cancelFail"));
             b.disabled = false;
           }
         }
