@@ -12,7 +12,7 @@
   // ---------- 文字（三语）----------
   var TXT = {
     en: {
-      sec: "App", install: "Install Mochii Club app", shop: "Back to The Mochii Shop", back: "Back",
+      sec: "App", install: "Install Mochii Club app", installShort: "Install Club", site: "Back to website", shop: "Back to The Mochii Shop", back: "Back",
       iosT: "Add Mochii Club to your Home Screen",
       ios1: "Open this page in <b>Safari</b> (not inside Facebook, Instagram, TikTok or WhatsApp).",
       ios2: "Tap the <b>Share</b> button <span class=\"pwa-k\">⬆️</span> at the bottom (or top) of Safari.",
@@ -24,7 +24,7 @@
       ok: "Got it", done: "Installed! Look for the Mochii Club icon on your home screen."
     },
     ms: {
-      sec: "Aplikasi", install: "Pasang aplikasi Mochii Club", shop: "Kembali ke The Mochii Shop", back: "Kembali",
+      sec: "Aplikasi", install: "Pasang aplikasi Mochii Club", installShort: "Pasang Club", site: "Ke laman web", shop: "Kembali ke The Mochii Shop", back: "Kembali",
       iosT: "Tambah Mochii Club ke Skrin Utama",
       ios1: "Buka halaman ini dalam <b>Safari</b> (bukan dalam Facebook, Instagram, TikTok atau WhatsApp).",
       ios2: "Tekan butang <b>Kongsi</b> <span class=\"pwa-k\">⬆️</span> di bahagian bawah (atau atas) Safari.",
@@ -36,7 +36,7 @@
       ok: "Faham", done: "Sudah dipasang! Cari ikon Mochii Club di skrin utama anda."
     },
     zh: {
-      sec: "App", install: "安装 Mochii Club App", shop: "回到 Mochii 商店", back: "返回",
+      sec: "App", install: "安装 Mochii Club App", installShort: "安装 Club", site: "回到网站", shop: "回到 Mochii 商店", back: "返回",
       iosT: "把 Mochii Club 加到主屏幕",
       ios1: "用 <b>Safari</b> 打开这个页面（不能在 Facebook、Instagram、TikTok、WhatsApp 里面打开）。",
       ios2: "点 Safari 下方（或上方）的 <b>分享</b> 按钮 <span class=\"pwa-k\">⬆️</span>。",
@@ -146,10 +146,11 @@
   function addSettingsSection(panel) {
     if (!panel || panel.querySelector(".pwa-sec")) return;
     var sec = document.createElement("div");
-    sec.className = "set-sec set-contact pwa-sec";
-    sec.innerHTML = '<div class="set-h">📲 ' + t("sec") + '</div><div class="set-col">' +
-      (standalone ? "" : '<button type="button" class="set-wa" data-pwa-install>📲 <span>' + t("install") + "</span></button>") +
-      '<a class="set-wa" href="/">🏪 <span>' + t("shop") + "</span></a></div>";
+    sec.className = "set-sec pwa-sec";   // 和上面的「外观」「语言」一样：标题 + 一行按钮
+    sec.innerHTML = '<div class="set-h">📲 ' + t("sec") + '</div><div class="set-row">' +
+      (standalone ? "" : '<button type="button" data-pwa-install title="' + t("installShort") + '">📲<span>' + t("installShort") + "</span></button>") +
+      '<button type="button" data-pwa-site title="' + t("site") + '">🏪<span>' + t("site") + "</span></button></div>";
+    sec.querySelector("[data-pwa-site]").addEventListener("click", function () { location.href = "/"; });
     var ib = sec.querySelector("[data-pwa-install]");
     if (ib) ib.addEventListener("click", install);
     var contact = panel.querySelector(".set-contact");
