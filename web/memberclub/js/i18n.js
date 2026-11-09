@@ -79,6 +79,7 @@ const DICT = {
     "notif.prizeShipped": "Your prize has shipped: {name}",
     "notif.prizeCancelled": "Prize cancelled: {name}",
     "reason.follow": "Followed us on {p}",
+    "reason.checkin": "Daily check-in: Day {n}",
     "follow.title": "📣 Follow us",
     "follow.sub": "Follow us on each platform and get points — once per platform.",
     "follow.go": "Follow",
@@ -648,6 +649,7 @@ const DICT = {
     "notif.prizeShipped": "Hadiah anda telah dihantar: {name}",
     "notif.prizeCancelled": "Hadiah dibatalkan: {name}",
     "reason.follow": "Ikuti kami di {p}",
+    "reason.checkin": "Daftar masuk harian: Hari {n}",
     "follow.title": "📣 Ikuti kami",
     "follow.sub": "Ikuti kami di setiap platform dan dapatkan mata — sekali bagi setiap platform.",
     "follow.go": "Ikuti",
@@ -1217,6 +1219,7 @@ const DICT = {
     "notif.prizeShipped": "您的奖品已发货：{name}",
     "notif.prizeCancelled": "奖品已取消：{name}",
     "reason.follow": "关注我们：{p}",
+    "reason.checkin": "每日签到：第{n}天",
     "follow.title": "📣 关注我们",
     "follow.sub": "关注我们的各个平台就送积分，每个平台可领一次。",
     "follow.go": "去关注",
@@ -1998,5 +2001,6 @@ export function translateReason(reason) {
   if (r === "完善资料：上传头像") return t("reason.profileAvatar");
   if (r === "积分过期") return t("reason.expired");
   if (r.startsWith("关注我们：")) return t("reason.follow", { p: r.slice(5) });
+  if ((m = r.match(/^每日签到：第(\d)天$/))) return t("reason.checkin", { n: m[1] });
   return r;
 }
