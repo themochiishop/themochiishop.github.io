@@ -11,6 +11,14 @@ const DEFAULT_POINTS = [1, 1, 2, 2, 3, 3, 8];   // 要和后端 src/checkin.js �
 const TXT = {
   en: {
     title: "📅 Daily check-in",
+    btnShort: "Check in +{n}",
+    barDone: "Done today",
+    roundDone: "Round complete",
+    streakShort: "{n}",
+    barTitle: "Check-in",
+    needBindShort: "Link an order to start",
+    fold: "Collapse",
+    unfold: "Show details",
     btn: "Check in +{n}",
     done: "Checked in today",
     tomorrow: "Come back tomorrow for +{n}",
@@ -28,6 +36,14 @@ const TXT = {
   },
   ms: {
     title: "📅 Daftar masuk harian",
+    btnShort: "Daftar +{n}",
+    barDone: "Selesai hari ini",
+    roundDone: "Pusingan selesai",
+    streakShort: "{n}",
+    barTitle: "Daftar masuk",
+    needBindShort: "Pautkan pesanan untuk mula",
+    fold: "Tutup",
+    unfold: "Lihat butiran",
     btn: "Daftar masuk +{n}",
     done: "Sudah daftar masuk hari ini",
     tomorrow: "Datang semula esok untuk +{n}",
@@ -45,6 +61,14 @@ const TXT = {
   },
   zh: {
     title: "📅 每日签到",
+    btnShort: "签到 +{n}",
+    barDone: "今日已签",
+    roundDone: "一轮完成",
+    streakShort: "{n}天",
+    barTitle: "每日签到",
+    needBindShort: "绑定订单即可开始",
+    fold: "收起",
+    unfold: "展开明细",
     btn: "签到 +{n}",
     done: "今天已签到",
     tomorrow: "明天再来可拿 +{n}",
@@ -96,10 +120,8 @@ export function viewOf(state, now = Date.now()) {
   return { today: false, done: 0, next: 1, streak: 0 };
 }
 
-// 卡片 HTML；opts = { bound, preview }
-export function cardHTML(settings, state, opts = {}) {
-  if (!settings.active) return "";
-  const v = viewOf(state);
+// 完整卡片（电脑版一直显示；手机版展开时显示）
+function fullCardHTML(settings, v, opts) {
   const P = settings.points;
   const cells = P.map((p, i) => {
     const n = i + 1;
@@ -119,11 +141,67 @@ export function cardHTML(settings, state, opts = {}) {
       <button type="button" class="btn btn-primary btn-inline ci-btn" data-checkin ${opts.preview ? `disabled title="${ct("preview")}"` : ""}>${ct("btn", { n: P[v.next - 1] })}</button></div>`;
   }
   return `<div class="card ci-card${!opts.bound ? " ci-locked" : ""}">
-    <div class="card-head"><h2>${ct("title")}</h2>${v.today && v.streak > 1 ? `<span class="ci-streak">🔥 ${ct("streak", { n: v.streak })}</span>` : ""}</div>
+    <div class="card-head"><h2>${ct("title")}</h2>${v.today && v.streak > 1 ? `<span class="ci-streak">🔥 ${ct("streak", { n: v.streak })}</span>` : ""}
+      <button type="button" class="ci-fold" data-ci-fold aria-label="${ct("fold")}" title="${ct("fold")}">⌃</button></div>
     <ol class="ci-cells">${cells}</ol>
     ${action}
     <p class="ci-rule">${ct("rule")}</p>
   </div>`;
+}
+
+// 📱 手机版一行签到条：今天第几天 + 7 个小圆点 + 签到按钮（点其他地方展开完整卡片）
+function barHTML(settings, v, opts) {
+  const P = settings.points;
+  const dots = `<span class="ci-dots" aria-hidden="true">${P.map((_, i) => {
+    const n = i + 1;
+    if (n <= v.done) return `<i class="on"></i>`;
+    if (n === 7) return `<b>🎁</b>`;
+    return `<i class="${!v.today && opts.bound && n === v.next ? "nx" : ""}"></i>`;
+  }).join("")}</span>`;
+  const chev = `<span class="ci-chev" aria-hidden="true">⌄</span>`;
+  let inner;
+  if (!opts.bound) {
+    inner = `<span class="ci-bt">📅 ${ct("barTitle")}</span><span class="ci-bm">${ct("needBindShort")}</span>
+      <a class="btn btn-primary ci-bbtn" href="bind.html">${ct("bindBtn")}</a>`;
+  } else if (v.today && v.done === 7) {
+    inner = `<span class="ci-bt">🎉 ${ct("roundDone")}</span>${dots}<span class="ci-fire">+${P[6]}</span>${chev}`;
+  } else if (v.today) {
+    inner = `<span class="ci-bt">✅ ${ct("barDone")}</span>${dots}${v.streak > 1 ? `<span class="ci-fire">🔥${ct("streakShort", { n: v.streak })}</span>` : ""}${chev}`;
+  } else {
+    inner = `<span class="ci-bt">📅 ${ct("day", { n: v.next })}</span>${dots}
+      <button type="button" class="btn btn-primary ci-bbtn" data-checkin ${opts.preview ? `disabled title="${ct("preview")}"` : ""}>${ct("btnShort", { n: P[v.next - 1] })}</button>`;
+  }
+  return `<div class="ci-bar${v.today && v.done === 7 ? " gift" : ""}" data-ci-open role="button" tabindex="0" aria-label="${ct("unfold")}">${inner}</div>`;
+}
+
+// 📱 展开 / 收起（记在这台手机）；第 7 天还没签那天自动展开，突出 🎁（当天按过收起就不再自动展开）
+const OPEN_KEY = "mochii_ci_open", FOLD7_KEY = "mochii_ci_fold7";
+const store = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } };
+function isOpen(v, opts) {
+  if (opts.bound && !v.today && v.next === 7 && store(FOLD7_KEY) !== mytDate(Date.now())) return true;
+  return store(OPEN_KEY) === "1";
+}
+
+// 卡片 HTML；opts = { bound, preview }
+export function cardHTML(settings, state, opts = {}) {
+  if (!settings.active) return "";
+  const v = viewOf(state);
+  return `<div class="ci-wrap${isOpen(v, opts) ? " open" : ""}" data-ci-wrap>${barHTML(settings, v, opts)}${fullCardHTML(settings, v, opts)}</div>`;
+}
+
+// 首页的点击：展开 / 收起。有处理就回传 true（签到按钮、绑定连结不在这里处理）
+export function onToggle(e) {
+  if (e.target.closest("[data-checkin], a")) return false;
+  const fold = e.target.closest("[data-ci-fold]");
+  const bar = !fold && e.target.closest("[data-ci-open]");
+  if (!fold && !bar) return false;
+  const wrap = e.target.closest("[data-ci-wrap]");
+  if (!wrap) return false;
+  const open = !!bar;
+  wrap.classList.toggle("open", open);
+  store(OPEN_KEY, open ? "1" : "0");
+  if (!open) store(FOLD7_KEY, mytDate(Date.now()));
+  return true;
 }
 
 // ---------- 后端 ----------
