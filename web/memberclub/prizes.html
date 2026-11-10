@@ -291,7 +291,7 @@
               <span class="pz-dlv-ico">${dlv === "separate" ? "🚚" : "📦"}</span>
               <div><b>${t("pz.dlv." + dlv)}</b><div class="muted">${t("pz.dlv." + dlv + "Sub")}</div></div>
             </div>
-            ${sh.withOrder && p.shippedAt && !sh.trackingNo && p.status !== "cancelled" ? `
+            ${sh.withOrder && p.shippedAt && p.status !== "cancelled" ? `
               <div class="gift-ship"><div class="ship-line">${esc(t("gift.withOrderDone"))}${sh.orderNo ? ` <span class="mono small-break">${esc(sh.orderNo)}</span>` : ""}</div></div>` : ""}
             ${(sh.trackingNo || (sh.photos || []).length) && p.status !== "cancelled" ? `
               <div class="gift-ship">
@@ -424,8 +424,16 @@
         if (g.status === "pending") body = `
             <div class="pz-dlv"><span class="pz-dlv-ico">📦</span><div><b>${t("sg.withOrder")}</b><div class="muted">${t("sg.withOrderSub")}</div></div></div>
             ${g.orderFound ? `<div class="meta">✅ ${esc(t("sg.found"))}</div>` : dl ? `<div class="pz-deadline${left <= 7 ? " soon" : ""}">⏰ ${esc(t("sg.deadline", { d: fmtDate(dl) }))}</div>` : ""}`;
-        else if (g.status === "sent") body = `
-            <div class="gift-ship"><div class="ship-line">${esc(t("gift.withOrderDone"))}${g.sentOrder ? ` <span class="mono small-break">${esc(g.sentOrder)}</span>` : ""}</div></div>`;
+        else if (g.status === "sent") {
+          const sh = g.shipping || {}, url = /^https:\/\//i.test(sh.trackingUrl || "") ? sh.trackingUrl : "";
+          body = `
+            <div class="gift-ship"><div class="ship-line">${esc(t("gift.withOrderDone"))}${g.sentOrder ? ` <span class="mono small-break">${esc(g.sentOrder)}</span>` : ""}</div>
+              ${sh.trackingNo ? `<div class="ship-line">🚚 <b>${esc(sh.carrierName || t("pz.tracking"))}</b> <span class="mono small-break">${esc(sh.trackingNo)}</span>
+                <button class="btn btn-ghost btn-inline btn-xs" data-copy="${esc(sh.trackingNo)}">${t("rw.copy")}</button></div>` : ""}
+              ${url ? `<a class="track-link" href="${esc(url)}" target="_blank" rel="noopener">🔗 ${t("gift.track")}</a>` : ""}
+              ${(sh.photos || []).length ? `<div class="gift-photos">${sh.photos.map(x => `<img src="${esc(x)}" alt="" loading="lazy" data-zoom>`).join("")}</div>` : ""}
+            </div>`;
+        }
         else body = `<div class="meta">${g.voidReason === "expired" ? "⏰ " + esc(t("sg.expired", { d: dl ? fmtDate(dl) : "-" })) : esc(t("sg.cancelled"))}</div>`;
         return `
           <li class="redeem-li gift-item pz-item sg-${esc(g.status)}">
@@ -451,6 +459,12 @@
         $("sgPast").querySelector("ul").innerHTML = past.map(sgLi).join("");
         if (act.length) $("pzEmpty").classList.add("hidden");
       }
+      // 小礼物卡片的「复制」运单号
+      $("sgCard").addEventListener("click", async e => {
+        const b = e.target.closest("button[data-copy]");
+        if (!b) return;
+        try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = t("rw.copied"); setTimeout(() => b.textContent = t("rw.copy"), 1500); } catch (err) {}
+      });
       onSnapshot(query(collection(db, "smallGifts"), where("uid", "==", user.uid)), s => {
         gifts = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0));
         renderSG();
