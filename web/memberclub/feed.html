@@ -472,9 +472,10 @@
     const canSee = p => me.rank >= (p.minRank ?? 0);
     const isMod = () => me.admin || me.perm === "mod";
     const canReply = () => !!me.member && !!me.member.name && (me.perm !== "none" || me.internal || me.bound) && me.rank >= (cfg.replyRank ?? 0);
-    const canPost = () => !!me.member && !!me.member.name && (me.perm !== "none" || ((me.internal || me.bound) && me.rank >= (cfg.postRank ?? 1)));
+    // 内部会员：发帖不看等级、直接公开（要和 Firestore 规则的 fdCanPost / fdAutoPublish 一致）
+    const canPost = () => !!me.member && !!me.member.name && (me.perm !== "none" || me.internal || (me.bound && me.rank >= (cfg.postRank ?? 1)));
     const canUpload = () => me.admin || me.internal || me.bound || me.perm !== "none";
-    const autoPublish = () => me.admin || me.perm !== "none" || me.rank >= (cfg.autoRank ?? 2);
+    const autoPublish = () => me.admin || me.perm !== "none" || me.internal || me.rank >= (cfg.autoRank ?? 2);
     function sliderHTML(images, cls = "") {
       const imgs = (images || []).map(safeImg).filter(Boolean).slice(0, 3);
       if (!imgs.length) return "";
