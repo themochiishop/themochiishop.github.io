@@ -163,6 +163,15 @@
     }
 
     /* 分享卡 */
+    .likers-link { background: none; border: 0; padding: 0; margin-top: 10px; color: var(--accent); font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; }
+    .likers-card { max-width: 380px; }
+    .likers-card h2 { font-size: 1.05rem; margin: 0 0 10px; }
+    #lkList { max-height: 60vh; overflow-y: auto; }
+    .lk-row { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid var(--line); cursor: pointer; }
+    .lk-row:last-child { border-bottom: 0; }
+    .lk-row > .av, .lk-row > .xhs-avatar { width: 38px; height: 38px; flex: none; }
+    .lk-row .nm { font-weight: 700; }
+    .lk-row .tm { font-size: .78rem; color: var(--muted); }
     .share-card { padding: 0; overflow: hidden; text-align: center; max-width: 380px; }
     .share-card .sc-cover { aspect-ratio: 12 / 5; background: #7c5cff center / cover no-repeat; }
     .share-card .sc-av { display: flex; justify-content: center; margin-top: -40px; }
@@ -340,6 +349,15 @@
     <div class="modal-card">
       <button type="button" class="modal-x" data-close aria-label="close">✕</button>
       <div id="reportInner"></div>
+    </div>
+  </div>
+
+  <!-- ❤️ 赞过的人（只有作者和管理员看得到入口；2026-11-13）-->
+  <div id="likers" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card likers-card">
+      <button type="button" class="modal-x" data-close aria-label="close">✕</button>
+      <h2 id="lkTitle"></h2>
+      <div id="lkList"></div>
     </div>
   </div>
 
@@ -779,6 +797,29 @@
       if (more) more.onclick = async () => { try { await navigator.share({ title, url }); } catch (e) {} };
     }
     function showSharer() { $("sharer").classList.remove("hidden"); document.body.style.overflow = "hidden"; }
+    // ❤️ 赞过的人：最新的在上面；按名字去他的 Feed 主页
+    async function openLikers(p) {
+      $("lkTitle").textContent = ft("likersTitle", { n: p.nLike });
+      $("lkList").innerHTML = `<p class="empty">…</p>`;
+      $("likers").classList.remove("hidden"); document.body.style.overflow = "hidden";
+      try {
+        const snap = await getDocs(query(collection(db, "feedPosts", p.id, "likes"), orderBy("at", "desc"), limit(300)));
+        const rows = snap.docs.map(d => ({ uid: d.id, at: d.data().at }));
+        await loadProfiles(rows.map(r => r.uid));
+        $("lkList").innerHTML = rows.length ? rows.map(r => {
+          const f = profiles[r.uid] || {};
+          const w = { name: f.name || ft("someone"), tier: f.tier || "mochii", title: f.title || "", avatar: f.avatar || "", ciBadge: f.ciBadge || 0 };
+          return `<div class="lk-row" data-lku="${esc(r.uid)}">${avatarOf(w)}<div><div class="nm">${esc(w.name)} ${tierMark(w)}</div>
+            <div class="tm">${r.at ? fmtTime(r.at) : ""}</div></div></div>`;
+        }).join("") : `<p class="empty">${esc(ft("likersNone"))}</p>`;
+        $("lkList").querySelectorAll("[data-lku]").forEach(el => el.onclick = () => {
+          const key = "u-" + el.dataset.lku, pushed = sheetPushed;
+          closeModal("likers");
+          closeModal("detail", true, true);
+          if (pushed) { afterBack = () => goAuthor(key); history.back(); } else goAuthor(key);
+        });
+      } catch (e) { $("lkList").innerHTML = `<p class="empty">${esc(ft("fail") + e.message)}</p>`; }
+    }
     // 🔗 分享一篇帖子
     function openPostSharer(p) {
       const w = who(p), url = SHARE_BASE + "/p/" + p.id, title = (w.name || "Mochii") + " · Mochii Feed";
@@ -1038,7 +1079,7 @@
     // keepHash：不要改网址（换页时用）；noBack：不要退回浏览记录（已经按了「返回」或要去别的地方）
     function closeModal(id, keepHash, noBack) {
       $(id).classList.add("hidden");
-      document.body.style.overflow = [...SHEETS, "sharer", "reporter"].some(s => !$(s).classList.contains("hidden")) ? "hidden" : "";
+      document.body.style.overflow = [...SHEETS, "sharer", "reporter", "likers"].some(s => !$(s).classList.contains("hidden")) ? "hidden" : "";
       if (id === "detail") {
         openId = null; openPost = null; focusCid = null; editing = null;
         if (!keepHash && /^#p-/.test(location.hash)) history.replaceState(null, "", location.pathname + location.search + (view.mode === "user" ? "#u-" + view.uid : view.mode === "shop" ? "#shop" : ""));
@@ -1049,7 +1090,7 @@
         if (!noBack) history.back();
       }
     }
-    ["detail", "composer", "editor", "sharer", "reporter"].forEach(id => $(id).addEventListener("click", e => {
+    ["detail", "composer", "editor", "sharer", "reporter", "likers"].forEach(id => $(id).addEventListener("click", e => {
       if (e.target === $(id) || e.target.closest("[data-close]")) closeModal(id);
     }));
 
@@ -1092,6 +1133,7 @@
           </div>
           ${editing === "post" ? editBoxHTML(p.content.text || "")
             : p.content.text ? `<div class="detail-text">${esc(p.content.text)}</div>` : ""}
+          ${(mine || me.admin) && p.nLike > 0 ? `<button class="likers-link" data-dlikers>❤️ ${esc(ft("likersLink", { n: p.nLike }))} ›</button>` : ""}
           <div class="cmt-head">💬 ${esc(ft("replies"))}${comments.length ? ` (${comments.length})` : ""}</div>
           <div>${loading ? `<p class="muted" style="font-size:.85rem">${esc(ft("loading"))}</p>` : comments.length ? comments.map(c => {
             const cw = who(c);
@@ -1144,6 +1186,8 @@
       });
       const dl = inner.querySelector("[data-dlike]");
       if (dl) dl.onclick = () => toggleLike(p.id);
+      const dk = inner.querySelector("[data-dlikers]");   // ❤️ 赞过的人
+      if (dk) dk.onclick = () => openLikers(p);
       const ds = inner.querySelector("[data-dshare]");   // 🔗 分享这篇帖子（有预览）
       if (ds) ds.onclick = () => openPostSharer(p);
       // ⋯ 选单
