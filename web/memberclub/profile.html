@@ -262,7 +262,7 @@
           <li class="acct-card p-${esc(b.platform)}" title="${esc(how)}">
             <div class="acct-top">${platformTag(b.platform)}<span class="acct-user">${esc(b.username)}</span><span class="acct-ok">✓ ${t("bind.verified")}</span></div>
             <div class="acct-line">${st.orders
-              ? `🧾 <b>${esc(t("bind.chipOrders", { n: st.orders }))}</b><span class="dot">·</span><span class="money">${esc(fmtMoney(st.spend))}</span><span class="dot">·</span>⭐ <b>${esc(t("bind.chipPoints", { n: st.points.toLocaleString() }))}</b>`
+              ? `🧾 <b>${esc(t("bind.chipOrders", { n: st.orders }))}</b><span class="dot">·</span>⭐ <b>${esc(t("bind.chipPoints", { n: st.points.toLocaleString() }))}</b>`
               : `<span class="muted" style="font-size:.8rem">${esc(t("bind.noOrders"))}</span>`}</div>
             <div class="acct-meta">${esc(meta)}</div>
           </li>`;

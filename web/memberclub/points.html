@@ -255,7 +255,7 @@
           const state = st === "refunded" ? `<span class="tag tag-bad">${t("tag.refunded")}</span>`
             : st === "pending" ? `<span class="tag tag-pending">${t("tag.pending")}</span>`
             : `<span class="tag tag-ok">${t("tag.credited")}</span>`;
-          return { date: o.orderTime, sum: st === "refunded" ? 0 : Number(o.amount) || 0, html: `
+          return { date: o.orderTime, sum: st === "refunded" ? 0 : Number(o.points) || 0, html: `
             <li>
               <div class="main">
                 <div class="title">${platformTag(o.platform)} ${fmtMoney(o.amount)}</div>
@@ -267,7 +267,7 @@
               </div>
             </li>` };
         });
-        monthList($("ordersList"), rows, ost_, monthOf, n => `<b>${fmtMoney(n)}</b>`, t("acc.noOrders"));
+        monthList($("ordersList"), rows, ost_, monthOf, n => `<b>+${esc(t("unit.pts", { n: n.toLocaleString() }))}</b>`, t("acc.noOrders"));
       }
       bindMonthList($("ordersList"), ost_, () => renderOrders());
       renderOrders();

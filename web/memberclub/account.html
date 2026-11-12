@@ -135,7 +135,7 @@
       const tp = tierProgress(member);
       $("tierCard").classList.add("tier-" + tp.tier.id);
       $("tierIcon").innerHTML = tierIconHTML(tp.tier);      $("tierName").textContent = tierLabel(tp.tier);
-      $("tierPerk").textContent = t("tier.perk", { m: tp.tier.multiplier, b: tp.tier.birthday, s: fmtMoney(tp.spend) });
+      $("tierPerk").textContent = t("tier.perk", { m: tp.tier.multiplier, b: tp.tier.birthday });
       $("tierBar").style.width = tp.pct + "%";
       $("tierNext").textContent = tp.next
         ? t("tier.next", { need: fmtMoney(tp.need), icon: tp.next.icon, label: tierLabel(tp.next), m: tp.next.multiplier })
