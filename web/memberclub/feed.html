@@ -40,7 +40,7 @@
     .pic-count { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,.55); color: #fff; font-size: .62rem;
       font-weight: 700; padding: 1px 7px; border-radius: 999px; pointer-events: none; letter-spacing: .3px; }
     /* 📝 文字卡片（只有文字的帖子，像小红书；3:4，字少字大）2026-11-13 */
-    .tcard { aspect-ratio: 3 / 4; width: 100%; display: flex; align-items: center; justify-content: center; padding: 14% 11%;
+    .tcard { aspect-ratio: 3 / 4; width: 100%; display: flex; align-items: center; justify-content: center; padding: 14% 9%;
       box-sizing: border-box; overflow: hidden; position: relative; }
     .tcard .tc-text { white-space: pre-wrap; word-break: break-word; text-align: center; font-weight: 800; line-height: 1.35;
       max-height: 100%; overflow: hidden; width: 100%; }
@@ -60,13 +60,36 @@
     .tc-sky { background: linear-gradient(170deg, #dff1ff, #bfe0ff); color: #1d4466; }
     .tc-mochii { background: #ff8fc1 radial-gradient(circle at 50% 120%, #ffd1e6 0 45%, transparent 46%); color: #fff;
       text-shadow: 0 1px 2px rgba(150, 30, 90, .35); }
+    .tc-dots { background: radial-gradient(#fff 22%, transparent 23%) 0 0 / 22px 22px, #ffb6d5; color: #8a1f55; }
+    .tc-strawberry { background: radial-gradient(#ff7aa8 18%, transparent 19%) 0 0 / 26px 26px, radial-gradient(#ff7aa8 18%, transparent 19%) 13px 13px / 26px 26px, #fff1f5; color: #8a1f55; }
+    .tc-hearts { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34'%3E%3Cpath d='M17 26s-9-5.5-9-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 5.5-9 11-9 11z' fill='%23ff9ec8' opacity='.55'/%3E%3C/svg%3E") 0 0 / 34px 34px, #fff0f6; color: #a3245f; }
+    .tc-sakura { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cg fill='%23fff' opacity='.7' transform='translate(20 20)'%3E%3Ccircle cy='-6' r='4'/%3E%3Ccircle cx='6' cy='-2' r='4'/%3E%3Ccircle cx='4' cy='5' r='4'/%3E%3Ccircle cx='-4' cy='5' r='4'/%3E%3Ccircle cx='-6' cy='-2' r='4'/%3E%3C/g%3E%3Ccircle cx='20' cy='20' r='2.5' fill='%23ffd36e'/%3E%3C/svg%3E") 0 0 / 40px 40px, #ffc9df; color: #7a1f4c; }
+    .tc-stars { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='46' height='46'%3E%3Cpath d='M12 6l1.6 3.4 3.7.5-2.7 2.6.6 3.7L12 14.4l-3.2 1.8.6-3.7-2.7-2.6 3.7-.5z' fill='%23ffe08a' opacity='.8'/%3E%3Ccircle cx='34' cy='30' r='1.5' fill='%23fff' opacity='.8'/%3E%3Ccircle cx='30' cy='10' r='1' fill='%23fff' opacity='.6'/%3E%3C/svg%3E") 0 0 / 46px 46px, #2b2363; color: #fff6d6; }
+    .tc-clouds { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='70' height='50'%3E%3Cg fill='%23fff' opacity='.8'%3E%3Ccircle cx='20' cy='30' r='9'/%3E%3Ccircle cx='31' cy='24' r='12'/%3E%3Ccircle cx='44' cy='30' r='9'/%3E%3Crect x='20' y='30' width='24' height='9'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 70px 50px, #bfe3ff; color: #1d4466; }
+    .tc-checker { background: conic-gradient(#ffd3e6 25%, #fff 0 50%, #ffd3e6 0 75%, #fff 0) 0 0 / 28px 28px; color: #8a1f55; }
+    .tc-lemon { background: repeating-linear-gradient(135deg, #fff6b8 0 12px, #fffbe0 12px 24px); color: #6b5a00; }
+    .tc-taro { background: linear-gradient(160deg, #e9dcff, #cdb8ff); color: #3f2a7a; }
+    .tc-matcha { background: radial-gradient(#fff 12%, transparent 13%) 0 0 / 20px 20px, #cfe8b8; color: #2f5222; }
+    /* 花纹背景：文字底下垫一层半透明，字才看得清楚 */
+    :is(.tc-dots, .tc-strawberry, .tc-hearts, .tc-sakura, .tc-clouds, .tc-checker, .tc-lemon, .tc-matcha) .tc-text {
+      background: rgba(255, 255, 255, .72); border-radius: 12px; padding: .45em .5em; box-sizing: border-box; }
+    .tc-stars .tc-text { background: rgba(20, 14, 60, .55); border-radius: 12px; padding: .45em .5em; box-sizing: border-box; }
     .tcard::after { content: "Mochii Feed"; position: absolute; bottom: 7px; right: 10px; font-size: .55rem; font-weight: 700; opacity: .35; letter-spacing: .4px; }
     .detail-tcard { max-width: 420px; margin: 0 auto; }
-    .bg-pick { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; align-items: center; }
+    .bg-lbl { font-size: .76rem; margin: 2px 0 6px; }
+    .bg-lbl[hidden] { display: none; }
+    .bg-pick { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; margin: 0 0 4px; scrollbar-width: none; }
+    .bg-pick::-webkit-scrollbar { display: none; }
+    .bg-pick button { flex: none; }
     .bg-pick[hidden] { display: none; }
     .bg-pick button { width: 34px; height: 34px; border-radius: 9px; border: 2px solid transparent; cursor: pointer; padding: 0; }
     .bg-pick button.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--card); }
-    .tc-preview { width: 150px; margin: 6px 0 2px; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+    .tc-preview { width: 190px; max-width: 60%; margin: 4px auto 12px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+    .c-bar { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 4px; }
+    .c-addpic { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1px dashed var(--line); color: var(--text);
+      border-radius: 999px; padding: 6px 14px; font: inherit; font-size: .85rem; cursor: pointer; }
+    .c-addpic[hidden] { display: none; }
+    .c-count { font-size: .76rem; color: var(--muted); }
     .tc-preview[hidden] { display: none; }
     .xhs-content { padding: 8px 10px; font-size: .88rem; font-weight: 500; color: #222; line-height: 1.45;
       white-space: pre-wrap; word-break: break-word; }
@@ -273,6 +296,7 @@
     .reply-row .btn { width: auto; padding: 10px 16px; }
     .cant { font-size: .82rem; color: var(--muted); text-align: center; padding: 10px 0 4px; }
     .post-pics { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; }
+    .post-pics[hidden] { display: none; }
     .post-pic { position: relative; width: 84px; height: 84px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
     .post-pic img { width: 100%; height: 100%; object-fit: cover; }
     .post-pic button { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 50%; border: 0;
@@ -364,11 +388,13 @@
     <div class="modal-card">
       <button type="button" class="modal-x" data-close aria-label="close">✕</button>
       <h2 id="cTitle"></h2>
-      <textarea id="cText" rows="5" maxlength="2000"></textarea>
-      <!-- 📝 只有文字：选卡片背景（有照片就不显示） -->
+      <!-- 📝 只有文字：上面选背景、中间预览（加了照片 → 换成照片缩图）2026-11-13 -->
+      <p class="muted bg-lbl" id="cBgLbl" hidden></p>
       <div class="bg-pick" id="cBg" hidden></div>
       <div class="tc-preview" id="cBgPrev" hidden></div>
       <div class="post-pics" id="cPics"></div>
+      <textarea id="cText" rows="4" maxlength="2000"></textarea>
+      <div class="c-bar"><button type="button" class="c-addpic" id="cAddPic"></button><span class="c-count" id="cCount">0 / 2000</span></div>
       <input type="file" id="cFile" accept="image/*" multiple class="hidden">
       <p class="muted" style="font-size:.76rem" id="cPicNote"></p>
       <p class="muted" style="font-size:.8rem;margin:10px 0" id="cNote"></p>
@@ -961,7 +987,8 @@
     }
 
     // 📝 文字卡片：模板（帖子的 bg；旧帖子没有 → 用帖子编号固定选一款）
-    const TEXT_BG = ["pink", "cream", "mint", "night", "grid", "peach", "sky", "mochii"];
+    const TEXT_BG = ["pink", "cream", "mint", "night", "grid", "peach", "sky", "mochii",
+      "dots", "strawberry", "hearts", "sakura", "stars", "clouds", "checker", "lemon", "taro", "matcha"];
     const bgOf = p => TEXT_BG.includes(p.bg) ? p.bg : TEXT_BG[[...String(p.id || "")].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % TEXT_BG.length];
     const tcSize = t => { const n = [...String(t || "").trim()].length + (String(t).match(/\n/g) || []).length * 8;
       return n <= 14 ? "xl" : n <= 45 ? "l" : n <= 110 ? "m" : "s"; };
@@ -1433,19 +1460,26 @@
     let cBg = TEXT_BG[0];
     function drawBg() {
       const textOnly = !pics.length;
-      $("cBg").hidden = !textOnly; $("cBgPrev").hidden = !textOnly;
+      $("cBgLbl").hidden = $("cBg").hidden = $("cBgPrev").hidden = !textOnly;
       if (!textOnly) return;
-      $("cBg").innerHTML = `<span class="muted" style="font-size:.76rem;width:100%">${esc(ft("bgPick"))}</span>`
-        + TEXT_BG.map(b => `<button type="button" class="tc-${b}${b === cBg ? " on" : ""}" data-bg="${b}" aria-label="${b}"></button>`).join("");
+      $("cBgLbl").textContent = ft("bgPick");
+      if (!$("cBg").children.length) {   // 只画一次（保持往右滑的位置）
+        $("cBg").innerHTML = TEXT_BG.map(b => `<button type="button" class="tc-${b}" data-bg="${b}" aria-label="${b}"></button>`).join("");
+        $("cBg").querySelectorAll("[data-bg]").forEach(x => x.onclick = () => { cBg = x.dataset.bg; drawBg(); });
+      }
+      $("cBg").querySelectorAll("[data-bg]").forEach(x => x.classList.toggle("on", x.dataset.bg === cBg));
       $("cBgPrev").innerHTML = textCardHTML($("cText").value || ft("bgSample"), cBg);
-      $("cBg").querySelectorAll("[data-bg]").forEach(x => x.onclick = () => { cBg = x.dataset.bg; drawBg(); });
     }
-    $("cText").addEventListener("input", () => { if (!pics.length) $("cBgPrev").innerHTML = textCardHTML($("cText").value || ft("bgSample"), cBg); });
+    function drawCount() { $("cCount").textContent = `${[...$("cText").value].length} / 2000`; }
+    $("cText").addEventListener("input", () => { drawCount(); if (!pics.length) $("cBgPrev").innerHTML = textCardHTML($("cText").value || ft("bgSample"), cBg); });
+    $("cAddPic").onclick = () => $("cFile").click();
     function drawPics() {
-      drawBg();
-      $("cPics").innerHTML = pics.map((p, i) => `<div class="post-pic"><img src="${p.full}" alt=""><button type="button" data-rm="${i}">✕</button></div>`).join("")
-        + (pics.length < MAX_PICS ? `<button type="button" class="post-add" id="cAdd">${esc(ft("addPic"))}</button>` : "");
-      const add = $("cAdd"); if (add) add.onclick = () => $("cFile").click();
+      drawBg(); drawCount();
+      // 加了照片：照片缩图在背景 / 预览的位置；「📷 加照片」在输入框下面
+      $("cPics").innerHTML = pics.map((p, i) => `<div class="post-pic"><img src="${p.full}" alt=""><button type="button" data-rm="${i}">✕</button></div>`).join("");
+      $("cPics").hidden = !pics.length;
+      $("cAddPic").hidden = pics.length >= MAX_PICS;
+      $("cAddPic").textContent = "📷 " + ft("addPic").replace(/^[+＋]\s*/, "") + (pics.length ? ` ${pics.length}/${MAX_PICS}` : "");
       $("cPics").querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { pics.splice(+b.dataset.rm, 1); drawPics(); });
     }
     $("cFile").onchange = async e => {
