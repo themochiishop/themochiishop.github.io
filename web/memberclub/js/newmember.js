@@ -288,6 +288,20 @@ function source() {
   } catch (e) { return null; }
 }
 
+// 📊 新人卡统计：看过 Welcome Hub 的会员 → 后端在会员资料记下来源（joinSource，只记一次）
+//   每个会员在这台手机只送一次（成功后记在 localStorage）；会员视角（预览）不送
+const SRC_SENT = "mochiiCardSrcSent_";
+export function reportCardSource(user, member) {
+  try {
+    if (!user || user.isPreview || (member && member.joinSource)) return;
+    if (source() !== "card" || localStorage.getItem(SRC_SENT + user.uid)) return;
+    const seenAt = Number(localStorage.getItem(FROM_KEY) || 0) || Date.now();
+    call({ op: "source", source: "card", seenAt })
+      .then(() => { try { localStorage.setItem(SRC_SENT + user.uid, "1"); } catch (e) {} })
+      .catch(e => console.warn("nm source", e));
+  } catch (e) {}
+}
+
 // ---------- 后端 ----------
 let fnMember = null;
 function call(data) {

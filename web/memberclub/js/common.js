@@ -6,7 +6,7 @@ import {
   onSnapshot, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { t, tn, applyI18n, langSwitchHTML, bindLangSwitch, settingsHTML, bindSettings, translateReason, lang, soundOn, playChime, CHIME_KEY } from "./i18n.js";
-import { bellEvents as nmBellEvents } from "./newmember.js";   // 🎉 新会员奖励
+import { bellEvents as nmBellEvents, reportCardSource } from "./newmember.js";   // 🎉 新会员奖励 · 📊 新人卡来源
 import { ft } from "./feed-i18n.js";
 
 export { t, tn, applyI18n, translateReason, lang } from "./i18n.js";
@@ -802,6 +802,7 @@ export function requireMember(onReady, opts = {}) {
       document.body.classList.remove("loading");
       onReady(user, member);
       initBell(user, member);
+      reportCardSource(user, member);   // 📊 从新人卡（Welcome Hub）进来的会员：记下来源（只记一次）
       // 额外福利：在背景检查（开放中的都领过了就不再检查）
       const doneKey = "mochiiBonusDone_" + user.uid;
       let doneList = [];
