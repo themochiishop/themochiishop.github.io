@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="css/member.css">
   <script src="js/theme-init.js"></script>
   <style>
+    body.preview-mode #fab { display: none !important; }   /* 👁 会员视角：不能发帖 */
     /* ===== 沿用原本 Feed 的瀑布流卡片布局 ===== */
     .feed-page { max-width: 860px; margin: 0 auto; padding: 14px 6px 90px; }
     .feed-head { text-align: center; margin: 4px 4px 16px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
@@ -378,7 +379,7 @@
       collection, collectionGroup, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, orderBy, limit, startAfter,
       getCountFromServer, writeBatch, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
-    import { renderNav, initBell, esc, toDate, toast, compressImage, isInternalMember, t, lang, BLACK_CROWN, fillContacts, claimBonuses, toastBonuses, invalidateMemberCache } from "./js/common.js";
+    import { renderNav, initBell, esc, toDate, toast, compressImage, isInternalMember, t, lang, BLACK_CROWN, fillContacts, claimBonuses, toastBonuses, invalidateMemberCache, startFeedPreview } from "./js/common.js";
     import { applyI18n, langSwitchHTML, bindLangSwitch, settingsHTML, bindSettings } from "./js/i18n.js";
     import { ft } from "./js/feed-i18n.js";
     import { maskPhones } from "./js/phone-filter.js";
@@ -400,6 +401,7 @@
 
     // 目前这个人
     const me = { user: null, member: null, rank: -1, bound: false, internal: false, admin: false, title: "", perm: "none", feed: null };
+    let pv = null;   // 👁 会员视角（管理员预览）：{ uid, member }；「我的 Feed」= 那位会员的主页
     let cfg = {};
     const profiles = {};   // 会员ID → memberFeed 资料（头像、简介、最新名字）
 
@@ -581,6 +583,11 @@
 
     // ---------- 顶部 ----------
     function renderTop() {
+      if (pv) {   // 👁 会员视角：导航、铃铛都用那位会员（只读）
+        renderNav(location.hash === "#me" ? "myfeed" : "feed");
+        initBell({ uid: pv.uid, email: pv.member.email || "", displayName: pv.member.name || "", isPreview: true }, pv.member);
+        return;
+      }
       if (me.member) { renderNav(location.hash === "#me" ? "myfeed" : "feed"); initBell(me.user, me.member); return; }
       applyI18n();
       $("topbar").className = "topbar";
@@ -639,6 +646,7 @@
       if ((m = h.match(/^#c-([\w-]+)$/)) && codeUid[m[1]]) return { mode: "user", uid: codeUid[m[1]] };
       if ((m = h.match(/^#u-([\w-]+)$/))) return { mode: "user", uid: m[1] };
       if (h === "#shop") return { mode: "shop" };
+      if (h === "#me" && pv) return { mode: "user", uid: pv.uid };   // 👁 会员视角
       if (h === "#me" && me.member) return { mode: "user", uid: me.user.uid };
       if (/^#p-/.test(h)) return view;   // 打开帖子：留在目前的列表
       return { mode: "all" };
@@ -655,7 +663,7 @@
     }
 
     async function route() {
-      if (location.hash === "#me" && !me.member) { location.href = "index.html"; return; }
+      if (location.hash === "#me" && !me.member && !pv) { location.href = "index.html"; return; }
       await resolveCode();
       const next = viewFromHash();
       const changed = next.mode !== view.mode || next.uid !== view.uid;
@@ -1421,6 +1429,7 @@
       if (started) return;   // 只在第一次判断身份；登入、登出都会换页
       started = true;
       try { await loadMe(user); } catch (e) { console.warn("loadMe", e); }
+      try { pv = await startFeedPreview(user); } catch (e) { console.warn("preview", e); }
       renderTop();
       document.body.classList.remove("loading");
       loadMyPosts();
