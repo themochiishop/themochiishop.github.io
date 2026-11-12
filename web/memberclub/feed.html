@@ -757,11 +757,17 @@
     }
 
     // ---------- 分享卡：头像 + 短链接 ----------
+    // 🔗 2026-11-13：分享网址改用 club.themochiishop.com（Cloud Function shareLink 给 WhatsApp / Facebook 预览）
+    const SHARE_BASE = "https://club.themochiishop.com";
+    async function shareUrl(url, title) {
+      if (navigator.share) { try { await navigator.share({ title, url }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
+      try { await navigator.clipboard.writeText(url); toast(ft("copied")); } catch (e) { prompt("", url); }
+    }
     function openSharer() {
       const w = profW;
       if (!w) return;
       const key = w.shop ? "shop" : w.tier;
-      const url = "https://www.themochiishop.com/u/" + (w.shop ? "shop" : w.code);
+      const url = SHARE_BASE + "/u/" + (w.shop ? "shop" : w.code);   // 🔗 有预览（头像、名字）的分享网址
       const tierName = w.shop ? "Official" : w.tier === "black" ? "Black Elite" : t("tier." + w.tier);
       const RING = { mochii: "#ff6fae", silver: "#e2e8f0", gold: "#f5c542", diamond: "#67e8f9", black: "#d4af37", shop: "#fff" };
       $("shareCard").style.setProperty("--ring", RING[key] || "#ff6fae");
@@ -1050,6 +1056,7 @@
               <div class="nm">${esc(w.name)} ${tierMark(w)}</div>
               <div class="tm">${titleTag(w.title)}<span>${p.pinned ? esc(ft("pinned")) + " · " : ""}${fmtTime(p.createdAt)}${p.editedAt ? ` · <span class="edited-tag">${esc(ft("edited"))}</span>` : ""}</span></div></div></div>
             <div style="display:flex;align-items:center;gap:4px">
+              ${p.status === "published" ? `<button class="xhs-like-btn" data-dshare title="${esc(ft("sharePost"))}" aria-label="${esc(ft("sharePost"))}">🔗</button>` : ""}
               <button class="xhs-like-btn${p.liked ? " liked" : ""}" data-dlike>${p.liked ? "❤️" : "🤍"} <span>${p.nLike}</span></button>
               ${moreHTML("post", "", canEdit(p), mine || isMod(), !isShop(p) && canReport(p.authorUid))}
             </div>
@@ -1108,6 +1115,8 @@
       });
       const dl = inner.querySelector("[data-dlike]");
       if (dl) dl.onclick = () => toggleLike(p.id);
+      const ds = inner.querySelector("[data-dshare]");   // 🔗 分享这篇帖子（有预览）
+      if (ds) ds.onclick = () => shareUrl(SHARE_BASE + "/p/" + p.id, (who(p).name || "Mochii") + " · Mochii Feed");
       // ⋯ 选单
       inner.querySelectorAll("[data-more]").forEach(b => b.onclick = e => {
         e.stopPropagation();
