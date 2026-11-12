@@ -1024,7 +1024,7 @@ function speedUpNav(el) {
 window.addEventListener("pageshow", () => document.body.classList.remove("navigating"));
 
 // ---------- 🔔 通知铃铛：积分进账、积分可用、兑换批准/拒绝 ----------
-const bell = { cat: "all", live: [], soundReady: false, liveChecked: false, ledger: [], redemptions: [], announcements: [], messages: [], bindLogs: [], prizes: [], feed: [], replies: [], reports: [], uid: "", member: null, seenAt: null, highlightSince: null };
+const bell = { cat: "all", live: [], soundReady: false, liveChecked: false, ledger: [], redemptions: [], announcements: [], messages: [], bindLogs: [], prizes: [], feed: [], replies: [], likes: [], reports: [], uid: "", member: null, seenAt: null, highlightSince: null };
 const ANNOUNCE_DAYS = 60; // 公告在铃铛里显示多少天
 
 function buildEvents() {
@@ -1172,6 +1172,20 @@ function buildEvents() {
     ev.push({ time: at, icon: "🚩", title: ft(r.status === "approved" ? "notifReportOk" : "notifReportNo"),
       detail: String(r.text || "").slice(0, 60), link: "" });
   });
+  // ❤️ 有人赞了我的帖子：同一篇合并成一则（时间 = 最新一个赞）
+  const byPost = new Map();
+  bell.likes.forEach(l => {
+    const at = toDate(l.at);
+    if (!at) return;
+    if (!byPost.has(l.postId)) byPost.set(l.postId, []);
+    byPost.get(l.postId).push({ uid: l.uid, at });
+  });
+  byPost.forEach((arr, pid) => {
+    arr.sort((a, b) => b.at - a.at);
+    const name = likeInfo.names[arr[0].uid] || ft("someone");
+    ev.push({ time: arr[0].at, icon: "❤️", title: arr.length > 1 ? ft("notifLikeMany", { name, n: arr.length - 1 }) : ft("notifLike", { name }),
+      detail: likeInfo.posts[pid] || "", link: "feed.html#p-" + pid });
+  });
   // 💬 有人回复我的帖子、或回复我（自己的回复不通知）
   bell.replies.forEach(c => {
     const at = toDate(c.createdAt);
@@ -1180,6 +1194,20 @@ function buildEvents() {
       detail: String(c.text || "").slice(0, 80), link: "feed.html#p-" + c.postId + "~" + c.id });   // ~回复ID：打开后跳到那条回复
   });
   return ev.filter(e => e.time <= now).sort((a, b) => b.time - a.time).slice(0, 50).map(e => ({ ...e, cat: bellCatOf(e) }));
+}
+
+// ❤️ 点赞通知要的名字（memberFeed 公开）、帖子开头（读不到就不显示）：读过就记住
+const likeInfo = { names: {}, posts: {}, asked: new Set() };
+async function likeExtras() {
+  const want = [];
+  const latest = new Map();
+  bell.likes.forEach(l => { const at = toDate(l.at); const cur = latest.get(l.postId); if (at && (!cur || at > cur.at)) latest.set(l.postId, { uid: l.uid, at }); });
+  latest.forEach((v, pid) => {
+    if (!likeInfo.asked.has("u" + v.uid)) { likeInfo.asked.add("u" + v.uid); want.push(getDoc(doc(db, "memberFeed", v.uid)).then(s => { if (s.exists()) likeInfo.names[v.uid] = s.data().name || ""; }).catch(() => {})); }
+    if (!likeInfo.asked.has("p" + pid)) { likeInfo.asked.add("p" + pid); want.push(getDoc(doc(db, "feedPosts", pid, "content", "main")).then(s => {
+      if (s.exists()) likeInfo.posts[pid] = String(s.data().text || "").replace(/\s+/g, " ").trim().slice(0, 60); }).catch(() => {})); }
+  });
+  if (want.length) { await Promise.all(want); renderBell(); }
 }
 
 // 🗂️ 通知分类：积分（含等级）｜兑换（兑换、中奖、运输）｜Feed｜公告；其他（例如绑定）只在「全部」
@@ -1362,6 +1390,19 @@ export function initBell(user, member) {
   ["postAuthorUid", "replyToUid"].forEach((f, i) => onSnapshot(
     query(collectionGroup(db, "comments"), where(f, "==", user.uid), where("createdAt", ">=", replySince), orderBy("createdAt", "desc"), limit(20)),
     onRep(i ? "b" : "a"), err => console.warn("replies", err)));
+  // ❤️ 有人赞了我的帖子（2026-11-13）：最近 30 天的赞（按赞的时间算，旧帖子有新的赞也会通知）
+  //   管理员也收店铺帖子的赞（店铺帖子的赞记成 postAuthorUid = "shop"）；要 Firestore 索引 likes（集合群组）：postAuthorUid ↑、at ↓
+  (async () => {
+    const owners = [user.uid];
+    if (!PREVIEW) { const adm = await getDoc(doc(db, "admins", user.uid)).catch(() => null); if (adm && adm.exists()) owners.push("shop"); }
+    onSnapshot(query(collectionGroup(db, "likes"), where("postAuthorUid", "in", owners),
+      where("at", ">=", new Date(Date.now() - 30 * 86400000)), orderBy("at", "desc"), limit(100)),
+      s => {
+        bell.likes = s.docs.filter(d => d.id !== user.uid && d.ref.parent.parent)
+          .map(d => ({ uid: d.id, postId: d.ref.parent.parent.id, at: d.data().at }));
+        renderBell(); likeExtras();
+      }, err => console.warn("likes", err));
+  })();
   initFeedDot(user);
   onSnapshot(query(collection(db, "feedReports"), where("reporterUid", "==", user.uid)),
     s => { bell.reports = s.docs.map(d => d.data()); renderBell(); },
