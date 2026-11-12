@@ -39,6 +39,35 @@
     .slider-img { width: 100%; flex-shrink: 0; scroll-snap-align: start; height: auto; display: block; background: #f7f7f7; }
     .pic-count { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,.55); color: #fff; font-size: .62rem;
       font-weight: 700; padding: 1px 7px; border-radius: 999px; pointer-events: none; letter-spacing: .3px; }
+    /* 📝 文字卡片（只有文字的帖子，像小红书；3:4，字少字大）2026-11-13 */
+    .tcard { aspect-ratio: 3 / 4; width: 100%; display: flex; align-items: center; justify-content: center; padding: 14% 11%;
+      box-sizing: border-box; overflow: hidden; position: relative; }
+    .tcard .tc-text { white-space: pre-wrap; word-break: break-word; text-align: center; font-weight: 800; line-height: 1.35;
+      max-height: 100%; overflow: hidden; width: 100%; }
+    .tcard.tc-xl .tc-text { font-size: clamp(1.4rem, 9cqw, 2.6rem); line-height: 1.25; }
+    .tcard.tc-l .tc-text { font-size: clamp(1.05rem, 7cqw, 1.8rem); }
+    .tcard.tc-m .tc-text { font-size: clamp(.9rem, 5.2cqw, 1.3rem); text-align: left; }
+    .tcard.tc-s .tc-text { font-size: clamp(.78rem, 4.2cqw, 1.05rem); text-align: left; font-weight: 600;
+      -webkit-mask-image: linear-gradient(#000 80%, transparent); mask-image: linear-gradient(#000 80%, transparent); }
+    .tcard { container-type: inline-size; }
+    .tc-pink { background: linear-gradient(150deg, #ffd6ec, #f5b8ff 55%, #c9b6ff); color: #6b1d5c; }
+    .tc-cream { background: #fff7e8 radial-gradient(circle at 85% 12%, #ffe1b8 0 18%, transparent 19%); color: #5b4636; }
+    .tc-mint { background: linear-gradient(160deg, #dcfff1, #b8f0dc); color: #1f5c48; }
+    .tc-night { background: radial-gradient(circle at 20% 15%, #4c3b8f, #1a1440 70%); color: #fff3fb; }
+    .tc-grid { background-color: #fffdf7; color: #333;
+      background-image: linear-gradient(#e9e3d3 1px, transparent 1px), linear-gradient(90deg, #e9e3d3 1px, transparent 1px); background-size: 18px 18px; }
+    .tc-peach { background: linear-gradient(140deg, #ffe0d2, #ffc4b0); color: #7a3322; }
+    .tc-sky { background: linear-gradient(170deg, #dff1ff, #bfe0ff); color: #1d4466; }
+    .tc-mochii { background: #ff8fc1 radial-gradient(circle at 50% 120%, #ffd1e6 0 45%, transparent 46%); color: #fff;
+      text-shadow: 0 1px 2px rgba(150, 30, 90, .35); }
+    .tcard::after { content: "Mochii Feed"; position: absolute; bottom: 7px; right: 10px; font-size: .55rem; font-weight: 700; opacity: .35; letter-spacing: .4px; }
+    .detail-tcard { max-width: 420px; margin: 0 auto; }
+    .bg-pick { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 4px; align-items: center; }
+    .bg-pick[hidden] { display: none; }
+    .bg-pick button { width: 34px; height: 34px; border-radius: 9px; border: 2px solid transparent; cursor: pointer; padding: 0; }
+    .bg-pick button.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--card); }
+    .tc-preview { width: 150px; margin: 6px 0 2px; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+    .tc-preview[hidden] { display: none; }
     .xhs-content { padding: 8px 10px; font-size: .88rem; font-weight: 500; color: #222; line-height: 1.45;
       white-space: pre-wrap; word-break: break-word; }
     .xhs-footer { padding: 6px 8px; display: flex; align-items: center; justify-content: space-between;
@@ -336,6 +365,9 @@
       <button type="button" class="modal-x" data-close aria-label="close">✕</button>
       <h2 id="cTitle"></h2>
       <textarea id="cText" rows="5" maxlength="2000"></textarea>
+      <!-- 📝 只有文字：选卡片背景（有照片就不显示） -->
+      <div class="bg-pick" id="cBg" hidden></div>
+      <div class="tc-preview" id="cBgPrev" hidden></div>
       <div class="post-pics" id="cPics"></div>
       <input type="file" id="cFile" accept="image/*" multiple class="hidden">
       <p class="muted" style="font-size:.76rem" id="cPicNote"></p>
@@ -928,14 +960,23 @@
       }
     }
 
+    // 📝 文字卡片：模板（帖子的 bg；旧帖子没有 → 用帖子编号固定选一款）
+    const TEXT_BG = ["pink", "cream", "mint", "night", "grid", "peach", "sky", "mochii"];
+    const bgOf = p => TEXT_BG.includes(p.bg) ? p.bg : TEXT_BG[[...String(p.id || "")].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % TEXT_BG.length];
+    const tcSize = t => { const n = [...String(t || "").trim()].length + (String(t).match(/\n/g) || []).length * 8;
+      return n <= 14 ? "xl" : n <= 45 ? "l" : n <= 110 ? "m" : "s"; };
+    const textCardHTML = (text, bg, extra = "") => `<div class="tcard tc-${bg} tc-${tcSize(text)} ${extra}"><div class="tc-text">${esc(String(text || "").trim())}</div></div>`;
+    const isTextOnly = p => p.visible && !(p.content.images || []).length && !!String(p.content.text || "").trim();
+
     function cardHTML(p) {
       const w = who(p);
-      const top = p.visible
+      const top = isTextOnly(p) ? textCardHTML(p.content.text, bgOf(p))
+        : p.visible
         ? sliderHTML(p.content.images)
         : `<div class="lock-box">${safeImg(p.thumb) ? `<img src="${esc(p.thumb)}" alt="">` : ""}
              <div class="lock-on"><span class="ic">🔒</span><b>${esc(ft("rank" + Math.max(0, p.minRank)))}</b>
              <span>${esc(ft(me.member ? "lockUp" : "lockGuest"))}</span></div></div>`;
-      const text = p.visible && p.content.text ? `<div class="xhs-content">${esc(p.content.text)}</div>` : "";
+      const text = p.visible && p.content.text && !isTextOnly(p) ? `<div class="xhs-content">${esc(p.content.text)}</div>` : "";
       const right = p.visible ? `<div class="xhs-right">
           ${p.nCmt ? `<span class="xhs-cmt">💬 ${p.nCmt}</span>` : ""}
           <button class="xhs-like-btn${p.liked ? " liked" : ""}" data-like="${esc(p.id)}">${p.liked ? "❤️" : "🤍"} <span>${p.nLike}</span></button>
@@ -1133,7 +1174,7 @@
       const mine = me.user && p.authorUid === me.user.uid;
 
       $("detailInner").innerHTML = `
-        ${sliderHTML(p.content.images, "detail-slider")}
+        ${isTextOnly(p) ? textCardHTML(p.content.text, bgOf(p), "detail-tcard") : sliderHTML(p.content.images, "detail-slider")}
         <div class="detail-body">
           <div class="detail-meta">
             <div class="who" data-author="${esc(authorKey(p))}">${avatarOf(w)}<div>
@@ -1389,7 +1430,19 @@
 
     // ---------- 发帖 ----------
     let pics = [];
+    let cBg = TEXT_BG[0];
+    function drawBg() {
+      const textOnly = !pics.length;
+      $("cBg").hidden = !textOnly; $("cBgPrev").hidden = !textOnly;
+      if (!textOnly) return;
+      $("cBg").innerHTML = `<span class="muted" style="font-size:.76rem;width:100%">${esc(ft("bgPick"))}</span>`
+        + TEXT_BG.map(b => `<button type="button" class="tc-${b}${b === cBg ? " on" : ""}" data-bg="${b}" aria-label="${b}"></button>`).join("");
+      $("cBgPrev").innerHTML = textCardHTML($("cText").value || ft("bgSample"), cBg);
+      $("cBg").querySelectorAll("[data-bg]").forEach(x => x.onclick = () => { cBg = x.dataset.bg; drawBg(); });
+    }
+    $("cText").addEventListener("input", () => { if (!pics.length) $("cBgPrev").innerHTML = textCardHTML($("cText").value || ft("bgSample"), cBg); });
     function drawPics() {
+      drawBg();
       $("cPics").innerHTML = pics.map((p, i) => `<div class="post-pic"><img src="${p.full}" alt=""><button type="button" data-rm="${i}">✕</button></div>`).join("")
         + (pics.length < MAX_PICS ? `<button type="button" class="post-add" id="cAdd">${esc(ft("addPic"))}</button>` : "");
       const add = $("cAdd"); if (add) add.onclick = () => $("cFile").click();
@@ -1439,12 +1492,13 @@
           authorUid: me.user.uid, authorName: me.member.name || "", authorTier: me.member.tier || "mochii",
           authorTitle: me.title, thumb: pics.length ? await compressImage(pics[0].file, 24) : "",
           imageCount: pics.length, pinned: false, createdAt: serverTimestamp(),
+          ...(pics.length ? {} : { bg: cBg }),   // 📝 文字卡片背景
           ...(ciShare ? { tag: "checkin", ciMs: ciShare.ms } : {}),   // 🏅 签到分享帖
         });
         batch.set(doc(db, "feedPosts", ref.id, "content", "main"), { text, images: pics.map(p => p.full) });
         await batch.commit();
         if (hit) logFilter("post", raw, text, ref.id);
-        $("cText").value = ""; pics = [];
+        $("cText").value = ""; pics = []; cBg = TEXT_BG[Math.floor(Math.random() * TEXT_BG.length)];
         if (ciShare) { ciShare = null; history.replaceState(null, "", location.pathname + location.hash); }
         closeModal("composer");
         toast(ft(direct ? "posted" : "sentReview") + (hit ? " " + ft("phoneHidden") : ""));
