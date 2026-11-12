@@ -720,7 +720,8 @@ function exitPreview() {
   window.close();   // 从后台开的新分页：直接关掉
   setTimeout(() => location.replace("home.html"), 200);
 }
-const PREVIEW_BLOCK = "[data-addr],#addrAdd,#logoutBtn,a.cn-tag,[data-cancel],[data-editaddr],[data-receive],#rcvSubmit,#eaSubmit,#eaNew,[data-got],[data-claim],[data-pzaddr],#pzSubmit,#bellReadAll,[data-redeem],[data-like],[data-follow],button[type=submit]";
+const PREVIEW_BLOCK = "[data-addr],#addrAdd,#logoutBtn,a.cn-tag,[data-cancel],[data-editaddr],[data-receive],#rcvSubmit,#eaSubmit,#eaNew,[data-got],[data-claim],[data-pzaddr],#pzSubmit,#bellReadAll,[data-redeem],[data-like],[data-follow],button[type=submit]"
+  + ",#fab,#cSend,#rSend,#rpSend,#eSave,#profEdit,#profEditI,[data-mact],[data-del]";   // Feed 页：发帖、回复、编辑、删除、检举
 function previewBanner(name, supported) {
   const bar = document.createElement("div");
   bar.className = "preview-bar";
@@ -746,6 +747,20 @@ function previewBanner(name, supported) {
       <p class="muted">可以看：首页、兑换商城、兑换记录、中奖记录、会员等级、积分明细、个人资料、帮助中心</p>
       <a class="btn btn-primary" href="home.html" style="margin-top:12px">回首页</a></div>`;
   }
+}
+// 👁 会员视角下打开 Feed（feed.html 用）：管理员才可以；回传 { uid, member }，不是就回传 null
+//   「我的 Feed」= 那位会员的 Feed 主页；所有会改资料的按钮都挡住
+export async function startFeedPreview(user) {
+  const va = readViewAs();
+  if (!user || !va || !va.uid) return null;
+  const adm = await getDoc(doc(db, "admins", user.uid)).catch(() => null);
+  if (!adm || !adm.exists()) { try { sessionStorage.removeItem(VIEW_KEY); } catch (e) {} return null; }
+  const snap = await getDoc(doc(db, "members", va.uid)).catch(() => null);
+  if (!snap || !snap.exists()) return null;
+  const member = snap.data();
+  PREVIEW = { uid: va.uid, name: member.name || "会员", adminUid: user.uid };
+  previewBanner(PREVIEW.name, true);
+  return { uid: va.uid, member };
 }
 async function startPreview(admin, va, onReady) {
   const page = (location.pathname.split("/").pop() || "home.html").replace(/\.html$/, "") || "home";
@@ -881,7 +896,7 @@ export function renderNav(active) {
     ${group && group.sub ? `
     <div class="topbar-inner sub-nav-row">
       <nav class="sub-nav">
-        ${group.sub.map(([k, href, key]) => `<a href="${k === "myfeed" && PREVIEW ? "feed.html#u-" + encodeURIComponent(PREVIEW.uid) : href}" ${k === "myfeed" && PREVIEW ? 'target="_blank" title="开新分页看这位会员的 Feed 主页"' : ""} data-k="${k}" class="${k === active ? "active" : ""}">${key.startsWith("fd:") ? ft(key.slice(3)) : t(key)}</a>`).join("")}
+        ${group.sub.map(([k, href, key]) => `<a href="${k === "myfeed" && PREVIEW ? "feed.html?viewAs=" + encodeURIComponent(PREVIEW.uid) + "#me" : href}" ${k === "myfeed" && PREVIEW ? 'title="这位会员的 Feed 主页（只读）"' : ""} data-k="${k}" class="${k === active ? "active" : ""}">${key.startsWith("fd:") ? ft(key.slice(3)) : t(key)}</a>`).join("")}
       </nav>
     </div>` : ""}`;
   bindSettings(el);
