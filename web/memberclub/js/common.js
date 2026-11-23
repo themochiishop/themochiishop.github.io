@@ -1131,7 +1131,8 @@ function buildEvents() {
       icon: "📢",
       title: loc.title || a.title || "",
       detail: loc.body || a.body || "",
-      link: a.link || "",
+      // 旧的小礼物通知连到兑换记录（错）：改连「中奖记录」的小礼物
+      link: a.link === "rewards.html" && /little gift/i.test((a.i18n && a.i18n.en && a.i18n.en.title) || "") ? "prizes.html#sgCard" : (a.link || ""),
       announce: true,
     });
   });
