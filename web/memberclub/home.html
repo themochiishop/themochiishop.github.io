@@ -58,11 +58,11 @@
 
     requireMember(async (user, member) => {
       const mine = c => getDocs(query(collection(db, c), where("uid", "==", user.uid)));
-      let cfg = {}, bal, oSnap, rSnap, bnSnap, nSnap, pzSnap, nmReward = null, perks = {}, ciState = null;
+      let cfg = {}, bal, oSnap, rSnap, bnSnap, nSnap, pzSnap, sgSnap = { docs: [] }, nmReward = null, perks = {}, ciState = null;
       try {
         const sSnap = await getDoc(doc(db, "settings", "home")).catch(() => null);
         cfg = sSnap && sSnap.exists() ? sSnap.data() : {};
-        [bal, oSnap, rSnap, bnSnap, nSnap, pzSnap] = await Promise.all([
+        [bal, oSnap, rSnap, bnSnap, nSnap, pzSnap, , sgSnap] = await Promise.all([
           loadBalance(user.uid),
           mine("orders"),
           getDocs(query(collection(db, "rewards"), where("active", "==", true))),
@@ -70,6 +70,7 @@
           getDocs(query(collection(db, "homeNews"), orderBy("createdAt", "desc"), limit(30))).catch(() => ({ docs: [] })),
           mine("prizeWins").catch(() => ({ docs: [] })),
           NM.loadSettings(),
+          mine("smallGifts").catch(() => ({ docs: [] })),   // 🎁 小礼物（随下一单寄出）
         ]);
         // 📅 每日签到：后台有开才读自己的签到状态
         perks = await loadPerks();
@@ -235,11 +236,27 @@
           .filter(p => PZ_TAG[p.status])
           .sort((a, b) => (a.status === "unclaimed" ? 0 : 1) - (b.status === "unclaimed" ? 0 : 1)
             || (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0));
-        if (!list.length) return "";
+        // 🎁 还没寄出的小礼物也显示在这里（点了到「中奖记录」的小礼物）
+        const gifts = (sgSnap.docs || []).map(d => ({ id: d.id, ...d.data() })).filter(g => g.status === "pending")
+          .sort((a, b) => (toDate(a.deadline) || 0) - (toDate(b.deadline) || 0));
+        if (!list.length && !gifts.length) return "";
         const todo = list.some(p => p.status === "unclaimed");
+        const giftLi = g => {
+          const dl = toDate(g.deadline), sep = g.delivery === "separate";
+          const st = g.manual && g.status === "pending" && (sep || g.linkedOrder) ? "sg.st.toShip" : "sg.st.pending";
+          return `<li><a href="prizes.html#sgCard" class="home-pz-item">
+            <span class="redeem-thumb">🎁</span>
+            <div class="redeem-body">
+              <div class="title">${esc(g.giftName || "")} <span class="tag tag-pending">${t(st)}</span></div>
+              <div class="meta">${sep ? "🚚" : "📦"} ${esc(g.manual ? t("sg.fromShop") : t("sg.from", { m: g.label || "" }))}</div>
+              ${!sep && !g.linkedOrder && !g.orderFound && dl ? `<div class="meta pz-deadline${dl - Date.now() <= 7 * 86400000 ? " soon" : ""}" style="margin-top:2px">⏰ ${esc(t("sg.deadline", { d: fmtDate(dl) }))}</div>` : ""}
+            </div>
+            <span class="home-pz-go">➔</span>
+          </a></li>`;
+        };
         return `
           <div class="card prize-card home-prize${todo ? " has-todo" : ""}">
-            <div class="card-head"><h2>${t("pz.title")}</h2><a class="head-go" href="prizes.html" aria-label="${esc(t("home.viewAll"))}">➔</a></div>
+            <div class="card-head"><h2>${t(list.length ? "pz.title" : "sg.title")}</h2><a class="head-go" href="prizes.html${list.length ? "" : "#sgCard"}" aria-label="${esc(t("home.viewAll"))}">➔</a></div>
             <ul class="home-pz">
               ${list.map(p => {
                 const dlv = p.delivery === "separate" ? "separate" : "withOrder";
@@ -253,6 +270,7 @@
                   <span class="home-pz-go ${p.status === "unclaimed" ? "btn btn-primary btn-inline btn-xs" : ""}">${p.status === "unclaimed" ? t("pz.claim") : "➔"}</span>
                 </a></li>`;
               }).join("")}
+              ${gifts.map(giftLi).join("")}
             </ul>
           </div>`;
       }

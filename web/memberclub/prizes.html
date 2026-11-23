@@ -464,7 +464,10 @@
         $("sgPast").querySelector("summary").textContent = t("sg.past", { n: past.length });
         $("sgPast").querySelector("ul").innerHTML = past.map(sgLi).join("");
         if (act.length) $("pzEmpty").classList.add("hidden");
+        // 从首页 / 铃铛点进来（#sgCard）：第一次画好就捲到小礼物
+        if (gifts.length && location.hash === "#sgCard" && !sgScrolled) { sgScrolled = true; setTimeout(() => $("sgCard").scrollIntoView({ behavior: "smooth", block: "start" }), 80); }
       }
+      let sgScrolled = false;
       // 小礼物卡片的「复制」运单号
       $("sgCard").addEventListener("click", async e => {
         const b = e.target.closest("button[data-copy]");
